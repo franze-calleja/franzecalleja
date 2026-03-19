@@ -1,0 +1,229 @@
+{
+  "profile": {
+    "name": "Franze William Calleja",
+    "location": "Candelaria, Quezon",
+    "role": "Software Engineer",
+    "image": "/profile.png"
+  },
+  "links": [
+    {
+      "label": "Send email",
+      "href": "mailto:franze.calleja@email.com",
+      "icon": "mail"
+    },
+    {
+      "label": "GitHub",
+      "href": "https://github.com/your-username",
+      "icon": "github"
+    },
+    {
+      "label": "LinkedIn",
+      "href": "https://linkedin.com/in/your-username",
+      "icon": "linkedin"
+    }
+  ],
+  "about": {
+    "eyebrow": "About",
+    "title": "Full-stack software engineer focused on production-ready systems.",
+    "body": [
+      "I am a full-stack software engineer who develops enterprise solutions and end-to-end web and mobile applications. I work across the stack, building frontend experiences in TypeScript and React (including state management and Next.js), implementing backend services with Express (TypeScript), PHP, and Rust, and designing the infrastructure that keeps systems reliable and secure.",
+      "I currently work as Lead Fullstack Software Engineer at Manuel S. Enverga University Foundation - Candelaria Inc. I also serve as a Lead Software Engineer on a part-time contractual basis with an international company in Canada, and I lead a freelance group that delivers identity and business solutions for clients worldwide. I coordinate teams, own delivery, and help translate product goals into pragmatic technical solutions.",
+      "Lately I have been diving deep into artificial intelligence and cloud infrastructure: experimenting with agentic development workflows, model orchestration, and scalable cloud architectures to expand what I can deliver and to bring AI into production safely and effectively."
+    ]
+  },
+  "experience": {
+    "eyebrow": "Experience",
+    "title": "Professional timeline",
+    "steps": [
+      { "step": "01", "title": "Fullstack Software Engineer", "caption": "MSEUF-CI" },
+      { "step": "02", "title": "Lead Developer", "caption": "R-A-Ones Corporation" },
+      { "step": "03", "title": "Web Developer", "caption": "Techbears Solutions" },
+      { "step": "04", "title": "Frontend Developer Intern", "caption": "Linoflap Technology" },
+      { "step": "05", "title": "Freelance Lead Developer", "caption": "Ellipsense(Freelance Group)" },
+      { "step": "06", "title": "Student Developer", "caption": "Freelance" },
+      { "step": "07", "title": "Computer Science Student", "caption": "MSEUF-CI" }
+    ]
+  },
+  "techstack": {
+    "eyebrow": "Tech Stack",
+    "items": [
+      { "label": "TypeScript", "icon": "code" },
+      { "label": "Rust", "icon": "box" },
+      { "label": "PHP", "icon": "pen-tool" },
+      { "label": "React", "icon": "layers" },
+      { "label": "Next.js", "icon": "zap" },
+      { "label": "Node.js", "icon": "server" },
+      { "label": "Express.js", "icon": "server" },
+      { "label": "Axum", "icon": "box" },
+      { "label": "Prisma", "icon": "box" },
+      { "label": "MySQL", "icon": "database" },
+      { "label": "PostgreSQL", "icon": "database" },
+      { "label": "Docker", "icon": "container" },
+      { "label": "Git", "icon": "git-branch" },
+      { "label": "Tailwind CSS", "icon": "paintbrush" }
+      
+    ]
+  },
+  "skills": {
+    "eyebrow": "Skills",
+    "categories": [
+      {
+        "name": "Frontend",
+        "items": [
+          "State management (TanStack, Redux, Zustand)",
+          "Component-driven UI / design systems",
+          "Responsive layouts & accessibility",
+          "Testing (Jest, React Testing Library)"
+        ]
+      },
+      {
+        "name": "Backend",
+        "items": [
+          "REST APIs",
+          "Database design, migrations & ORMs (Prisma)",
+          "Authentication, authorization & sessions",
+          "Background jobs, queues & scheduling"
+        ]
+      },
+      {
+        "name": "AI & Infrastructure",
+        "items": ["Agentic development", "Model orchestration", "Cloud infrastructure (AWS/GCP)", "Containerization (Docker)", "CI/CD"]
+      }
+    ]
+  },
+  "projects": {
+    "eyebrow": "Recent Projects",
+    "viewAllHref": "https://github.com/your-username",
+    "items": [
+      {
+        "name": "Portfolio Site",
+        "description": "Minimal bento-style personal portfolio built with Next.js and Tailwind.",
+        "href": "https://github.com/your-username/portfolio"
+      },
+      {
+        "name": "Design System",
+        "description": "Reusable component library with token-based theming and dark mode support.",
+        "href": "https://github.com/your-username/design-system"
+      },
+      {
+        "name": "Task Manager API",
+        "description": "REST API built with Node.js, Prisma, and PostgreSQL for task management.",
+        "href": "https://github.com/your-username/task-api"
+      },
+      {
+        "name": "Auth Starter",
+        "description": "Next.js authentication boilerplate with sessions, JWT, and role-based access.",
+        "href": "https://github.com/your-username/auth-starter"
+      },
+      {
+        "name": "Dashboard UI",
+        "description": "Admin dashboard template with charts, tables, and responsive bento layout.",
+        "href": "https://github.com/your-username/dashboard-ui"
+      },
+      {
+        "name": "CLI Tool",
+        "description": "Node.js command-line utility for scaffolding project structures quickly.",
+        "href": "https://github.com/your-username/cli-tool"
+      }
+    ]
+  },
+  "education": {
+    "eyebrow": "Education",
+    "items": [
+      {
+        "degree": "Bachelor of Science in Computer Science",
+        "institution": "Manuel S. Enverga University Foundation - Candelaria Inc.",
+        "year": "2021 – 2025",
+        "honors": "Class Salutatorian, Magna Cum Laude",
+        "description": "Graduated with honors; coursework focused on software engineering, algorithms, and systems."
+      }
+    ]
+  },
+  "testimonials": {
+    "eyebrow": "Testimonials",
+    "items": [
+      {
+        "quote": "Franze is one of the most reliable engineers I've worked with. His attention to UI detail is exceptional.",
+        "name": "Alliah Mikaela Revedezo",
+        "role": "Software Engineer and UI/UX Designer"
+      }
+    ]
+  },
+  "availability": {
+    "eyebrow": "Availability",
+    "status": "Open to work",
+    "statusType": "open",
+    "description": "Currently open to full-time roles and freelance projects. Based in the Philippines, available to work remotely with teams worldwide.",
+    "preferredRoles": ["Full Stack Developer"],
+    "contactHref": "mailto:franze.calleja@email.com"
+  },
+  "gallery": {
+    "eyebrow": "Gallery",
+    "subtitle": "A quick visual row of recent work, ideas, and snapshots.",
+    "items": [
+      {
+        "label": "01",
+        "title": "Workspace",
+        "caption": "A calm setup for focused builds.",
+        "tone": "from-slate-950 via-slate-800 to-slate-600"
+      },
+      {
+        "label": "02",
+        "title": "Interface studies",
+        "caption": "Small experiments for layout rhythm.",
+        "tone": "from-stone-900 via-stone-700 to-stone-500"
+      },
+      {
+        "label": "03",
+        "title": "Theme system",
+        "caption": "Light and dark surfaces with soft contrast.",
+        "tone": "from-zinc-950 via-zinc-700 to-zinc-500"
+      },
+      {
+        "label": "04",
+        "title": "Product flow",
+        "caption": "Simple structure for quick scanning.",
+        "tone": "from-neutral-950 via-neutral-700 to-neutral-500"
+      },
+      {
+        "label": "05",
+        "title": "Component layers",
+        "caption": "Reusable pieces with tight spacing.",
+        "tone": "from-slate-900 via-zinc-700 to-stone-500"
+      },
+      {
+        "label": "06",
+        "title": "Design notes",
+        "caption": "Loose ideas collected before refinement.",
+        "tone": "from-stone-950 via-slate-700 to-zinc-500"
+      },
+      {
+        "label": "07",
+        "title": "Build snapshots",
+        "caption": "Progress captures from active projects.",
+        "tone": "from-zinc-900 via-stone-700 to-neutral-500"
+      },
+      {
+        "label": "08",
+        "title": "Visual rhythm",
+        "caption": "Texture, spacing, and contrast studies.",
+        "tone": "from-neutral-900 via-slate-700 to-stone-500"
+      }
+    ]
+  },
+  "footer": {
+    "eyebrow": "Franze William Calleja",
+    "tagline": "Simple, focused portfolio design built to be easy to scan.",
+    "quickLinks": [
+      { "label": "About", "href": "#about" },
+      { "label": "Projects", "href": "#projects" },
+      { "label": "Gallery", "href": "#gallery" },
+      { "label": "Contact", "href": "mailto:franze.calleja@email.com" }
+    ],
+    "social": [
+      { "label": "GitHub", "href": "https://github.com/your-username", "icon": "github" },
+      { "label": "LinkedIn", "href": "https://linkedin.com/in/your-username", "icon": "linkedin" },
+      { "label": "Instagram", "href": "https://instagram.com/your-username", "icon": "instagram" }
+    ]
+  }
+}

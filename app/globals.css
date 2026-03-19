@@ -53,6 +53,80 @@ body {
   color: var(--background);
 }
 
+@keyframes chat-panel-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(0.5rem) scale(0.96);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes chat-callout-enter {
+  0% {
+    opacity: 0;
+    transform: translateX(0.75rem) scale(0.95);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes chat-bot-idle {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+
+  25% {
+    transform: translateY(-0.18rem) rotate(-6deg) scale(1.05);
+  }
+
+  50% {
+    transform: translateY(0.05rem) rotate(0deg) scale(1);
+  }
+
+  75% {
+    transform: translateY(-0.08rem) rotate(6deg) scale(1.03);
+  }
+}
+
+@keyframes chat-bot-open {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+
+  25% {
+    transform: translateY(-0.08rem) rotate(-8deg) scale(1.03);
+  }
+
+  75% {
+    transform: translateY(0.04rem) rotate(8deg) scale(1.03);
+  }
+}
+
+.animate-chat-panel-enter {
+  animation: chat-panel-enter 180ms ease-out;
+}
+
+.animate-chat-callout-enter {
+  animation: chat-callout-enter 240ms ease-out;
+}
+
+.animate-chat-bot-idle {
+  animation: chat-bot-idle 2.8s ease-in-out infinite;
+}
+
+.animate-chat-bot-open {
+  animation: chat-bot-open 1.8s ease-in-out infinite;
+}
+
 .theme-switch {
   display: inline-flex;
   align-items: center;

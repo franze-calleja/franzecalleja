@@ -21,7 +21,7 @@ export default function ProfileHeader() {
             alt={content.profile.name}
             width={148}
             height={148}
-            className="h-36 w-36 rounded-lg border border-[color:var(--border)] object-cover shadow-sm"
+            className="h-36 w-36 rounded-lg border border-(--border) object-cover shadow-sm"
             priority
           />
 
@@ -47,8 +47,8 @@ export default function ProfileHeader() {
                     rel={link.label === "Send email" ? undefined : "noreferrer"}
                     className={
                       link.label === "Send email"
-                        ? "inline-flex items-center gap-2 rounded-lg border border-[color:var(--border)] bg-[color:var(--foreground)] px-3 py-1.5 text-[color:var(--background)] transition-colors"
-                        : "group relative inline-flex items-center gap-2 overflow-hidden rounded-lg border border-[color:var(--border)] px-3 py-1.5 text-[color:var(--foreground)] transition-colors"
+                        ? "inline-flex items-center gap-2 rounded-lg border border-(--border) bg-foreground px-3 py-1.5 text-background transition-colors"
+                        : "group relative inline-flex items-center gap-2 overflow-hidden rounded-lg border border-(--border) px-3 py-1.5 text-foreground transition-colors"
                     }
                   >
                     {link.label === "Send email" ? (
@@ -59,10 +59,10 @@ export default function ProfileHeader() {
                     ) : (
                       <>
                         <span
-                          className="absolute inset-0 z-0 -translate-x-full bg-[color:var(--foreground)] transition-transform duration-300 ease-out group-hover:translate-x-0"
+                          className="absolute inset-0 z-0 -translate-x-full bg-foreground transition-transform duration-300 ease-out group-hover:translate-x-0"
                           aria-hidden="true"
                         />
-                        <span className="relative z-10 inline-flex items-center gap-2 transition-colors group-hover:text-[color:var(--background)]">
+                        <span className="relative z-10 inline-flex items-center gap-2 transition-colors group-hover:text-background">
                           <Icon className="h-4 w-4" />
                           {link.label}
                         </span>
@@ -89,8 +89,8 @@ function DetailRow({
   text: string;
 }) {
   return (
-    <div className="flex items-center gap-2 text-[0.7rem] text-[color:var(--muted)] sm:text-sm">
-      <span className="text-[color:var(--foreground)]/80">
+    <div className="flex items-center gap-2 text-[0.7rem] text-(--muted) sm:text-sm">
+      <span className="text-(--foreground)/80">
         <Icon className="h-4 w-4" />
       </span>
       <span>{text}</span>

@@ -65,7 +65,7 @@ export default function GalleryCard() {
             <div
               key={item.label}
               data-gallery-item
-              className="group relative aspect-[3/4] w-36 shrink-0 overflow-hidden rounded-md border border-[color:var(--border)] sm:w-48 sm:aspect-[4/5] lg:w-auto lg:basis-1/5"
+              className="group relative aspect-3/4 w-36 shrink-0 overflow-hidden rounded-md border border-(--border) sm:w-48 sm:aspect-4/5 lg:w-auto lg:basis-1/5"
             >
               <div className={`absolute inset-0 bg-linear-to-br ${item.tone}`} />
               <div className="absolute inset-0 bg-[linear-gradient(160deg,rgba(255,255,255,0.14),transparent_45%,rgba(0,0,0,0.36))]" />

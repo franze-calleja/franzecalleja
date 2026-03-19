@@ -15,7 +15,7 @@ export default function ThemeToggle() {
     <button
       type="button"
       onClick={toggleTheme}
-      className="theme-switch shrink-0 rounded-full border border-[color:var(--border)] bg-transparent p-1 text-[color:var(--foreground)] transition-colors hover:bg-[color:var(--hover)]"
+      className="theme-switch shrink-0 rounded-full border border-(--border) bg-transparent p-1 text-foreground transition-colors hover:bg-(--hover)"
       aria-label="Toggle color theme"
     >
       <span className="theme-switch__track">

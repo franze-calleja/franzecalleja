@@ -187,51 +187,59 @@
     "items": [
       {
         "label": "01",
-        "title": "Workspace",
+        "title": "Franze",
         "caption": "A calm setup for focused builds.",
-        "tone": "from-slate-950 via-slate-800 to-slate-600"
+        "tone": "from-slate-950 via-slate-800 to-slate-600",
+        "image": "/profile.png"
       },
       {
         "label": "02",
-        "title": "Interface studies",
+        "title": "Logo",
         "caption": "Small experiments for layout rhythm.",
-        "tone": "from-stone-900 via-stone-700 to-stone-500"
+        "tone": "from-stone-900 via-stone-700 to-stone-500",
+        "image": "/icon.png"
       },
       {
         "label": "03",
-        "title": "Theme system",
+        "title": "Franze",
         "caption": "Light and dark surfaces with soft contrast.",
-        "tone": "from-zinc-950 via-zinc-700 to-zinc-500"
+        "tone": "from-zinc-950 via-zinc-700 to-zinc-500",
+        "image": "/profile.png"
       },
       {
         "label": "04",
-        "title": "Product flow",
+        "title": "Logo",
         "caption": "Simple structure for quick scanning.",
-        "tone": "from-neutral-950 via-neutral-700 to-neutral-500"
+        "tone": "from-neutral-950 via-neutral-700 to-neutral-500",
+        "image": "/icon.png"
       },
       {
         "label": "05",
-        "title": "Component layers",
+        "title": "Franze",
         "caption": "Reusable pieces with tight spacing.",
-        "tone": "from-slate-900 via-zinc-700 to-stone-500"
+        "tone": "from-slate-900 via-zinc-700 to-stone-500",
+        "image": "/profile.png"
       },
       {
         "label": "06",
-        "title": "Design notes",
+        "title": "Logo",
         "caption": "Loose ideas collected before refinement.",
-        "tone": "from-stone-950 via-slate-700 to-zinc-500"
+        "tone": "from-stone-950 via-slate-700 to-zinc-500",
+        "image": "/icon.png"
       },
       {
         "label": "07",
-        "title": "Build snapshots",
+        "title": "Franze",
         "caption": "Progress captures from active projects.",
-        "tone": "from-zinc-900 via-stone-700 to-neutral-500"
+        "tone": "from-zinc-900 via-stone-700 to-neutral-500",
+        "image": "/profile.png"
       },
       {
         "label": "08",
-        "title": "Visual rhythm",
+        "title": "Logo",
         "caption": "Texture, spacing, and contrast studies.",
-        "tone": "from-neutral-900 via-slate-700 to-stone-500"
+        "tone": "from-neutral-900 via-slate-700 to-stone-500",
+        "image": "/icon.png"
       }
     ]
   },

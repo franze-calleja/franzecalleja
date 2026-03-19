@@ -1,6 +1,7 @@
 "use client";
 
 import content from "@/app/profile-data.json";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import SectionCard from "./section-card";
 
@@ -67,8 +68,18 @@ export default function GalleryCard() {
               data-gallery-item
               className="group relative aspect-3/4 w-36 shrink-0 overflow-hidden rounded-md border border-(--border) sm:w-48 sm:aspect-4/5 lg:w-auto lg:basis-1/5"
             >
-              <div className={`absolute inset-0 bg-linear-to-br ${item.tone}`} />
-              <div className="absolute inset-0 bg-[linear-gradient(160deg,rgba(255,255,255,0.14),transparent_45%,rgba(0,0,0,0.36))]" />
+              {item.image ? (
+                <Image
+                  src={item.image}
+                  alt={item.title}
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  sizes="(max-width: 640px) 9rem, (max-width: 1024px) 12rem, 20vw"
+                />
+              ) : (
+                <div className={`absolute inset-0 bg-linear-to-br ${item.tone}`} />
+              )}
+              <div className="absolute inset-0 bg-[linear-gradient(160deg,rgba(255,255,255,0.08),transparent_45%,rgba(0,0,0,0.52))]" />
               <div className="relative flex h-full flex-col justify-between p-3 text-white">
                 <span className="inline-flex w-fit rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-[0.65rem] font-medium uppercase tracking-[0.2em] backdrop-blur-sm">
                   {item.label}

@@ -3,7 +3,8 @@
     "name": "Franze William Calleja",
     "location": "Candelaria, Quezon",
     "role": "Software Engineer",
-    "image": "/profile.png"
+    "image": "/profile.png",
+    "imageBack": "/profile-back.png"
   },
   "links": [
     {

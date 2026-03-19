@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Briefcase, Github, Linkedin, Mail, MapPin } from "lucide-react";
 
@@ -12,18 +15,70 @@ const iconMap = {
 } as const;
 
 export default function ProfileHeader() {
+  const backImageSrc = content.profile.imageBack ?? "/icon.png";
+  const [isTouchPointer, setIsTouchPointer] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(pointer: coarse)");
+
+    const updatePointerMode = () => {
+      setIsTouchPointer(mediaQuery.matches);
+      if (!mediaQuery.matches) {
+        setIsFlipped(false);
+      }
+    };
+
+    updatePointerMode();
+    mediaQuery.addEventListener("change", updatePointerMode);
+
+    return () => {
+      mediaQuery.removeEventListener("change", updatePointerMode);
+    };
+  }, []);
+
   return (
     <SectionCard className="w-full lg:p-6">
       <div className="relative flex flex-row items-stretch gap-3 sm:justify-between sm:gap-5">
         <div className="flex flex-1 items-stretch gap-3 pr-12 sm:gap-4 sm:pr-0">
-          <Image
-            src={content.profile.image}
-            alt={content.profile.name}
-            width={148}
-            height={148}
-            className="h-full min-h-24 w-20 shrink-0 self-stretch rounded-lg border border-(--border) object-cover shadow-sm sm:h-36 sm:w-36"
-            priority
-          />
+          <button
+            type="button"
+            aria-pressed={isTouchPointer ? isFlipped : undefined}
+            aria-label={`Show ${content.profile.name} icon`}
+            onClick={() => {
+              if (isTouchPointer) {
+                setIsFlipped((current) => !current);
+              }
+            }}
+            className={`flip-card h-full min-h-24 w-20 shrink-0 self-stretch overflow-hidden rounded-lg border border-(--border) shadow-sm sm:h-36 sm:w-36 ${
+              isFlipped ? "is-flipped" : ""
+            }`}
+          >
+            {/* overflow-hidden must NOT be here — it breaks preserve-3d; each face clips itself */}
+            <div className="flip-card-inner">
+              <div className="flip-card-front">
+                <Image
+                  src={content.profile.image}
+                  alt={content.profile.name}
+                  fill
+                  sizes="(max-width: 640px) 5rem, 9rem"
+                  className="object-cover"
+                  priority
+                />
+              </div>
+
+              <div className="flip-card-back bg-transparent">
+                <Image
+                  src={backImageSrc}
+                  alt={`${content.profile.name} icon`}
+                  fill
+                  sizes="(max-width: 640px) 5rem, 9rem"
+                  className="object-cover"
+                  priority
+                />
+              </div>
+            </div>
+          </button>
 
           <div className="min-w-0 flex-1 space-y-2.5 self-stretch sm:pt-1">
             <div className="space-y-1">

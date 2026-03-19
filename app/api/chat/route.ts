@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import content from "@/app/profile-data.json";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 type IncomingMessage = {
   role?: "user" | "assistant";
@@ -87,6 +88,31 @@ export async function POST(request: Request) {
     );
   }
 
+  // --- Rate limiting ---
+  const ip =
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    request.headers.get("x-real-ip") ??
+    "unknown";
+
+  const { allowed, remaining, resetInSeconds } = checkRateLimit(ip);
+
+  if (!allowed) {
+    return NextResponse.json(
+      {
+        error: `You've sent too many messages. Please wait ${resetInSeconds} second${resetInSeconds === 1 ? "" : "s"} before trying again.`,
+      },
+      {
+        status: 429,
+        headers: {
+          "X-RateLimit-Limit": "10",
+          "X-RateLimit-Remaining": "0",
+          "Retry-After": String(resetInSeconds),
+        },
+      },
+    );
+  }
+  // ---------------------
+
   const conversation = body.messages
     .filter((message) => typeof message.content === "string" && message.content.trim())
     .slice(-10)
@@ -161,7 +187,10 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json({ reply, model: modelName });
+    return NextResponse.json(
+      { reply, model: modelName },
+      { headers: { "X-RateLimit-Remaining": String(remaining) } },
+    );
   }
 
   lastErrorText = await response.text();

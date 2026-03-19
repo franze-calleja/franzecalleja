@@ -40,7 +40,7 @@ export default function GalleryCard() {
 
   return (
     <SectionCard className="lg:col-span-3">
-      <div className="space-y-2.5">
+      <div className="min-w-0 space-y-2.5">
         <div className="flex items-end justify-between gap-3">
           <div className="space-y-0.5">
             <p className="text-xs font-medium uppercase tracking-[0.22em] text-(--muted)">
@@ -59,13 +59,13 @@ export default function GalleryCard() {
           ref={viewportRef}
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
-          className="flex gap-2 overflow-x-auto scroll-smooth pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          className="flex w-full gap-2 overflow-x-auto scroll-smooth pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         >
           {content.gallery.items.map((item) => (
             <div
               key={item.label}
               data-gallery-item
-              className="group relative aspect-4/5 shrink-0 basis-1/2 overflow-hidden rounded-md border border-(--border) sm:basis-1/3 lg:basis-1/5"
+              className="group relative aspect-[3/4] w-36 shrink-0 overflow-hidden rounded-md border border-[color:var(--border)] sm:w-48 sm:aspect-[4/5] lg:w-auto lg:basis-1/5"
             >
               <div className={`absolute inset-0 bg-linear-to-br ${item.tone}`} />
               <div className="absolute inset-0 bg-[linear-gradient(160deg,rgba(255,255,255,0.14),transparent_45%,rgba(0,0,0,0.36))]" />

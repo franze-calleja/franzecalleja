@@ -8,17 +8,17 @@
   "links": [
     {
       "label": "Send email",
-      "href": "mailto:franze.calleja@email.com",
+      "href": "mailto:franzewilliamcalleja@gmail.com",
       "icon": "mail"
     },
     {
       "label": "GitHub",
-      "href": "https://github.com/your-username",
+      "href": "https://github.com/franze-calleja",
       "icon": "github"
     },
     {
       "label": "LinkedIn",
-      "href": "https://linkedin.com/in/your-username",
+      "href": "https://www.linkedin.com/in/franze-calleja",
       "icon": "linkedin"
     }
   ],
@@ -93,37 +93,55 @@
   },
   "projects": {
     "eyebrow": "Recent Projects",
-    "viewAllHref": "https://github.com/your-username",
+    "viewAllHref": "https://github.com/franze-calleja",
     "items": [
       {
-        "name": "Portfolio Site",
-        "description": "Minimal bento-style personal portfolio built with Next.js and Tailwind.",
-        "href": "https://github.com/your-username/portfolio"
+        "name": "Human Resource Information Management System",
+        "description": "Internal HR platform for managing employee records, workflows, and administrative data.",
+        "href": "https://hrims.mseufcandelaria.com",
+        "technologies": ["Next.js", "Express", "Prisma", "MySQL"]
       },
       {
-        "name": "Design System",
-        "description": "Reusable component library with token-based theming and dark mode support.",
-        "href": "https://github.com/your-username/design-system"
+        "name": "Investo",
+        "description": "Mobile investment experience focused on streamlined tracking and account interactions.",
+        "href": "https://github.com/franze-calleja/investo",
+        "technologies": ["React Native", "Expo", "TypeScript", "Zustand"]
       },
       {
-        "name": "Task Manager API",
-        "description": "REST API built with Node.js, Prisma, and PostgreSQL for task management.",
-        "href": "https://github.com/your-username/task-api"
+        "name": "Unified Plant, Facilities, and Property System",
+        "description": "Operations system for coordinating plant assets, facilities, and property records.",
+        "href": "https://upfps.mseufcandelaria.com",
+        "technologies": ["Next.js", "Express", "Prisma", "MySQL"]
       },
       {
-        "name": "Auth Starter",
-        "description": "Next.js authentication boilerplate with sessions, JWT, and role-based access.",
-        "href": "https://github.com/your-username/auth-starter"
+        "name": "PHD Airbnb Parking for Cars",
+        "description": "Mobile parking workflow for locating, reserving, and tracking parking availability.",
+        "href": "",
+        "technologies": ["React Native", "Expo", "Express", "Prisma", "PostgreSQL"]
       },
       {
-        "name": "Dashboard UI",
-        "description": "Admin dashboard template with charts, tables, and responsive bento layout.",
-        "href": "https://github.com/your-username/dashboard-ui"
+        "name": "Submission Tracker",
+        "description": "Full-stack submission tracking platform with database-backed record management.",
+        "href": "https://submissiontracker.mseufcandelaria.com",
+        "technologies": ["Next.js", "Full-Stack", "Prisma", "MySQL"]
       },
       {
-        "name": "CLI Tool",
-        "description": "Node.js command-line utility for scaffolding project structures quickly.",
-        "href": "https://github.com/your-username/cli-tool"
+        "name": "MinIO Selfhosted Object Storage",
+        "description": "Self-hosted object storage setup for local or private infrastructure deployments.",
+        "href": "https://github.com/franze-calleja/minio-cdn",
+        "technologies": ["Docker", "Shell"]
+      },
+      {
+        "name": "NQ Trend Trading Website and LMS",
+        "description": "Trading website and learning platform built for content delivery and user management.",
+        "href": "https://nqtrendtrading.com",
+        "technologies": ["Next.js", "ASP .NET"]
+      },
+      {
+        "name": "EUC CITHM NFC Attendance",
+        "description": "Attendance system using NFC-enabled flows for fast and reliable check-ins.",
+        "href": "https://euccithmattendance.com",
+        "technologies": ["VueJS", "Laravel"]
       }
     ]
   },
@@ -155,7 +173,7 @@
     "statusType": "open",
     "description": "Currently open to full-time roles and freelance projects. Based in the Philippines, available to work remotely with teams worldwide.",
     "preferredRoles": ["Full Stack Developer"],
-    "contactHref": "mailto:franze.calleja@email.com"
+    "contactHref": "mailto:franzewilliamcalleja@gmail.com"
   },
   "gallery": {
     "eyebrow": "Gallery",
@@ -213,7 +231,7 @@
   },
   "footer": {
     "eyebrow": "Franze William Calleja",
-    "tagline": "Simple, focused portfolio design built to be easy to scan.",
+    "tagline": "Full-stack engineer building production-ready systems.",
     "quickLinks": [
       { "label": "About", "href": "#about" },
       { "label": "Projects", "href": "#projects" },
@@ -221,9 +239,9 @@
       { "label": "Contact", "href": "mailto:franze.calleja@email.com" }
     ],
     "social": [
-      { "label": "GitHub", "href": "https://github.com/your-username", "icon": "github" },
-      { "label": "LinkedIn", "href": "https://linkedin.com/in/your-username", "icon": "linkedin" },
-      { "label": "Instagram", "href": "https://instagram.com/your-username", "icon": "instagram" }
+      { "label": "GitHub", "href": "https://github.com/franze-calleja", "icon": "github" },
+      { "label": "LinkedIn", "href": "https://www.linkedin.com/in/franze-calleja", "icon": "linkedin" },
+      { "label": "Instagram", "href": "https://instagram.com/franze.calleja", "icon": "instagram" }
     ]
   }
 }

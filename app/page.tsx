@@ -33,7 +33,7 @@ export default function Home() {
           <AvailabilityCard />
         </section>
 
-        <section id="gallery" className="grid gap-2 lg:grid-cols-3">
+        <section id="gallery" className="grid grid-cols-1 gap-2 lg:grid-cols-3">
           <GalleryCard />
         </section>
 

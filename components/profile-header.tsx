@@ -45,10 +45,29 @@ export default function ProfileHeader() {
                     href={link.href}
                     target={link.label === "Send email" ? undefined : "_blank"}
                     rel={link.label === "Send email" ? undefined : "noreferrer"}
-                    className="inline-flex items-center gap-2 rounded-lg border border-[color:var(--border)] px-3 py-1.5 text-[color:var(--foreground)] transition-colors hover:bg-[color:var(--hover)]"
+                    className={
+                      link.label === "Send email"
+                        ? "inline-flex items-center gap-2 rounded-lg border border-[color:var(--border)] bg-[color:var(--foreground)] px-3 py-1.5 text-[color:var(--background)] transition-colors"
+                        : "group relative inline-flex items-center gap-2 overflow-hidden rounded-lg border border-[color:var(--border)] px-3 py-1.5 text-[color:var(--foreground)] transition-colors"
+                    }
                   >
-                    <Icon className="h-4 w-4" />
-                    {link.label}
+                    {link.label === "Send email" ? (
+                      <>
+                        <Icon className="h-4 w-4" />
+                        {link.label}
+                      </>
+                    ) : (
+                      <>
+                        <span
+                          className="absolute inset-0 z-0 -translate-x-full bg-[color:var(--foreground)] transition-transform duration-300 ease-out group-hover:translate-x-0"
+                          aria-hidden="true"
+                        />
+                        <span className="relative z-10 inline-flex items-center gap-2 transition-colors group-hover:text-[color:var(--background)]">
+                          <Icon className="h-4 w-4" />
+                          {link.label}
+                        </span>
+                      </>
+                    )}
                   </a>
                 );
               })}

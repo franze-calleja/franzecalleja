@@ -42,10 +42,16 @@ export default function TechStackCard() {
             return (
               <span
                 key={tech.label}
-                className="inline-flex items-center gap-1.5 rounded-md border border-[color:var(--border)] px-3 py-1.5 text-xs font-medium text-[color:var(--foreground)]"
+                className="group relative inline-flex items-center gap-1.5 overflow-hidden rounded-md border border-[color:var(--border)] px-3 py-1.5 text-xs font-medium text-[color:var(--foreground)] transition-colors"
               >
-                <Icon className="h-3.5 w-3.5 text-[color:var(--muted)]" />
-                {tech.label}
+                <span
+                  className="absolute inset-0 z-0 -translate-x-full bg-[color:var(--foreground)] transition-transform duration-300 ease-out group-hover:translate-x-0"
+                  aria-hidden="true"
+                />
+                <span className="relative z-10 inline-flex items-center gap-1.5 transition-colors group-hover:text-[color:var(--background)]">
+                  <Icon className="h-3.5 w-3.5 text-[color:var(--muted)] transition-colors group-hover:text-[color:var(--background)]" />
+                  {tech.label}
+                </span>
               </span>
             );
           })}

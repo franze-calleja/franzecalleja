@@ -33,8 +33,12 @@ export default function ProjectsPage() {
         </div>
 
         <ul className="grid gap-2 sm:grid-cols-2 auto-rows-fr">
-          {content.projects.items.map((project) => (
-            <li key={project.name} className="h-full">
+          {content.projects.items.map((project, index) => (
+            <li
+              key={project.name}
+              className="h-full animate-card-enter motion-reduce:animate-none"
+              style={{ animationDelay: `${index * 90}ms` }}
+            >
               <a
                 href={project.href}
                 target="_blank"

@@ -24,8 +24,12 @@ export default function ProjectsCard() {
         </div>
 
         <ul className="grid gap-1.5 sm:grid-cols-2 auto-rows-fr">
-          {previewProjects.map((project) => (
-            <li key={project.name} className="h-full">
+          {previewProjects.map((project, index) => (
+            <li
+              key={project.name}
+              className="h-full animate-card-enter motion-reduce:animate-none"
+              style={{ animationDelay: `${index * 90}ms` }}
+            >
               <a
                 href={project.href}
                 target="_blank"

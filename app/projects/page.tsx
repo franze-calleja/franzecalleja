@@ -16,7 +16,7 @@ export default function ProjectsPage() {
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-3">
           <div className="space-y-1">
-            <p className="text-xs font-medium uppercase tracking-[0.22em] text-[color:var(--muted)]">
+            <p className="text-xs font-medium uppercase tracking-[0.22em] text-(--muted)">
               {content.projects.eyebrow}
             </p>
             <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
@@ -25,7 +25,7 @@ export default function ProjectsPage() {
           </div>
           <Link
             href="/"
-            className="inline-flex items-center gap-1 rounded-full border border-[color:var(--border)] px-3 py-1.5 text-xs font-medium text-[color:var(--muted)] transition-colors hover:bg-[color:var(--hover)] hover:text-[color:var(--foreground)]"
+            className="inline-flex items-center gap-1 rounded-full border border-(--border) px-3 py-1.5 text-xs font-medium text-(--muted) transition-colors hover:bg-(--hover) hover:text-foreground"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             Back
@@ -39,20 +39,20 @@ export default function ProjectsPage() {
                 href={project.href}
                 target="_blank"
                 rel="noreferrer"
-                className="group flex h-full min-h-[14rem] flex-col gap-1 rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] p-4 transition-colors hover:bg-[color:var(--hover)]"
+                className="group flex h-full min-h-56 flex-col gap-1 rounded-lg border border-(--border) bg-(--surface) p-4 transition-colors hover:bg-(--hover)"
               >
                 <div className="flex items-start justify-between gap-2">
                   <p className="text-sm font-semibold sm:text-base">{project.name}</p>
-                  <ArrowUpRight className="h-4 w-4 shrink-0 text-[color:var(--muted)] transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                  <ArrowUpRight className="h-4 w-4 shrink-0 text-(--muted) transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                 </div>
-                <p className="text-sm leading-6 text-[color:var(--muted)]">
+                <p className="text-sm leading-6 text-(--muted)">
                   {project.description}
                 </p>
                 <div className="mt-auto flex flex-wrap gap-1 pt-2">
                   {project.technologies.map((technology) => (
                     <span
                       key={technology}
-                      className="rounded-full border border-[color:var(--border)] px-2 py-0.5 text-[0.62rem] font-medium uppercase tracking-[0.16em] text-[color:var(--muted)]"
+                      className="rounded-full border border-(--border) px-2 py-0.5 text-[0.62rem] font-medium uppercase tracking-[0.16em] text-(--muted)"
                     >
                       {technology}
                     </span>

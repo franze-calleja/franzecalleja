@@ -14,6 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://franzecalleja.dev"),
   title: {
     default: "Franze William Calleja",
     template: "%s | Franze William Calleja",
@@ -33,6 +34,21 @@ export const metadata: Metadata = {
     "TypeScript",
     "Portfolio",
   ],
+  openGraph: {
+    type: "website",
+    title: "Franze William Calleja",
+    description:
+      "Full-stack software engineer focused on production-ready systems.",
+    siteName: "Franze William Calleja",
+    images: [{ url: "/icon.png", width: 512, height: 512, alt: "Franze William Calleja" }],
+  },
+  twitter: {
+    card: "summary",
+    title: "Franze William Calleja",
+    description:
+      "Full-stack software engineer focused on production-ready systems.",
+    images: ["/icon.png"],
+  },
   robots: {
     index: true,
     follow: true,

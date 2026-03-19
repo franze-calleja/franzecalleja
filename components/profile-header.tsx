@@ -14,23 +14,22 @@ const iconMap = {
 export default function ProfileHeader() {
   return (
     <SectionCard className="w-full lg:p-6">
-      <div className="flex items-start justify-between gap-4 sm:gap-5">
-        <div className="flex flex-1 items-start gap-3.5 sm:gap-4">
+      <div className="relative flex flex-row items-stretch gap-3 sm:justify-between sm:gap-5">
+        <div className="flex flex-1 items-stretch gap-3 pr-12 sm:gap-4 sm:pr-0">
           <Image
             src={content.profile.image}
             alt={content.profile.name}
             width={148}
             height={148}
-            className="h-36 w-36 rounded-lg border border-(--border) object-cover shadow-sm"
+            className="h-full min-h-24 w-20 shrink-0 self-stretch rounded-lg border border-(--border) object-cover shadow-sm sm:h-36 sm:w-36"
             priority
           />
 
-          <div className="space-y-2.5 pt-1">
+          <div className="min-w-0 flex-1 space-y-2.5 self-stretch sm:pt-1">
             <div className="space-y-1">
-              <h1 className="text-2xl font-semibold tracking-tight sm:text-[1.7rem]">
+              <h1 className="text-lg font-semibold leading-tight tracking-tight sm:text-[1.7rem]">
                 {content.profile.name}
               </h1>
-
               <DetailRow icon={MapPin} text={content.profile.location} />
               <DetailRow icon={Briefcase} text={content.profile.role} />
             </div>
@@ -45,16 +44,17 @@ export default function ProfileHeader() {
                     href={link.href}
                     target={link.label === "Send email" ? undefined : "_blank"}
                     rel={link.label === "Send email" ? undefined : "noreferrer"}
+                    aria-label={link.label}
                     className={
                       link.label === "Send email"
-                        ? "inline-flex items-center gap-2 rounded-lg border border-(--border) bg-foreground px-3 py-1.5 text-background transition-colors"
-                        : "group relative inline-flex items-center gap-2 overflow-hidden rounded-lg border border-(--border) px-3 py-1.5 text-foreground transition-colors"
+                        ? "inline-flex items-center justify-center gap-2 rounded-lg border border-(--border) bg-foreground px-2.5 py-1.5 text-background transition-colors sm:justify-start sm:px-3"
+                        : "group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-lg border border-(--border) px-2.5 py-1.5 text-foreground transition-colors sm:justify-start sm:px-3"
                     }
                   >
                     {link.label === "Send email" ? (
                       <>
-                        <Icon className="h-4 w-4" />
-                        {link.label}
+                        <Icon className="h-4 w-4 shrink-0" />
+                        <span className="hidden sm:inline">{link.label}</span>
                       </>
                     ) : (
                       <>
@@ -63,8 +63,8 @@ export default function ProfileHeader() {
                           aria-hidden="true"
                         />
                         <span className="relative z-10 inline-flex items-center gap-2 transition-colors group-hover:text-background">
-                          <Icon className="h-4 w-4" />
-                          {link.label}
+                          <Icon className="h-4 w-4 shrink-0" />
+                          <span className="hidden sm:inline">{link.label}</span>
                         </span>
                       </>
                     )}
@@ -75,7 +75,9 @@ export default function ProfileHeader() {
           </div>
         </div>
 
-        <ThemeToggle />
+        <div className="absolute right-0 top-0 sm:static sm:ml-auto">
+          <ThemeToggle />
+        </div>
       </div>
     </SectionCard>
   );

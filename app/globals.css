@@ -43,6 +43,16 @@ body {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+::selection {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+::-moz-selection {
+  background: var(--foreground);
+  color: var(--background);
+}
+
 .theme-switch {
   display: inline-flex;
   align-items: center;

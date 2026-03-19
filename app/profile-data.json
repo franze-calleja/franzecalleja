@@ -236,12 +236,12 @@
       { "label": "About", "href": "#about" },
       { "label": "Projects", "href": "#projects" },
       { "label": "Gallery", "href": "#gallery" },
-      { "label": "Contact", "href": "mailto:franze.calleja@email.com" }
+      { "label": "Contact", "href": "mailto:franzewilliamcalleja@gmail.com" }
     ],
     "social": [
       { "label": "GitHub", "href": "https://github.com/franze-calleja", "icon": "github" },
       { "label": "LinkedIn", "href": "https://www.linkedin.com/in/franze-calleja", "icon": "linkedin" },
-      { "label": "Instagram", "href": "https://instagram.com/franze.calleja", "icon": "instagram" }
+      { "label": "Instagram", "href": "https://www.instagram.com/franze_william/", "icon": "instagram" }
     ]
   }
 }

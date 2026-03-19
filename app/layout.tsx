@@ -13,8 +13,36 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Franze William Calleja",
-  description: "Minimal personal profile page",
+  title: {
+    default: "Franze William Calleja",
+    template: "%s | Franze William Calleja",
+  },
+  description:
+    "Franze William Calleja's personal portfolio featuring full-stack software engineering work, projects, experience, and tech stack.",
+  applicationName: "Franze William Calleja",
+  authors: [{ name: "Franze William Calleja" }],
+  creator: "Franze William Calleja",
+  publisher: "Franze William Calleja",
+  keywords: [
+    "Franze William Calleja",
+    "Software Engineer",
+    "Full-Stack Developer",
+    "Next.js",
+    "React",
+    "TypeScript",
+    "Portfolio",
+  ],
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
 };
 
 export default function RootLayout({

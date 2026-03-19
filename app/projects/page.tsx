@@ -1,7 +1,14 @@
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import content from "@/app/profile-data.json";
+
+export const metadata: Metadata = {
+  title: "Projects",
+  description:
+    "Selected projects by Franze William Calleja, including web, mobile, and full-stack systems with their technologies.",
+};
 
 export default function ProjectsPage() {
   return (

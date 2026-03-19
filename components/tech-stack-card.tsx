@@ -11,6 +11,8 @@ import {
   Zap,
 } from "lucide-react";
 
+import Link from "next/link";
+
 import content from "@/app/profile-data.json";
 import SectionCard from "./section-card";
 
@@ -31,9 +33,18 @@ export default function TechStackCard() {
   return (
     <SectionCard className="lg:col-start-1 lg:col-span-2" style={{ animationDelay: "300ms" }}>
       <div className="space-y-2.5">
-        <p className="text-xs font-medium uppercase tracking-[0.22em] text-(--muted)">
-          {content.techstack.eyebrow}
-        </p>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs font-medium uppercase tracking-[0.22em] text-(--muted)">
+            {content.techstack.eyebrow}
+          </p>
+          <Link
+            href={content.techstack.viewAllHref ?? "/stack"}
+            className="inline-flex items-center gap-1 text-xs font-medium text-(--muted) transition-colors hover:text-foreground"
+          >
+            View all
+            <span aria-hidden="true">↗</span>
+          </Link>
+        </div>
 
         <div className="flex flex-wrap gap-1.5">
           {content.techstack.items.map((tech) => {

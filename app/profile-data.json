@@ -26,9 +26,9 @@
     "eyebrow": "About",
     "title": "Full-stack software engineer focused on production-ready systems.",
     "body": [
-      "I am a full-stack software engineer who develops enterprise solutions and end-to-end web and mobile applications. I work across the stack, building frontend experiences in TypeScript and React (including state management and Next.js), implementing backend services with Express (TypeScript), PHP, and Rust, and designing the infrastructure that keeps systems reliable and secure.",
-      "I currently work as Lead Fullstack Software Engineer at Manuel S. Enverga University Foundation - Candelaria Inc. I also serve as a Lead Software Engineer on a part-time contractual basis with an international company in Canada, and I lead a freelance group that delivers identity and business solutions for clients worldwide. I coordinate teams, own delivery, and help translate product goals into pragmatic technical solutions.",
-      "Lately I have been diving deep into artificial intelligence and cloud infrastructure: experimenting with agentic development workflows, model orchestration, and scalable cloud architectures to expand what I can deliver and to bring AI into production safely and effectively."
+      "I am a full-stack software engineer who develops enterprise solutions and end-to-end web and mobile applications. I work across the stack, building frontend experiences in React/Next.js, implementing backend services with NodeJS/Express and Rust (Axum), and designing the infrastructure that keeps systems reliable and secure.",
+      "I currently work as Lead Fullstack Software Engineer at Manuel S. Enverga University Foundation - Candelaria Inc. I also serve as a Lead Software Engineer on a part-time contractual basis at R-A-Ones Corporation in Canada, and lead a freelance group delivering software solutions for clients worldwide. I coordinate teams, own delivery, and translate product goals into pragmatic technical solutions.",
+      "Recently, I’ve been exploring AI and cloud infrastructure—focusing on agentic workflows, model orchestration, and scalable architectures to bring AI into production effectively."
     ]
   },
   "experience": {
@@ -46,48 +46,63 @@
   },
   "techstack": {
     "eyebrow": "Tech Stack",
+    "viewAllHref": "/stack",
     "items": [
-      { "label": "TypeScript", "icon": "code" },
-      { "label": "Rust", "icon": "box" },
-      { "label": "PHP", "icon": "pen-tool" },
-      { "label": "React", "icon": "layers" },
-      { "label": "Next.js", "icon": "zap" },
-      { "label": "Node.js", "icon": "server" },
-      { "label": "Express.js", "icon": "server" },
-      { "label": "Axum", "icon": "box" },
-      { "label": "Prisma", "icon": "box" },
-      { "label": "MySQL", "icon": "database" },
-      { "label": "PostgreSQL", "icon": "database" },
-      { "label": "Docker", "icon": "container" },
-      { "label": "Git", "icon": "git-branch" },
-      { "label": "Tailwind CSS", "icon": "paintbrush" }
-      
+      { "label": "TypeScript", "icon": "code", "level": 95 },
+      { "label": "Node.js", "icon": "server", "level": 92 },
+      { "label": "Express.js", "icon": "server", "level": 92 },
+      { "label": "React", "icon": "layers", "level": 92 },
+      { "label": "Next.js", "icon": "zap", "level": 92 },
+      { "label": "Prisma", "icon": "box", "level": 90 },
+      { "label": "Git", "icon": "git-branch", "level": 90 },
+      { "label": "Tailwind CSS", "icon": "paintbrush", "level": 86 },
+      { "label": "MySQL", "icon": "database", "level": 85 },
+      { "label": "PostgreSQL", "icon": "database", "level": 85 },
+      { "label": "Docker", "icon": "container", "level": 82 },
+      { "label": "PHP", "icon": "pen-tool", "level": 80 },
+      { "label": "Axum", "icon": "box", "level": 65 },
+      { "label": "Rust", "icon": "box", "level": 65 }
     ]
   },
   "skills": {
     "eyebrow": "Skills",
+    "viewAllHref": "/stack",
+    "overall": [
+      { "label": "Frontend", "level": 92 },
+      { "label": "Backend", "level": 90 },
+      { "label": "Infrastructure", "level": 80 },
+      { "label": "AI", "level": 90 }
+    ],
     "categories": [
       {
         "name": "Frontend",
         "items": [
-          "State management (TanStack, Redux, Zustand)",
-          "Component-driven UI / design systems",
-          "Responsive layouts & accessibility",
-          "Testing (Jest, React Testing Library)"
+          { "label": "Component-driven UI / design systems", "level": 95 },
+          { "label": "Responsive layouts & accessibility", "level": 90 },
+          { "label": "State management (TanStack, Redux, Zustand)", "level": 88 },
+          { "label": "Testing (Jest, React Testing Library)", "level": 80 },
+          { "label": "Mobile development (React Native, Expo)", "level": 85 }
         ]
       },
       {
         "name": "Backend",
         "items": [
-          "REST APIs",
-          "Database design, migrations & ORMs (Prisma)",
-          "Authentication, authorization & sessions",
-          "Background jobs, queues & scheduling"
+          { "label": "REST APIs", "level": 95 },
+          { "label": "Modular/MVC/Horizontal Architectures", "level": 90 },
+          { "label": "Database design, migrations & ORMs (Prisma)", "level": 85 },
+          { "label": "Authentication, authorization & sessions", "level": 85 },
+          { "label": "Background jobs, queues & scheduling", "level": 75 }
         ]
       },
       {
         "name": "AI & Infrastructure",
-        "items": ["Agentic development", "Model orchestration", "Cloud infrastructure (AWS/GCP)", "Containerization (Docker)", "CI/CD"]
+        "items": [
+          { "label": "Agentic development", "level": 90 },
+          { "label": "Model orchestration", "level": 85 },
+          { "label": "Cloud infrastructure (AWS/GCP/Hostinger)", "level": 76 },
+          { "label": "Containerization (Docker)", "level": 80 },
+          { "label": "CI/CD", "level": 80 }
+        ]
       }
     ]
   },
@@ -187,57 +202,57 @@
     "items": [
       {
         "label": "01",
-        "title": "",
-        "caption": "",
+        "title": "Franze",
+        "caption": "A calm setup for focused builds.",
         "tone": "from-slate-950 via-slate-800 to-slate-600",
         "image": "/profile.png"
       },
       {
         "label": "02",
-        "title": "",
-        "caption": "",
+        "title": "Logo",
+        "caption": "Small experiments for layout rhythm.",
         "tone": "from-stone-900 via-stone-700 to-stone-500",
         "image": "/icon.png"
       },
       {
         "label": "03",
-        "title": "",
-        "caption": "",
+        "title": "Franze",
+        "caption": "Light and dark surfaces with soft contrast.",
         "tone": "from-zinc-950 via-zinc-700 to-zinc-500",
         "image": "/profile.png"
       },
       {
         "label": "04",
-        "title": "",
-        "caption": "",
+        "title": "Logo",
+        "caption": "Simple structure for quick scanning.",
         "tone": "from-neutral-950 via-neutral-700 to-neutral-500",
         "image": "/icon.png"
       },
       {
         "label": "05",
-        "title": "",
-        "caption": "",
+        "title": "Franze",
+        "caption": "Reusable pieces with tight spacing.",
         "tone": "from-slate-900 via-zinc-700 to-stone-500",
         "image": "/profile.png"
       },
       {
         "label": "06",
-        "title": "",
-        "caption": "",
+        "title": "Logo",
+        "caption": "Loose ideas collected before refinement.",
         "tone": "from-stone-950 via-slate-700 to-zinc-500",
         "image": "/icon.png"
       },
       {
         "label": "07",
-        "title": "",
-        "caption": "",
+        "title": "Franze",
+        "caption": "Progress captures from active projects.",
         "tone": "from-zinc-900 via-stone-700 to-neutral-500",
         "image": "/profile.png"
       },
       {
         "label": "08",
-        "title": "",
-        "caption": "",
+        "title": "Logo",
+        "caption": "Texture, spacing, and contrast studies.",
         "tone": "from-neutral-900 via-slate-700 to-stone-500",
         "image": "/icon.png"
       }

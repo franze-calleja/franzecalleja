@@ -2,9 +2,9 @@
 
 :root {
   color-scheme: light;
-  --background: #f5f5f3;
-  --surface: #ffffff;
-  --foreground: #171717;
+  --background: #f3efdd;
+  --surface: #f3efdd;
+  --foreground: #0E100F;
   --muted: #666666;
   --border: rgba(23, 23, 23, 0.08);
   --hover: rgba(23, 23, 23, 0.04);
@@ -12,9 +12,9 @@
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --background: #0b0b0b;
-  --surface: #121212;
-  --foreground: #f4f4f5;
+  --background: #0E100F;
+  --surface: #0E100F;
+  --foreground: #f3efdd;
   --muted: #a1a1aa;
   --border: rgba(255, 255, 255, 0.08);
   --hover: rgba(255, 255, 255, 0.06);

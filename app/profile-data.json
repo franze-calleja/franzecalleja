@@ -187,57 +187,57 @@
     "items": [
       {
         "label": "01",
-        "title": "Franze",
-        "caption": "A calm setup for focused builds.",
+        "title": "",
+        "caption": "",
         "tone": "from-slate-950 via-slate-800 to-slate-600",
         "image": "/profile.png"
       },
       {
         "label": "02",
-        "title": "Logo",
-        "caption": "Small experiments for layout rhythm.",
+        "title": "",
+        "caption": "",
         "tone": "from-stone-900 via-stone-700 to-stone-500",
         "image": "/icon.png"
       },
       {
         "label": "03",
-        "title": "Franze",
-        "caption": "Light and dark surfaces with soft contrast.",
+        "title": "",
+        "caption": "",
         "tone": "from-zinc-950 via-zinc-700 to-zinc-500",
         "image": "/profile.png"
       },
       {
         "label": "04",
-        "title": "Logo",
-        "caption": "Simple structure for quick scanning.",
+        "title": "",
+        "caption": "",
         "tone": "from-neutral-950 via-neutral-700 to-neutral-500",
         "image": "/icon.png"
       },
       {
         "label": "05",
-        "title": "Franze",
-        "caption": "Reusable pieces with tight spacing.",
+        "title": "",
+        "caption": "",
         "tone": "from-slate-900 via-zinc-700 to-stone-500",
         "image": "/profile.png"
       },
       {
         "label": "06",
-        "title": "Logo",
-        "caption": "Loose ideas collected before refinement.",
+        "title": "",
+        "caption": "",
         "tone": "from-stone-950 via-slate-700 to-zinc-500",
         "image": "/icon.png"
       },
       {
         "label": "07",
-        "title": "Franze",
-        "caption": "Progress captures from active projects.",
+        "title": "",
+        "caption": "",
         "tone": "from-zinc-900 via-stone-700 to-neutral-500",
         "image": "/profile.png"
       },
       {
         "label": "08",
-        "title": "Logo",
-        "caption": "Texture, spacing, and contrast studies.",
+        "title": "",
+        "caption": "",
         "tone": "from-neutral-900 via-slate-700 to-stone-500",
         "image": "/icon.png"
       }

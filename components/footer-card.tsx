@@ -13,7 +13,7 @@ const ICONS: Record<string, IconType> = {
 
 export default function FooterCard() {
   return (
-    <SectionCard className="lg:col-span-3">
+    <SectionCard className="lg:col-span-3" style={{ animationDelay: "930ms" }}>
       <div className="space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-1">

@@ -25,7 +25,7 @@ export default function TestimonialsCard() {
   const item = items[index];
 
   return (
-    <SectionCard>
+    <SectionCard style={{ animationDelay: "660ms" }}>
       <div className="space-y-2.5">
         <div className="flex items-center justify-between">
           <p className="text-xs font-medium uppercase tracking-[0.22em] text-(--muted)">

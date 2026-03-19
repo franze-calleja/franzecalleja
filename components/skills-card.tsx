@@ -3,7 +3,7 @@ import SectionCard from "./section-card";
 
 export default function SkillsCard() {
   return (
-    <SectionCard className="lg:col-start-3 lg:row-span-2">
+    <SectionCard className="lg:col-start-3 lg:row-span-2" style={{ animationDelay: "390ms" }}>
       <div className="space-y-2.5">
         <p className="text-xs font-medium uppercase tracking-[0.22em] text-(--muted)">
           {content.skills.eyebrow}

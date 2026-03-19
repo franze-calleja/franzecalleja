@@ -3,7 +3,7 @@ import SectionCard from "./section-card";
 
 export default function AboutCard() {
   return (
-    <SectionCard className="lg:col-span-2">
+    <SectionCard className="lg:col-span-2" style={{ animationDelay: "90ms" }}>
       <div className="space-y-2.5">
         <div className="space-y-2">
           <p className="text-xs font-medium uppercase tracking-[0.22em] text-(--muted)">

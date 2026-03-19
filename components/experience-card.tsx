@@ -3,7 +3,7 @@ import SectionCard from "./section-card";
 
 export default function ExperienceCard() {
   return (
-    <SectionCard>
+    <SectionCard style={{ animationDelay: "180ms" }}>
       <div className="space-y-2.5">
         <div className="space-y-2">
           <p className="text-xs font-medium uppercase tracking-[0.22em] text-(--muted)">

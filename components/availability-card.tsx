@@ -9,7 +9,7 @@ export default function AvailabilityCard() {
   const isOpen = statusType === "open";
 
   return (
-    <SectionCard>
+    <SectionCard style={{ animationDelay: "750ms" }}>
       <div className="space-y-2.5">
         <p className="text-xs font-medium uppercase tracking-[0.22em] text-(--muted)">
           {content.availability.eyebrow}

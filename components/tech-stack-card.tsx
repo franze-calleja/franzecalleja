@@ -29,7 +29,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 
 export default function TechStackCard() {
   return (
-    <SectionCard className="lg:col-start-1 lg:col-span-2">
+    <SectionCard className="lg:col-start-1 lg:col-span-2" style={{ animationDelay: "300ms" }}>
       <div className="space-y-2.5">
         <p className="text-xs font-medium uppercase tracking-[0.22em] text-(--muted)">
           {content.techstack.eyebrow}

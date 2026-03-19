@@ -40,7 +40,7 @@ export default function GalleryCard() {
   }, [isPaused]);
 
   return (
-    <SectionCard className="lg:col-span-3">
+    <SectionCard className="lg:col-span-3" style={{ animationDelay: "840ms" }}>
       <div className="min-w-0 space-y-2.5">
         <div className="flex items-end justify-between gap-3">
           <div className="space-y-0.5">

@@ -3,7 +3,7 @@ import SectionCard from "./section-card";
 
 export default function EducationCard() {
   return (
-    <SectionCard>
+    <SectionCard style={{ animationDelay: "570ms" }}>
       <div className="space-y-2.5">
         <p className="text-xs font-medium uppercase tracking-[0.22em] text-(--muted)">
           {content.education.eyebrow}

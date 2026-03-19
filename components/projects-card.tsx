@@ -8,7 +8,7 @@ const previewProjects = content.projects.items.slice(0, 4);
 
 export default function ProjectsCard() {
   return (
-    <SectionCard className="lg:col-start-1 lg:col-span-2">
+    <SectionCard className="lg:col-start-1 lg:col-span-2" style={{ animationDelay: "480ms" }}>
       <div className="space-y-2.5">
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs font-medium uppercase tracking-[0.22em] text-(--muted)">

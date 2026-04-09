@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import content from "@/app/profile-data.json";
 import SectionCard from "./section-card";
+import { ArrowUpRight } from "lucide-react";
 
 export default function SkillsCard() {
   return (
@@ -16,7 +17,7 @@ export default function SkillsCard() {
             className="inline-flex items-center gap-1 text-xs font-medium text-(--muted) transition-colors hover:text-foreground"
           >
             View all
-            <span aria-hidden="true">↗</span>
+            <ArrowUpRight className="h-3.5 w-3.5" />
           </Link>
         </div>
 

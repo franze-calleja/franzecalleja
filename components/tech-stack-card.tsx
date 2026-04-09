@@ -9,6 +9,7 @@ import {
   Server,
   Container,
   Zap,
+  ArrowUpRight,
 } from "lucide-react";
 
 import Link from "next/link";
@@ -42,7 +43,7 @@ export default function TechStackCard() {
             className="inline-flex items-center gap-1 text-xs font-medium text-(--muted) transition-colors hover:text-foreground"
           >
             View all
-            <span aria-hidden="true">↗</span>
+            <ArrowUpRight className="h-3.5 w-3.5" />
           </Link>
         </div>
 

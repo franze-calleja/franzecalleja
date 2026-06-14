@@ -265,7 +265,7 @@ body {
 
 .bside-hint {
   position: absolute;
-  left: -0.35rem;
+  right: -0.35rem;
   bottom: -0.6rem;
   z-index: 5;
   display: inline-flex;

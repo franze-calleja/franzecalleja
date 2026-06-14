@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 
 const THRESHOLD = 5;
-// a touch above the portal's 1500ms tap window, so the countdown bounces back
+// a touch above the portal's 3000ms tap window, so the countdown bounces back
 // to full only once a tap streak has truly lapsed
-const RESET_MS = 1700;
+const RESET_MS = 3200;
 
 // A glitchy "leaking" portal affordance pinned near the avatar. It listens to
 // the portal's `b-side:tap` broadcast to count down, and tapping it also feeds

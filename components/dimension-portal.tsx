@@ -48,7 +48,7 @@ export default function DimensionPortal() {
   const pathname = usePathname();
   const overlayRef = useRef<HTMLDivElement>(null);
   const matcherRef = useRef(createSequenceMatcher(KONAMI_SEQUENCE));
-  const clickerRef = useRef(createMultiClickCounter({ threshold: 5, windowMs: 1500 }));
+  const clickerRef = useRef(createMultiClickCounter({ threshold: 5, windowMs: 3000 }));
   const warpingRef = useRef(false);
   const [showDpad, setShowDpad] = useState(false);
   const [warpLabel, setWarpLabel] = useState("ENTERING THE B-SIDE…");

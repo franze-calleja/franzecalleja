@@ -66,6 +66,16 @@
 .bside .bs-fill-violet { background: var(--bs-accent-violet); color: #ffffff; }
 .bside .bs-fill-ink { background: #0E100F; color: #f3efdd; }
 
+/* tags on coloured fill blocks must keep fixed contrast — the block bg is
+   always the accent colour regardless of theme, so var(--background) would
+   make the tag invisible in dark mode (black on black). */
+.bside .bs-fill-pink .bs-tag,
+.bside .bs-fill-cyan .bs-tag,
+.bside .bs-fill-yellow .bs-tag {
+  background: #f3efdd;
+  color: #0E100F;
+}
+
 /* reveal: hidden start state; the reveal hook animates to visible.
    When JS/GSAP is unavailable OR reduced motion is on, content must still show,
    so the hook sets data-revealed="true" immediately in those cases. */

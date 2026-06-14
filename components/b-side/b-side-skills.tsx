@@ -1,27 +1,22 @@
-import Link from "next/link";
 import content from "@/app/profile-data.json";
 import BrutalBlock from "./brutal-block";
-
-function bar(level: number) {
-  const filled = Math.max(0, Math.min(8, Math.round(level / 12.5))); // clamp to 0..8 blocks
-  return "█".repeat(filled) + " ".repeat(8 - filled);
-}
 
 export default function BSideSkills() {
   return (
     <BrutalBlock className="bs-fill-ink">
-      <div className="flex items-center justify-between">
-        <span className="bs-idx" style={{ background: "#ffe600", color: "#0E100F" }}>
-          04 / SKILLS
-        </span>
-        <Link href="/b-side/stack" className="bs-tag" style={{ color: "#0E100F" }}>
-          VIEW ALL →
-        </Link>
-      </div>
-      <div className="bs-mono" style={{ marginTop: "0.7rem", fontSize: "0.8rem", lineHeight: 2 }}>
+      <span className="bs-idx" style={{ background: "#ffe600", color: "#0E100F" }}>
+        04 / SKILLS
+      </span>
+      <div style={{ marginTop: "0.7rem", display: "grid", gap: "0.65rem" }}>
         {content.skills.overall.map((s) => (
-          <div key={s.label} style={{ whiteSpace: "pre" }}>
-            {s.label.toUpperCase().padEnd(10, " ")} [{bar(s.level)}] {s.level}
+          <div key={s.label}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.3rem" }}>
+              <span className="bs-mono" style={{ fontSize: "0.7rem", fontWeight: 700 }}>{s.label.toUpperCase()}</span>
+              <span className="bs-mono" style={{ fontSize: "0.7rem", opacity: 0.7 }}>{s.level}</span>
+            </div>
+            <div style={{ height: "5px", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)" }}>
+              <div style={{ height: "100%", width: `${s.level}%`, background: "#ffe600" }} />
+            </div>
           </div>
         ))}
       </div>

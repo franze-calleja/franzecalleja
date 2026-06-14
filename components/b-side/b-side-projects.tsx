@@ -2,7 +2,10 @@ import Link from "next/link";
 import content from "@/app/profile-data.json";
 import BrutalBlock from "./brutal-block";
 
+const PREVIEW_COUNT = 3;
+
 export default function BSideProjects() {
+  const preview = content.projects.items.slice(0, PREVIEW_COUNT);
   return (
     <BrutalBlock className="bs-fill-pink">
       <div className="flex items-center justify-between">
@@ -12,7 +15,7 @@ export default function BSideProjects() {
       <div
         style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "0.7rem", marginTop: "0.7rem" }}
       >
-        {content.projects.items.map((p) => (
+        {preview.map((p) => (
           <a
             key={p.name}
             href={p.href}

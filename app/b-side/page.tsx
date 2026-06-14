@@ -18,18 +18,18 @@ export default function BSidePage() {
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-8">
-      <div ref={ref} style={{ display: "grid", gap: "1rem" }}>
-        <BSideHero />
+      <div ref={ref} className="bs-grid">
+        <div className="col-full"><BSideHero /></div>
         <BSideAbout />
         <BSideExperience />
         <BSideStack />
         <BSideSkills />
-        <BSideProjects />
+        <div className="col-full"><BSideProjects /></div>
         <BSideEducation />
         <BSideTestimonials />
         <BSideAvailability />
         <BSideGallery />
-        <BSideFooter />
+        <div className="col-full"><BSideFooter /></div>
       </div>
     </main>
   );

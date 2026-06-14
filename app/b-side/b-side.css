@@ -75,3 +75,19 @@
 @media (prefers-reduced-motion: reduce) {
   .bside [data-reveal="true"] { opacity: 1; }
 }
+
+/* ── Page grid ───────────────────────────────────────────────────────────── */
+.bside .bs-grid {
+  display: grid;
+  gap: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .bside .bs-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .bside .bs-grid .col-full {
+    grid-column: 1 / -1;
+  }
+}

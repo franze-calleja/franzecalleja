@@ -7,6 +7,7 @@ import { Briefcase, Github, Linkedin, Mail, MapPin } from "lucide-react";
 import content from "@/app/profile-data.json";
 import SectionCard from "./section-card";
 import ThemeToggle from "./theme-toggle";
+import BSidePortalHint from "./b-side-portal-hint";
 
 const iconMap = {
   mail: Mail,
@@ -41,11 +42,13 @@ export default function ProfileHeader() {
     <SectionCard className="w-full lg:p-6">
       <div className="relative flex flex-row items-stretch gap-3 sm:justify-between sm:gap-5">
         <div className="flex flex-1 items-stretch gap-3 pr-12 sm:gap-4 sm:pr-0">
+          <div className="relative shrink-0 self-stretch">
           <button
             type="button"
             aria-pressed={isTouchPointer ? isFlipped : undefined}
             aria-label={`Show ${content.profile.name} icon`}
             onClick={() => {
+              window.dispatchEvent(new CustomEvent("b-side:avatar-click"));
               if (isTouchPointer) {
                 setIsFlipped((current) => !current);
               }
@@ -79,6 +82,8 @@ export default function ProfileHeader() {
               </div>
             </div>
           </button>
+            <BSidePortalHint />
+          </div>
 
           <div className="min-w-0 flex-1 space-y-2.5 self-stretch sm:pt-1">
             <div className="space-y-1">
@@ -130,8 +135,83 @@ export default function ProfileHeader() {
           </div>
         </div>
 
-        <div className="absolute right-0 top-0 sm:static sm:ml-auto">
+        <div className="absolute right-0 top-0 sm:static sm:ml-auto sm:flex sm:flex-col sm:items-end sm:justify-between sm:self-stretch">
           <ThemeToggle />
+
+          {/* Arrow keys — desktop only, feeds the konami sequence */}
+          <div className="hidden lg:flex flex-col items-end gap-2">
+            <span
+              className="konami-glitch konami-glitch--dim"
+              data-text="↑↑↓↓←→←→BA"
+              style={{
+                fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+                fontSize: "0.58rem",
+                letterSpacing: "0.1em",
+                whiteSpace: "nowrap",
+              }}
+            >
+              ↑↑↓↓←→←→BA
+            </span>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(3, 2rem)",
+                gridTemplateRows: "repeat(2, 2rem)",
+                gap: "3px",
+              }}
+            >
+              <span aria-hidden="true" />
+              <button
+                type="button"
+                className="kbd-arrow"
+                aria-label="Konami: arrow up"
+                onClick={() =>
+                  window.dispatchEvent(
+                    new CustomEvent("b-side:feedkey", { detail: { key: "ArrowUp" } }),
+                  )
+                }
+              >
+                ↑
+              </button>
+              <span aria-hidden="true" />
+              <button
+                type="button"
+                className="kbd-arrow"
+                aria-label="Konami: arrow left"
+                onClick={() =>
+                  window.dispatchEvent(
+                    new CustomEvent("b-side:feedkey", { detail: { key: "ArrowLeft" } }),
+                  )
+                }
+              >
+                ←
+              </button>
+              <button
+                type="button"
+                className="kbd-arrow"
+                aria-label="Konami: arrow down"
+                onClick={() =>
+                  window.dispatchEvent(
+                    new CustomEvent("b-side:feedkey", { detail: { key: "ArrowDown" } }),
+                  )
+                }
+              >
+                ↓
+              </button>
+              <button
+                type="button"
+                className="kbd-arrow"
+                aria-label="Konami: arrow right"
+                onClick={() =>
+                  window.dispatchEvent(
+                    new CustomEvent("b-side:feedkey", { detail: { key: "ArrowRight" } }),
+                  )
+                }
+              >
+                →
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </SectionCard>

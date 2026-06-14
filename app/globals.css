@@ -253,3 +253,216 @@ body {
     transform: none;
   }
 }
+
+/* B-Side portal hint: a glitchy "leaking" affordance pinned near the avatar */
+@keyframes bside-hint-jitter {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-1px, 1px); }
+  40% { transform: translate(1px, -1px); }
+  60% { transform: translate(-1px, -1px); }
+  80% { transform: translate(1px, 1px); }
+}
+
+.bside-hint {
+  position: absolute;
+  right: -0.35rem;
+  bottom: -0.6rem;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.18rem 0.45rem;
+  border: 1px solid var(--foreground);
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--foreground);
+  animation: bside-hint-jitter 1.4s steps(2, end) infinite;
+}
+
+.bside-hint:hover {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.bside-hint__arrow {
+  display: inline-block;
+  animation: bside-hint-jitter 0.55s steps(2, end) infinite;
+}
+
+.bside-hint__label {
+  position: relative;
+  display: inline-block;
+}
+
+.bside-hint__label::before,
+.bside-hint__label::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.bside-hint__label::before {
+  color: #ff00ea;
+  transform: translateX(-1px);
+}
+
+.bside-hint__label::after {
+  color: #00e5ff;
+  transform: translateX(1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bside-hint,
+  .bside-hint__arrow {
+    animation: none;
+  }
+}
+
+/* ── Konami strap ────────────────────────────────────────────────────────── */
+@keyframes glitch-clip-1 {
+  0%,  86%, 100% { clip-path: inset(100% 0 0 0); transform: translate(0, 0); }
+  87% { clip-path: inset(18% 0 66% 0); transform: translate(-3px, 0); }
+  89% { clip-path: inset(52% 0 30% 0); transform: translate( 3px, 0); }
+  91% { clip-path: inset( 5% 0 80% 0); transform: translate(-2px, 0); }
+  93% { clip-path: inset(74% 0 10% 0); transform: translate( 2px, 0); }
+  95% { clip-path: inset(35% 0 48% 0); transform: translate(-1px, 0); }
+}
+
+@keyframes glitch-clip-2 {
+  0%,  86%, 100% { clip-path: inset(100% 0 0 0); transform: translate(0, 0); }
+  87% { clip-path: inset(62% 0 12% 0); transform: translate( 3px, 0); }
+  89% { clip-path: inset(10% 0 75% 0); transform: translate(-3px, 0); }
+  91% { clip-path: inset(44% 0 38% 0); transform: translate( 2px, 0); }
+  93% { clip-path: inset(84% 0  4% 0); transform: translate(-2px, 0); }
+  95% { clip-path: inset(25% 0 60% 0); transform: translate( 1px, 0); }
+}
+
+.konami-strap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 2rem;
+  background: #ffe600;
+  border-radius: 0.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform-origin: top center;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: default;
+  user-select: none;
+}
+
+/* Peel-up corner — bottom right */
+.konami-strap::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 0 22px 22px;
+  border-color: transparent transparent var(--background) transparent;
+  transition: border-width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.konami-strap:hover {
+  transform: perspective(500px) rotateX(6deg);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+}
+
+.konami-strap:hover::after {
+  border-width: 0 0 44px 44px;
+}
+
+.konami-glitch {
+  position: relative;
+  display: inline-block;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  color: #0e100f;
+}
+
+.konami-glitch::before,
+.konami-glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  background: #ffe600;
+}
+
+/* Dim variant: used on card backgrounds (not the yellow strap) */
+.konami-glitch--dim {
+  color: var(--foreground);
+  opacity: 0.35;
+}
+
+.konami-glitch--dim::before,
+.konami-glitch--dim::after {
+  background: transparent;
+  opacity: 0.8;
+}
+
+.konami-glitch::before {
+  color: #ff5da2;
+  animation: glitch-clip-1 6s infinite linear;
+}
+
+.konami-glitch::after {
+  color: #00e0c6;
+  animation: glitch-clip-2 6s infinite linear;
+  animation-delay: 0.7s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .konami-glitch::before,
+  .konami-glitch::after {
+    animation: none;
+    display: none;
+  }
+}
+
+/* ── Keyboard arrow keys (profile header, desktop only) ──────────────────── */
+.kbd-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1.5px solid var(--foreground);
+  border-bottom: 3px solid var(--foreground);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--foreground);
+  font-size: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.1s ease, transform 0.07s ease, border-bottom-width 0.07s ease;
+}
+
+.kbd-arrow:hover {
+  background: var(--hover);
+}
+
+.kbd-arrow:active {
+  transform: translateY(1px);
+  border-bottom-width: 1.5px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kbd-arrow {
+    transition: none;
+  }
+}

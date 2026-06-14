@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import ChatAssistant from "@/components/chat-assistant";
+import DimensionPortal from "@/components/dimension-portal";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -89,6 +90,7 @@ export default function RootLayout({
       >
         {children}
         <ChatAssistant />
+        <DimensionPortal />
       </body>
     </html>
   );

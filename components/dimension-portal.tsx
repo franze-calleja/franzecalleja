@@ -51,6 +51,7 @@ export default function DimensionPortal() {
   const clickerRef = useRef(createMultiClickCounter({ threshold: 5, windowMs: 1500 }));
   const warpingRef = useRef(false);
   const [showDpad, setShowDpad] = useState(false);
+  const [warpLabel, setWarpLabel] = useState("ENTERING THE B-SIDE…");
 
   const onB = pathname.startsWith("/b-side");
 
@@ -58,6 +59,9 @@ export default function DimensionPortal() {
     (dest: string) => {
       if (warpingRef.current) return;
       warpingRef.current = true;
+      setWarpLabel(
+        dest === "/b-side" ? "ENTERING THE B-SIDE…" : "EXITING THE B-SIDE…",
+      );
       const overlay = overlayRef.current;
       if (!overlay) {
         router.push(dest);
@@ -149,7 +153,7 @@ export default function DimensionPortal() {
           pointerEvents: "none",
         }}
       >
-        ENTERING THE B-SIDE…
+        {warpLabel}
       </div>
 
       {/* touch d-pad: only on the main site, toggled by a small glyph */}

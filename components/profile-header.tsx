@@ -42,6 +42,7 @@ export default function ProfileHeader() {
     <SectionCard className="w-full lg:p-6">
       <div className="relative flex flex-row items-stretch gap-3 sm:justify-between sm:gap-5">
         <div className="flex flex-1 items-stretch gap-3 pr-12 sm:gap-4 sm:pr-0">
+          <div className="relative shrink-0 self-stretch">
           <button
             type="button"
             aria-pressed={isTouchPointer ? isFlipped : undefined}
@@ -81,6 +82,8 @@ export default function ProfileHeader() {
               </div>
             </div>
           </button>
+            <BSidePortalHint />
+          </div>
 
           <div className="min-w-0 flex-1 space-y-2.5 self-stretch sm:pt-1">
             <div className="space-y-1">
@@ -135,8 +138,6 @@ export default function ProfileHeader() {
         <div className="absolute right-0 top-0 sm:static sm:ml-auto">
           <ThemeToggle />
         </div>
-
-        <BSidePortalHint />
       </div>
     </SectionCard>
   );

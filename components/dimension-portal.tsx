@@ -106,6 +106,16 @@ export default function DimensionPortal() {
     return () => window.removeEventListener("keydown", handler);
   }, [feedKey]);
 
+  // on-screen arrow key buttons (profile header, desktop)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const key = (e as CustomEvent<{ key: string }>).detail?.key;
+      if (key) feedKey(key);
+    };
+    window.addEventListener("b-side:feedkey", handler);
+    return () => window.removeEventListener("b-side:feedkey", handler);
+  }, [feedKey]);
+
   // avatar hotspot clicks (dispatched from profile-header / the portal hint).
   // Broadcasts the remaining tap count so the on-screen hint can count down.
   useEffect(() => {

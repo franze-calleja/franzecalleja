@@ -135,8 +135,83 @@ export default function ProfileHeader() {
           </div>
         </div>
 
-        <div className="absolute right-0 top-0 sm:static sm:ml-auto">
+        <div className="absolute right-0 top-0 sm:static sm:ml-auto sm:flex sm:flex-col sm:items-end sm:justify-between sm:self-stretch">
           <ThemeToggle />
+
+          {/* Arrow keys — desktop only, feeds the konami sequence */}
+          <div className="hidden lg:flex flex-col items-end gap-2">
+            <span
+              className="konami-glitch konami-glitch--dim"
+              data-text="↑↑↓↓←→←→BA"
+              style={{
+                fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+                fontSize: "0.58rem",
+                letterSpacing: "0.1em",
+                whiteSpace: "nowrap",
+              }}
+            >
+              ↑↑↓↓←→←→BA
+            </span>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(3, 2rem)",
+                gridTemplateRows: "repeat(2, 2rem)",
+                gap: "3px",
+              }}
+            >
+              <span aria-hidden="true" />
+              <button
+                type="button"
+                className="kbd-arrow"
+                aria-label="Konami: arrow up"
+                onClick={() =>
+                  window.dispatchEvent(
+                    new CustomEvent("b-side:feedkey", { detail: { key: "ArrowUp" } }),
+                  )
+                }
+              >
+                ↑
+              </button>
+              <span aria-hidden="true" />
+              <button
+                type="button"
+                className="kbd-arrow"
+                aria-label="Konami: arrow left"
+                onClick={() =>
+                  window.dispatchEvent(
+                    new CustomEvent("b-side:feedkey", { detail: { key: "ArrowLeft" } }),
+                  )
+                }
+              >
+                ←
+              </button>
+              <button
+                type="button"
+                className="kbd-arrow"
+                aria-label="Konami: arrow down"
+                onClick={() =>
+                  window.dispatchEvent(
+                    new CustomEvent("b-side:feedkey", { detail: { key: "ArrowDown" } }),
+                  )
+                }
+              >
+                ↓
+              </button>
+              <button
+                type="button"
+                className="kbd-arrow"
+                aria-label="Konami: arrow right"
+                onClick={() =>
+                  window.dispatchEvent(
+                    new CustomEvent("b-side:feedkey", { detail: { key: "ArrowRight" } }),
+                  )
+                }
+              >
+                →
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </SectionCard>

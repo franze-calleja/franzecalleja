@@ -7,6 +7,7 @@ import { Briefcase, Github, Linkedin, Mail, MapPin } from "lucide-react";
 import content from "@/app/profile-data.json";
 import SectionCard from "./section-card";
 import ThemeToggle from "./theme-toggle";
+import BSidePortalHint from "./b-side-portal-hint";
 
 const iconMap = {
   mail: Mail,
@@ -134,6 +135,8 @@ export default function ProfileHeader() {
         <div className="absolute right-0 top-0 sm:static sm:ml-auto">
           <ThemeToggle />
         </div>
+
+        <BSidePortalHint />
       </div>
     </SectionCard>
   );

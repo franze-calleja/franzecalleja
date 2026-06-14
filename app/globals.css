@@ -253,3 +253,76 @@ body {
     transform: none;
   }
 }
+
+/* B-Side portal hint: a glitchy "leaking" affordance pinned near the avatar */
+@keyframes bside-hint-jitter {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-1px, 1px); }
+  40% { transform: translate(1px, -1px); }
+  60% { transform: translate(-1px, -1px); }
+  80% { transform: translate(1px, 1px); }
+}
+
+.bside-hint {
+  position: absolute;
+  left: -0.35rem;
+  bottom: -0.6rem;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.18rem 0.45rem;
+  border: 1px solid var(--foreground);
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--foreground);
+  animation: bside-hint-jitter 1.4s steps(2, end) infinite;
+}
+
+.bside-hint:hover {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.bside-hint__arrow {
+  display: inline-block;
+  animation: bside-hint-jitter 0.55s steps(2, end) infinite;
+}
+
+.bside-hint__label {
+  position: relative;
+  display: inline-block;
+}
+
+.bside-hint__label::before,
+.bside-hint__label::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.bside-hint__label::before {
+  color: #ff00ea;
+  transform: translateX(-1px);
+}
+
+.bside-hint__label::after {
+  color: #00e5ff;
+  transform: translateX(1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bside-hint,
+  .bside-hint__arrow {
+    animation: none;
+  }
+}

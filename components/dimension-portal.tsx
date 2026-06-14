@@ -106,11 +106,16 @@ export default function DimensionPortal() {
     return () => window.removeEventListener("keydown", handler);
   }, [feedKey]);
 
-  // avatar hotspot clicks (dispatched from profile-header)
+  // avatar hotspot clicks (dispatched from profile-header / the portal hint).
+  // Broadcasts the remaining tap count so the on-screen hint can count down.
   useEffect(() => {
     const handler = () => {
       if (onB) return;
-      if (clickerRef.current.click(Date.now())) warpTo("/b-side");
+      const { triggered, remaining } = clickerRef.current.click(Date.now());
+      window.dispatchEvent(
+        new CustomEvent("b-side:tap", { detail: { remaining } }),
+      );
+      if (triggered) warpTo("/b-side");
     };
     window.addEventListener("b-side:avatar-click", handler);
     return () => window.removeEventListener("b-side:avatar-click", handler);

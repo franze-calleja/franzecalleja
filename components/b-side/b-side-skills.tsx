@@ -3,7 +3,7 @@ import content from "@/app/profile-data.json";
 import BrutalBlock from "./brutal-block";
 
 function bar(level: number) {
-  const filled = Math.round(level / 12.5); // 0..8 blocks
+  const filled = Math.max(0, Math.min(8, Math.round(level / 12.5))); // clamp to 0..8 blocks
   return "█".repeat(filled) + " ".repeat(8 - filled);
 }
 

@@ -46,6 +46,7 @@ export default function ProfileHeader() {
             aria-pressed={isTouchPointer ? isFlipped : undefined}
             aria-label={`Show ${content.profile.name} icon`}
             onClick={() => {
+              window.dispatchEvent(new CustomEvent("b-side:avatar-click"));
               if (isTouchPointer) {
                 setIsFlipped((current) => !current);
               }

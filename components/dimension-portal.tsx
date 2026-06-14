@@ -21,10 +21,17 @@ async function playWarp(overlay: HTMLElement, after: () => void) {
   try {
     const { default: gsap } = await import("gsap");
     const tl = gsap.timeline({ onComplete: after });
-    tl.fromTo(overlay, { opacity: 0 }, { opacity: 1, duration: 0.15 })
-      .to(overlay, { x: 6, duration: 0.04, repeat: 8, yoyo: true })
-      .to(overlay, { filter: "hue-rotate(180deg) contrast(2)", duration: 0.15 })
-      .to(overlay, { duration: 0.25 });
+    try {
+      tl.fromTo(overlay, { opacity: 0 }, { opacity: 1, duration: 0.15 })
+        .to(overlay, { x: 6, duration: 0.04, repeat: 8, yoyo: true })
+        .to(overlay, { filter: "hue-rotate(180deg) contrast(2)", duration: 0.15 })
+        .to(overlay, { duration: 0.25 });
+    } catch (err) {
+      // building the timeline failed after creation: kill it so onComplete
+      // can't fire alongside the fallback below
+      tl.kill();
+      throw err;
+    }
   } catch {
     window.setTimeout(after, 250);
   }
@@ -42,24 +49,32 @@ export default function DimensionPortal() {
   const overlayRef = useRef<HTMLDivElement>(null);
   const matcherRef = useRef(createSequenceMatcher(KONAMI_SEQUENCE));
   const clickerRef = useRef(createMultiClickCounter({ threshold: 5, windowMs: 1500 }));
+  const warpingRef = useRef(false);
   const [showDpad, setShowDpad] = useState(false);
 
   const onB = pathname.startsWith("/b-side");
 
   const warpTo = useCallback(
     (dest: string) => {
+      if (warpingRef.current) return;
+      warpingRef.current = true;
       const overlay = overlayRef.current;
       if (!overlay) {
         router.push(dest);
+        warpingRef.current = false;
         return;
       }
       playWarp(overlay, () => {
         router.push(dest);
         // hide overlay shortly after navigation
         window.setTimeout(() => {
-          overlay.style.display = "none";
-          overlay.style.opacity = "0";
-          overlay.style.filter = "none";
+          const o = overlayRef.current;
+          if (o) {
+            o.style.display = "none";
+            o.style.opacity = "0";
+            o.style.filter = "none";
+          }
+          warpingRef.current = false;
         }, 400);
       });
     },

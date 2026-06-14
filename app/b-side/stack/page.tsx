@@ -8,7 +8,7 @@ import BrutalBlock from "@/components/b-side/brutal-block";
 const sortedTech = [...content.techstack.items].sort((a, b) => b.level - a.level);
 
 function bar(level: number) {
-  const filled = Math.round(level / 10);
+  const filled = Math.max(0, Math.min(10, Math.round(level / 10)));
   return "█".repeat(filled) + " ".repeat(10 - filled);
 }
 

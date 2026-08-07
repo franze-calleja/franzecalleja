@@ -10,7 +10,8 @@ import BSideProjects from "@/components/b-side/b-side-projects";
 import BSideEducation from "@/components/b-side/b-side-education";
 import BSideTestimonials from "@/components/b-side/b-side-testimonials";
 import BSideAvailability from "@/components/b-side/b-side-availability";
-import BSideGallery from "@/components/b-side/b-side-gallery";
+import BSideGithubContributions from "@/components/b-side/b-side-github-contributions";
+import BSideGithubStats from "@/components/b-side/b-side-github-stats";
 import BSideFooter from "@/components/b-side/b-side-footer";
 
 export default function BSidePage() {
@@ -28,7 +29,8 @@ export default function BSidePage() {
         <BSideEducation />
         <BSideTestimonials />
         <BSideAvailability />
-        <BSideGallery />
+        <BSideGithubStats />
+        <div className="col-full"><BSideGithubContributions /></div>
         <div className="col-full"><BSideFooter /></div>
       </div>
     </main>

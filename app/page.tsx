@@ -1,6 +1,7 @@
 import AboutCard from "@/components/about-card";
 import AvailabilityCard from "@/components/availability-card";
-import GalleryCard from "@/components/gallery-card";
+import GithubContributionsCard from "@/components/github-contributions-card";
+import GithubStatsCard from "@/components/github-stats-card";
 import FooterCard from "@/components/footer-card";
 import EducationCard from "@/components/education-card";
 import ExperienceCard from "@/components/experience-card";
@@ -33,8 +34,9 @@ export default function Home() {
           <AvailabilityCard />
         </section>
 
-        <section id="gallery" className="grid grid-cols-1 gap-2 lg:grid-cols-3">
-          <GalleryCard />
+        <section id="github" className="grid grid-cols-1 gap-2 lg:grid-cols-3">
+          <GithubContributionsCard />
+          <GithubStatsCard />
         </section>
 
         <section className="grid gap-2 lg:grid-cols-3">

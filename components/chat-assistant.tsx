@@ -32,6 +32,7 @@ export default function ChatAssistant() {
   const [messages, setMessages] = useState<ChatMessage[]>(starterMessages);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [isStreamingReply, setIsStreamingReply] = useState(false);
   const [calloutVisible, setCalloutVisible] = useState(false);
   const [calloutIndex, setCalloutIndex] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -77,6 +78,7 @@ export default function ChatAssistant() {
     setMessages(nextMessages);
     setInput("");
     setIsSending(true);
+    let isStreamingReplyStarted = false;
 
     try {
       const response = await fetch("/api/chat", {
@@ -87,20 +89,60 @@ export default function ChatAssistant() {
         body: JSON.stringify({ messages: nextMessages }),
       });
 
-      const data = (await response.json()) as { reply?: string; error?: string };
+      const contentType = response.headers.get("content-type") ?? "";
 
-      if (!response.ok) {
-        throw new Error(data.error ?? "Something went wrong.");
+      // Errors and local fallbacks come back as JSON; live answers stream as text.
+      if (!response.ok || contentType.includes("application/json")) {
+        const data = (await response.json()) as { reply?: string; error?: string };
+
+        if (!response.ok) {
+          throw new Error(data.error ?? "Something went wrong.");
+        }
+
+        setMessages((currentMessages) => [
+          ...currentMessages,
+          {
+            role: "assistant",
+            content:
+              data.reply ?? "I could not generate a response right now. Please try again.",
+          },
+        ]);
+
+        return;
       }
 
-      setMessages((currentMessages) => [
-        ...currentMessages,
-        {
-          role: "assistant",
-          content:
-            data.reply ?? "I could not generate a response right now. Please try again.",
-        },
-      ]);
+      const reader = response.body?.getReader();
+
+      if (!reader) {
+        throw new Error("I could not read the response. Please try again.");
+      }
+
+      const decoder = new TextDecoder();
+      let assistantText = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) {
+          break;
+        }
+
+        assistantText += decoder.decode(value, { stream: true });
+
+        if (!isStreamingReplyStarted) {
+          isStreamingReplyStarted = true;
+          setIsStreamingReply(true);
+          setMessages((currentMessages) => [
+            ...currentMessages,
+            { role: "assistant", content: assistantText },
+          ]);
+        } else {
+          setMessages((currentMessages) => [
+            ...currentMessages.slice(0, -1),
+            { role: "assistant", content: assistantText },
+          ]);
+        }
+      }
     } catch (error) {
       setMessages((currentMessages) => [
         ...currentMessages,
@@ -114,6 +156,7 @@ export default function ChatAssistant() {
       ]);
     } finally {
       setIsSending(false);
+      setIsStreamingReply(false);
     }
   }
 
@@ -171,7 +214,7 @@ export default function ChatAssistant() {
             <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
               {messages.map((message, index) => (
                 <div
-                  key={`${message.role}-${index}-${message.content.slice(0, 12)}`}
+                  key={`${message.role}-${index}`}
                   className={
                     message.role === "user"
                       ? "ml-auto max-w-[85%] rounded-2xl rounded-br-sm bg-foreground px-3 py-2 text-sm text-background"
@@ -181,7 +224,7 @@ export default function ChatAssistant() {
                   {message.content}
                 </div>
               ))}
-              {isSending ? (
+              {isSending && !isStreamingReply ? (
                 <div className="mr-auto max-w-[85%] rounded-2xl rounded-bl-sm bg-(--hover) px-3 py-2 text-sm text-(--muted)">
                   Thinking...
                 </div>

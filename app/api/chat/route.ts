@@ -6,6 +6,7 @@ import {
   type PortfolioContext,
 } from "@/lib/chat-context";
 import { normalizeConversation } from "@/lib/chat-validation";
+import { createSseTextParser } from "@/lib/gemini-stream";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 /** How long to wait for Gemini before answering from local data instead. */
@@ -149,11 +150,17 @@ export async function POST(request: Request) {
     generationConfig: { maxOutputTokens: MAX_OUTPUT_TOKENS },
   };
 
+  // A manual controller rather than AbortSignal.timeout: the timeout must guard
+  // time-to-first-token, not total generation time. AbortSignal.timeout would
+  // cut off a healthy stream mid-answer.
+  const abortController = new AbortController();
+  const timeoutId = setTimeout(() => abortController.abort(), GEMINI_TIMEOUT_MS);
+
   let response: Response;
 
   try {
     response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:streamGenerateContent?alt=sse`,
       {
         method: "POST",
         headers: {
@@ -161,11 +168,11 @@ export async function POST(request: Request) {
           "x-goog-api-key": apiKey,
         },
         body: JSON.stringify(requestBody),
-        signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
+        signal: abortController.signal,
       },
     );
   } catch (error) {
-    // Timeout or network failure — same degraded mode as a 5xx.
+    clearTimeout(timeoutId);
     console.error("[chat] Gemini request did not complete:", error);
 
     return localFallbackResponse(
@@ -175,6 +182,8 @@ export async function POST(request: Request) {
   }
 
   if (!response.ok) {
+    clearTimeout(timeoutId);
+
     const errorText = await response.text().catch(() => "<unreadable>");
     console.error(`[chat] Gemini returned ${response.status}:`, errorText);
 
@@ -193,17 +202,11 @@ export async function POST(request: Request) {
     );
   }
 
-  const data = (await response.json()) as {
-    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-  };
+  const reader = response.body?.getReader();
 
-  const reply = data.candidates?.[0]?.content?.parts
-    ?.map((part) => part.text ?? "")
-    .join("")
-    .trim();
-
-  if (!reply) {
-    console.error("[chat] Gemini returned no text");
+  if (!reader) {
+    clearTimeout(timeoutId);
+    console.error("[chat] Gemini response had no body");
 
     return localFallbackResponse(
       normalized.lastUserMessage,
@@ -211,8 +214,80 @@ export async function POST(request: Request) {
     );
   }
 
-  return NextResponse.json(
-    { reply, model: modelName },
-    { headers: { "X-RateLimit-Remaining": String(remaining) } },
-  );
+  const decoder = new TextDecoder();
+  const parser = createSseTextParser();
+
+  // Pull until the first text delta arrives. Nothing is written to the client
+  // yet, so any failure up to this point can still return JSON.
+  let firstTexts: string[] = [];
+
+  try {
+    while (firstTexts.length === 0) {
+      const { done, value } = await reader.read();
+
+      if (done) {
+        break;
+      }
+
+      firstTexts = parser.push(decoder.decode(value, { stream: true }));
+    }
+  } catch (error) {
+    clearTimeout(timeoutId);
+    console.error("[chat] Gemini stream failed before any output:", error);
+
+    return localFallbackResponse(
+      normalized.lastUserMessage,
+      "The assistant took too long to respond, so this answer comes from local portfolio data.",
+    );
+  }
+
+  clearTimeout(timeoutId);
+
+  if (firstTexts.length === 0) {
+    console.error("[chat] Gemini stream produced no text");
+
+    return localFallbackResponse(
+      normalized.lastUserMessage,
+      "The assistant returned an empty response, so this answer comes from local portfolio data.",
+    );
+  }
+
+  // Past this point the response is committed: bytes go out under a 200, so a
+  // mid-stream failure can only append a notice, never change the status.
+  const encoder = new TextEncoder();
+
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      for (const text of firstTexts) {
+        controller.enqueue(encoder.encode(text));
+      }
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+
+          if (done) {
+            break;
+          }
+
+          for (const text of parser.push(decoder.decode(value, { stream: true }))) {
+            controller.enqueue(encoder.encode(text));
+          }
+        }
+      } catch (error) {
+        console.error("[chat] Gemini stream broke mid-response:", error);
+        controller.enqueue(encoder.encode("\n\n(The response was cut short.)"));
+      } finally {
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Cache-Control": "no-store",
+      "X-RateLimit-Remaining": String(remaining),
+    },
+  });
 }

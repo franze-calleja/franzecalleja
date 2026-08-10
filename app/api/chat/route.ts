@@ -1,29 +1,33 @@
 import { NextResponse } from "next/server";
 
-import content from "@/app/profile-data.json";
+import {
+  portfolioContext,
+  portfolioContextJson,
+  type PortfolioContext,
+} from "@/lib/chat-context";
+import { normalizeConversation } from "@/lib/chat-validation";
 import { checkRateLimit } from "@/lib/rate-limit";
 
-type IncomingMessage = {
-  role?: "user" | "assistant";
-  content?: string;
-};
+/** How long to wait for Gemini before answering from local data instead. */
+const GEMINI_TIMEOUT_MS = 15_000;
 
-type PortfolioContext = {
-  profile: typeof content.profile;
-  about: typeof content.about;
-  experience: typeof content.experience;
-  techstack: typeof content.techstack;
-  projects: typeof content.projects;
-  education: typeof content.education;
-  testimonials: typeof content.testimonials;
-  availability: typeof content.availability;
-};
+/** Upper bound on generated response length, to keep per-request cost bounded. */
+const MAX_OUTPUT_TOKENS = 512;
 
-function buildLocalReply(question: string, portfolioContext: PortfolioContext) {
+/** Built once — the portfolio data is static for the life of the process. */
+const SYSTEM_INSTRUCTION = [
+  "You are a concise, helpful assistant for Franze William Calleja's personal portfolio.",
+  "Answer questions using only the portfolio context provided below.",
+  "If the answer is not in the context, say you do not have that information.",
+  "Keep responses short, natural, and factual.",
+  `Portfolio context: ${portfolioContextJson}`,
+].join("\n\n");
+
+function buildLocalReply(question: string, context: PortfolioContext) {
   const normalizedQuestion = question.toLowerCase();
 
   if (normalizedQuestion.includes("project") || normalizedQuestion.includes("work")) {
-    const projectNames = portfolioContext.projects.items
+    const projectNames = context.projects.items
       .slice(0, 4)
       .map((project) => project.name)
       .join(", ");
@@ -31,8 +35,12 @@ function buildLocalReply(question: string, portfolioContext: PortfolioContext) {
     return `Recent projects include ${projectNames}. I can also share the technologies used on each one.`;
   }
 
-  if (normalizedQuestion.includes("tech") || normalizedQuestion.includes("stack") || normalizedQuestion.includes("tools")) {
-    const techLabels = portfolioContext.techstack.items
+  if (
+    normalizedQuestion.includes("tech") ||
+    normalizedQuestion.includes("stack") ||
+    normalizedQuestion.includes("tools")
+  ) {
+    const techLabels = context.techstack.items
       .slice(0, 6)
       .map((tech) => tech.label)
       .join(", ");
@@ -40,8 +48,12 @@ function buildLocalReply(question: string, portfolioContext: PortfolioContext) {
     return `Franze works mainly with ${techLabels}, along with backend tools like Prisma, MySQL, PostgreSQL, Docker, and Git.`;
   }
 
-  if (normalizedQuestion.includes("experience") || normalizedQuestion.includes("job") || normalizedQuestion.includes("role")) {
-    const firstRoles = portfolioContext.experience.steps
+  if (
+    normalizedQuestion.includes("experience") ||
+    normalizedQuestion.includes("job") ||
+    normalizedQuestion.includes("role")
+  ) {
+    const firstRoles = context.experience.steps
       .slice(0, 3)
       .map((step) => `${step.title} at ${step.caption}`)
       .join("; ");
@@ -49,21 +61,42 @@ function buildLocalReply(question: string, portfolioContext: PortfolioContext) {
     return `He has experience as ${firstRoles}.`;
   }
 
-  if (normalizedQuestion.includes("education") || normalizedQuestion.includes("school") || normalizedQuestion.includes("college")) {
-    const education = portfolioContext.education.items[0];
+  if (
+    normalizedQuestion.includes("education") ||
+    normalizedQuestion.includes("school") ||
+    normalizedQuestion.includes("college")
+  ) {
+    const education = context.education.items[0];
 
     return `${education.degree} at ${education.institution} (${education.year}), with honors: ${education.honors}.`;
   }
 
-  if (normalizedQuestion.includes("available") || normalizedQuestion.includes("contact") || normalizedQuestion.includes("hire")) {
-    return `${portfolioContext.availability.status}. ${portfolioContext.availability.description}`;
+  if (
+    normalizedQuestion.includes("available") ||
+    normalizedQuestion.includes("contact") ||
+    normalizedQuestion.includes("hire")
+  ) {
+    return `${context.availability.status}. ${context.availability.description}`;
   }
 
-  if (normalizedQuestion.includes("about") || normalizedQuestion.includes("who are you") || normalizedQuestion.includes("tell me about")) {
-    return portfolioContext.about.title;
+  if (
+    normalizedQuestion.includes("about") ||
+    normalizedQuestion.includes("who are you") ||
+    normalizedQuestion.includes("tell me about")
+  ) {
+    return context.about.title;
   }
 
   return `I may not have a live Gemini response right now, but I can still help with Franze's profile, projects, experience, tech stack, education, and availability.`;
+}
+
+/** Answer from local portfolio data when Gemini is unavailable. */
+function localFallbackResponse(lastUserMessage: string, warning: string) {
+  return NextResponse.json({
+    reply: buildLocalReply(lastUserMessage, portfolioContext),
+    model: "local-fallback",
+    warning,
+  });
 }
 
 export async function POST(request: Request) {
@@ -78,17 +111,15 @@ export async function POST(request: Request) {
   }
 
   const body = (await request.json().catch(() => null)) as {
-    messages?: IncomingMessage[];
+    messages?: unknown;
   } | null;
 
-  if (!body?.messages?.length) {
-    return NextResponse.json(
-      { error: "No messages were provided." },
-      { status: 400 },
-    );
+  const normalized = normalizeConversation(body?.messages);
+
+  if (!normalized.ok) {
+    return NextResponse.json({ error: normalized.error }, { status: 400 });
   }
 
-  // --- Rate limiting ---
   const ip =
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
     request.headers.get("x-real-ip") ??
@@ -111,102 +142,77 @@ export async function POST(request: Request) {
       },
     );
   }
-  // ---------------------
-
-  const conversation = body.messages
-    .filter((message) => typeof message.content === "string" && message.content.trim())
-    .slice(-10)
-    .map((message) => ({
-      role: message.role === "assistant" ? "model" : "user",
-      parts: [{ text: message.content!.trim() }],
-    }));
-
-  const portfolioContext: PortfolioContext = {
-    profile: content.profile,
-    about: content.about,
-    experience: content.experience,
-    techstack: content.techstack,
-    projects: content.projects,
-    education: content.education,
-    testimonials: content.testimonials,
-    availability: content.availability,
-  };
 
   const requestBody = {
-    systemInstruction: {
-      parts: [
-        {
-          text: [
-            "You are a concise, helpful assistant for Franze William Calleja's personal portfolio.",
-            "Answer questions using only the portfolio context provided below.",
-            "If the answer is not in the context, say you do not have that information.",
-            "Keep responses short, natural, and factual.",
-            `Portfolio context: ${JSON.stringify(portfolioContext)}`,
-          ].join("\n\n"),
-        },
-      ],
-    },
-    contents: conversation,
+    systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
+    contents: normalized.conversation,
+    generationConfig: { maxOutputTokens: MAX_OUTPUT_TOKENS },
   };
 
-  let lastErrorText = "";
-  const lastUserMessage = conversation
-    .slice()
-    .reverse()
-    .find((message) => message.role === "user")?.parts?.[0]?.text ?? "";
+  let response: Response;
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+  try {
+    response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": apiKey,
+        },
+        body: JSON.stringify(requestBody),
+        signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
       },
-      body: JSON.stringify(requestBody),
-    },
-  );
+    );
+  } catch (error) {
+    // Timeout or network failure — same degraded mode as a 5xx.
+    console.error("[chat] Gemini request did not complete:", error);
 
-  if (response.ok) {
-    const data = (await response.json()) as {
-      candidates?: Array<{
-        content?: {
-          parts?: Array<{ text?: string }>;
-        };
-      }>;
-    };
+    return localFallbackResponse(
+      normalized.lastUserMessage,
+      "The assistant took too long to respond, so this answer comes from local portfolio data.",
+    );
+  }
 
-    const reply = data.candidates?.[0]?.content?.parts
-      ?.map((part) => part.text ?? "")
-      .join("")
-      .trim();
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => "<unreadable>");
+    console.error(`[chat] Gemini returned ${response.status}:`, errorText);
 
-    if (!reply) {
-      return NextResponse.json(
-        { error: "Gemini returned an empty response." },
-        { status: 502 },
+    if (response.status === 429 || response.status >= 500) {
+      return localFallbackResponse(
+        normalized.lastUserMessage,
+        response.status === 429
+          ? "Gemini quota is exhausted, so the assistant is answering from local portfolio data."
+          : "Gemini is unavailable, so the assistant is answering from local portfolio data.",
       );
     }
 
     return NextResponse.json(
-      { reply, model: modelName },
-      { headers: { "X-RateLimit-Remaining": String(remaining) } },
+      { error: "The assistant could not answer that right now." },
+      { status: 502 },
     );
   }
 
-  lastErrorText = await response.text();
+  const data = (await response.json()) as {
+    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+  };
 
-  if (response.status === 429 || response.status >= 500) {
-    return NextResponse.json({
-      reply: buildLocalReply(lastUserMessage, portfolioContext),
-      model: "local-fallback",
-      warning: response.status === 429
-        ? "Gemini quota is exhausted, so the assistant is answering from local portfolio data."
-        : `Gemini request failed, so the assistant is answering from local portfolio data. Last error: ${lastErrorText}`,
-    });
+  const reply = data.candidates?.[0]?.content?.parts
+    ?.map((part) => part.text ?? "")
+    .join("")
+    .trim();
+
+  if (!reply) {
+    console.error("[chat] Gemini returned no text");
+
+    return localFallbackResponse(
+      normalized.lastUserMessage,
+      "The assistant returned an empty response, so this answer comes from local portfolio data.",
+    );
   }
 
   return NextResponse.json(
-    { error: `Gemini request failed: ${lastErrorText}` },
-    { status: response.status },
+    { reply, model: modelName },
+    { headers: { "X-RateLimit-Remaining": String(remaining) } },
   );
 }

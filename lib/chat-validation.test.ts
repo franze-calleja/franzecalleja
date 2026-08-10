@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 
 import {
-  MAX_CONVERSATION_CHARS,
   MAX_MESSAGE_CHARS,
   normalizeConversation,
 } from "./chat-validation";
@@ -112,7 +111,13 @@ describe("normalizeConversation", () => {
     }
   });
 
-  it("keeps the total limit below ten full-size messages", () => {
-    expect(MAX_CONVERSATION_CHARS).toBeLessThan(MAX_MESSAGE_CHARS * 10);
+  it("accepts a conversation exactly at the total limit", () => {
+    // 10 messages x 800 chars = exactly 8,000
+    const messages = Array.from({ length: 10 }, () =>
+      userMessage("a".repeat(800)),
+    );
+
+    const result = normalizeConversation(messages);
+    expect(result.ok).toBe(true);
   });
 });

@@ -281,6 +281,9 @@ export async function POST(request: Request) {
         controller.close();
       }
     },
+    cancel() {
+      void reader.cancel();
+    },
   });
 
   return new Response(stream, {

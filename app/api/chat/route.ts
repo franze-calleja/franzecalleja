@@ -147,7 +147,15 @@ export async function POST(request: Request) {
   const requestBody = {
     systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
     contents: normalized.conversation,
-    generationConfig: { maxOutputTokens: MAX_OUTPUT_TOKENS },
+    generationConfig: {
+      maxOutputTokens: MAX_OUTPUT_TOKENS,
+      // Gemini 3 models default to "high" thinking, and thinking tokens draw
+      // from the same maxOutputTokens budget as the visible reply — at 512
+      // tokens, high thinking can consume the whole budget and leave no text
+      // parts at all. Portfolio answers are short and factual, so low
+      // thinking is enough and keeps the budget for actual output.
+      thinkingConfig: { thinkingLevel: "LOW" },
+    },
   };
 
   // A manual controller rather than AbortSignal.timeout: the timeout must guard

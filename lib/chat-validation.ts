@@ -37,6 +37,10 @@ export function normalizeConversation(messages: unknown): NormalizeResult {
 
   const turns: Array<{ role: "user" | "model"; text: string }> = [];
 
+  // Pass 1: keep only turns with non-blank string content. No length check
+  // here — an oversize turn buried in history must not be able to reject the
+  // whole request (that's what bricks the widget once such a turn is stuck
+  // in client-side state; see the per-turn check below, applied post-slice).
   for (const message of messages) {
     const content = (message as { content?: unknown })?.content;
 
@@ -50,13 +54,6 @@ export function normalizeConversation(messages: unknown): NormalizeResult {
       continue;
     }
 
-    if (text.length > MAX_MESSAGE_CHARS) {
-      return {
-        ok: false,
-        error: `Messages are limited to ${MAX_MESSAGE_CHARS} characters. Please shorten your question.`,
-      };
-    }
-
     const role = (message as { role?: unknown })?.role;
     turns.push({ role: role === "assistant" ? "model" : "user", text });
   }
@@ -66,7 +63,25 @@ export function normalizeConversation(messages: unknown): NormalizeResult {
   }
 
   const recent = turns.slice(-MAX_MESSAGES);
-  const totalChars = recent.reduce((total, turn) => total + turn.text.length, 0);
+
+  // Reject only on the newest turn: it's the user's current input, so an
+  // accurate "shorten your question" error applies. An oversize turn earlier
+  // in history is dropped instead, below.
+  const newest = recent[recent.length - 1];
+
+  if (newest.text.length > MAX_MESSAGE_CHARS) {
+    return {
+      ok: false,
+      error: `Messages are limited to ${MAX_MESSAGE_CHARS} characters. Please shorten your question.`,
+    };
+  }
+
+  const trimmedHistory = recent
+    .slice(0, -1)
+    .filter((turn) => turn.text.length <= MAX_MESSAGE_CHARS);
+  const kept = [...trimmedHistory, newest];
+
+  const totalChars = kept.reduce((total, turn) => total + turn.text.length, 0);
 
   if (totalChars > MAX_CONVERSATION_CHARS) {
     return {
@@ -76,11 +91,11 @@ export function normalizeConversation(messages: unknown): NormalizeResult {
   }
 
   const lastUserMessage =
-    [...recent].reverse().find((turn) => turn.role === "user")?.text ?? "";
+    [...kept].reverse().find((turn) => turn.role === "user")?.text ?? "";
 
   return {
     ok: true,
-    conversation: recent.map((turn) => ({
+    conversation: kept.map((turn) => ({
       role: turn.role,
       parts: [{ text: turn.text }],
     })),

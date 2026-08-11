@@ -120,4 +120,51 @@ describe("normalizeConversation", () => {
     const result = normalizeConversation(messages);
     expect(result.ok).toBe(true);
   });
+
+  // Regression coverage for the widget-bricking bug: an oversize message must
+  // only ever be rejected when it is the newest turn. An oversize turn stuck
+  // in history (e.g. a maximally long past Gemini reply, or a rejected
+  // message a client failed to strip) must be dropped silently rather than
+  // repeatedly rejecting an otherwise-valid new question.
+  it("drops an oversize message in history but accepts a short newest turn", () => {
+    const result = normalizeConversation([
+      userMessage("a".repeat(MAX_MESSAGE_CHARS + 500)),
+      userMessage("a short follow-up question"),
+    ]);
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.conversation).toHaveLength(1);
+      expect(result.conversation[0].parts[0].text).toBe("a short follow-up question");
+    }
+  });
+
+  it("rejects when the newest turn itself is over the per-message limit", () => {
+    const result = normalizeConversation([
+      userMessage("a short earlier question"),
+      userMessage("a".repeat(MAX_MESSAGE_CHARS + 1)),
+    ]);
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toContain(String(MAX_MESSAGE_CHARS));
+    }
+  });
+
+  it("drops an oversize assistant turn in history and keeps a short newest user turn", () => {
+    const result = normalizeConversation([
+      userMessage("first question"),
+      { role: "assistant", content: "a".repeat(MAX_MESSAGE_CHARS + 200) },
+      userMessage("second question"),
+    ]);
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.conversation).toHaveLength(2);
+      expect(result.conversation.map((turn) => turn.parts[0].text)).toEqual([
+        "first question",
+        "second question",
+      ]);
+    }
+  });
 });

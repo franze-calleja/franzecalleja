@@ -1,11 +1,13 @@
 "use client";
 
-import { Bot, Send, X } from "lucide-react";
+import { Bot, Eraser, Send, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 type ChatMessage = {
   role: "user" | "assistant";
   content: string;
+  /** Set when a reply came from local fallback data instead of a live Gemini answer. */
+  warning?: string;
 };
 
 const starterMessages: ChatMessage[] = [
@@ -33,6 +35,7 @@ export default function ChatAssistant() {
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [isStreamingReply, setIsStreamingReply] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
   const [calloutVisible, setCalloutVisible] = useState(false);
   const [calloutIndex, setCalloutIndex] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -67,6 +70,12 @@ export default function ChatAssistant() {
     };
   }, [open, calloutIndex]);
 
+  function clearChat() {
+    setMessages(starterMessages);
+    setInput("");
+    setSendError(null);
+  }
+
   async function sendMessage(messageText: string) {
     const trimmedMessage = messageText.trim();
 
@@ -74,9 +83,11 @@ export default function ChatAssistant() {
       return;
     }
 
+    const previousMessages = messages;
     const nextMessages = [...messages, { role: "user", content: trimmedMessage } as const];
     setMessages(nextMessages);
     setInput("");
+    setSendError(null);
     setIsSending(true);
     let isStreamingReplyStarted = false;
 
@@ -93,9 +104,23 @@ export default function ChatAssistant() {
 
       // Errors and local fallbacks come back as JSON; live answers stream as text.
       if (!response.ok || contentType.includes("application/json")) {
-        const data = (await response.json()) as { reply?: string; error?: string };
+        const data = (await response.json()) as {
+          reply?: string;
+          error?: string;
+          warning?: string;
+        };
 
         if (!response.ok) {
+          if (response.status === 400) {
+            // The rejected turn is the newly-added user message: drop it from
+            // history and hand the text back so it can be edited, rather than
+            // leaving a permanently-rejected message stuck in state.
+            setMessages(previousMessages);
+            setInput(trimmedMessage);
+            setSendError(data.error ?? "Something went wrong.");
+            return;
+          }
+
           throw new Error(data.error ?? "Something went wrong.");
         }
 
@@ -105,6 +130,7 @@ export default function ChatAssistant() {
             role: "assistant",
             content:
               data.reply ?? "I could not generate a response right now. Please try again.",
+            warning: data.warning,
           },
         ]);
 
@@ -144,14 +170,14 @@ export default function ChatAssistant() {
         }
       }
     } catch (error) {
+      // Never surface the raw error (e.g. the browser's literal "Failed to
+      // fetch") to the visitor — log it for devtools and show fixed copy.
+      console.error(error);
       setMessages((currentMessages) => [
         ...currentMessages,
         {
           role: "assistant",
-          content:
-            error instanceof Error
-              ? error.message
-              : "I could not connect to the assistant right now.",
+          content: "I could not connect to the assistant right now. Please try again.",
         },
       ]);
     } finally {
@@ -201,27 +227,46 @@ export default function ChatAssistant() {
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-(--border) text-(--muted) transition-colors hover:bg-(--hover) hover:text-foreground"
-                aria-label="Close assistant"
-              >
-                <X className="h-4 w-4" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={clearChat}
+                  disabled={isSending}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-(--border) text-(--muted) transition-colors hover:bg-(--hover) hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                  aria-label="Clear chat"
+                >
+                  <Eraser className="h-4 w-4" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-(--border) text-(--muted) transition-colors hover:bg-(--hover) hover:text-foreground"
+                  aria-label="Close assistant"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
             <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
               {messages.map((message, index) => (
                 <div
                   key={`${message.role}-${index}`}
-                  className={
-                    message.role === "user"
-                      ? "ml-auto max-w-[85%] rounded-2xl rounded-br-sm bg-foreground px-3 py-2 text-sm text-background"
-                      : "mr-auto max-w-[85%] rounded-2xl rounded-bl-sm bg-(--hover) px-3 py-2 text-sm text-foreground"
-                  }
+                  className={message.role === "user" ? "ml-auto max-w-[85%]" : "mr-auto max-w-[85%]"}
                 >
-                  {message.content}
+                  <div
+                    className={
+                      message.role === "user"
+                        ? "rounded-2xl rounded-br-sm bg-foreground px-3 py-2 text-sm text-background"
+                        : "rounded-2xl rounded-bl-sm bg-(--hover) px-3 py-2 text-sm text-foreground"
+                    }
+                  >
+                    {message.content}
+                  </div>
+                  {message.warning ? (
+                    <p className="mt-1 px-1 text-xs text-(--muted)">{message.warning}</p>
+                  ) : null}
                 </div>
               ))}
               {isSending && !isStreamingReply ? (
@@ -233,6 +278,12 @@ export default function ChatAssistant() {
             </div>
 
             <div className="space-y-3 border-t border-(--border) p-3">
+              {sendError ? (
+                <p className="text-xs text-(--muted)" role="alert">
+                  {sendError}
+                </p>
+              ) : null}
+
               {messages.length <= 2 ? (
                 <div className="flex flex-wrap gap-2">
                   {quickPrompts.map((prompt) => (

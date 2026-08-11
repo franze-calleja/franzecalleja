@@ -21,13 +21,18 @@ describe("createSseTextParser", () => {
     ]);
   });
 
-  it("buffers a line split across two chunks", () => {
-    const parser = createSseTextParser();
-    const line = sseLine("Hello");
-    const splitAt = Math.floor(line.length / 2);
+  it("reassembles the full text correctly no matter where the chunk boundary falls", () => {
+    const fixture = sseLine("Hello") + sseLine(" wonderful") + sseLine(" world");
+    const expected = "Hello wonderful world";
 
-    expect(parser.push(line.slice(0, splitAt))).toEqual([]);
-    expect(parser.push(line.slice(splitAt))).toEqual(["Hello"]);
+    for (let splitAt = 0; splitAt <= fixture.length; splitAt += 1) {
+      const parser = createSseTextParser();
+
+      const firstTexts = parser.push(fixture.slice(0, splitAt));
+      const secondTexts = parser.push(fixture.slice(splitAt));
+
+      expect([...firstTexts, ...secondTexts].join("")).toBe(expected);
+    }
   });
 
   it("joins multiple parts within one candidate", () => {

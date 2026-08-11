@@ -104,6 +104,9 @@ export default function ChatAssistant() {
 
       // Errors and local fallbacks come back as JSON; live answers stream as text.
       if (!response.ok || contentType.includes("application/json")) {
+        // A body that fails to parse as JSON here is treated the same as "no
+        // usable server response": the SyntaxError propagates to the outer
+        // catch, which shows its own fixed copy rather than a raw parse error.
         const data = (await response.json()) as {
           reply?: string;
           error?: string;
@@ -111,17 +114,21 @@ export default function ChatAssistant() {
         };
 
         if (!response.ok) {
+          // Server-authored error text (a rate-limit wait time, a validation
+          // message) is safe and useful — surface it directly instead of
+          // throwing, which would discard it in favor of generic copy.
           if (response.status === 400) {
             // The rejected turn is the newly-added user message: drop it from
             // history and hand the text back so it can be edited, rather than
-            // leaving a permanently-rejected message stuck in state.
+            // leaving a permanently-rejected message stuck in state. Only the
+            // 400 path rolls the optimistic message back — other failures
+            // (e.g. 429) leave it in place.
             setMessages(previousMessages);
             setInput(trimmedMessage);
-            setSendError(data.error ?? "Something went wrong.");
-            return;
           }
 
-          throw new Error(data.error ?? "Something went wrong.");
+          setSendError(data.error ?? "Something went wrong.");
+          return;
         }
 
         setMessages((currentMessages) => [
@@ -140,7 +147,18 @@ export default function ChatAssistant() {
       const reader = response.body?.getReader();
 
       if (!reader) {
-        throw new Error("I could not read the response. Please try again.");
+        // Deliberately-worded, client-authored copy: show it as written
+        // instead of routing it through throw/catch, which would replace it
+        // with the catch block's generic message.
+        setMessages((currentMessages) => [
+          ...currentMessages,
+          {
+            role: "assistant",
+            content: "I could not read the response. Please try again.",
+          },
+        ]);
+
+        return;
       }
 
       const decoder = new TextDecoder();
@@ -170,8 +188,13 @@ export default function ChatAssistant() {
         }
       }
     } catch (error) {
-      // Never surface the raw error (e.g. the browser's literal "Failed to
-      // fetch") to the visitor — log it for devtools and show fixed copy.
+      // Reserved for cases where no usable server response was obtained at
+      // all: a rejected fetch (e.g. offline — the literal "Failed to fetch"
+      // must never reach the visitor), a body that failed to parse as JSON,
+      // or any other unexpected failure while reading the stream. Everything
+      // else (400s, other non-ok statuses, a missing stream reader) is
+      // handled above with its own accurate, deliberately-worded copy. Log
+      // the real cause for devtools and show fixed copy here.
       console.error(error);
       setMessages((currentMessages) => [
         ...currentMessages,

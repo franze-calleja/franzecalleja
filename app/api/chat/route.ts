@@ -195,18 +195,16 @@ export async function POST(request: Request) {
     const errorText = await response.text().catch(() => "<unreadable>");
     console.error(`[chat] Gemini returned ${response.status}:`, errorText);
 
-    if (response.status === 429 || response.status >= 500) {
-      return localFallbackResponse(
-        normalized.lastUserMessage,
-        response.status === 429
-          ? "Gemini quota is exhausted, so the assistant is answering from local portfolio data."
-          : "Gemini is unavailable, so the assistant is answering from local portfolio data.",
-      );
-    }
-
-    return NextResponse.json(
-      { error: "The assistant could not answer that right now." },
-      { status: 502 },
+    // Every non-ok upstream response falls back to local data rather than
+    // erroring out — this includes 400 (e.g. an invalid API key) and 403
+    // (e.g. a restricted key), not just quota/server errors, so a
+    // misconfigured or retired key degrades gracefully instead of showing
+    // the visitor an error bubble.
+    return localFallbackResponse(
+      normalized.lastUserMessage,
+      response.status === 429
+        ? "Gemini quota is exhausted, so the assistant is answering from local portfolio data."
+        : "The assistant is temporarily unavailable, so this answer comes from local portfolio data.",
     );
   }
 

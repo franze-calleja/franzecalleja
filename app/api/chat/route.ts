@@ -115,12 +115,6 @@ export async function POST(request: Request) {
     messages?: unknown;
   } | null;
 
-  const normalized = normalizeConversation(body?.messages);
-
-  if (!normalized.ok) {
-    return NextResponse.json({ error: normalized.error }, { status: 400 });
-  }
-
   const ip =
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
     request.headers.get("x-real-ip") ??
@@ -142,6 +136,12 @@ export async function POST(request: Request) {
         },
       },
     );
+  }
+
+  const normalized = normalizeConversation(body?.messages);
+
+  if (!normalized.ok) {
+    return NextResponse.json({ error: normalized.error }, { status: 400 });
   }
 
   const requestBody = {

@@ -1,7 +1,6 @@
 import { BriefcaseBusiness, Code2, FolderKanban, GraduationCap } from "lucide-react";
 
 import content from "@/app/profile-data.json";
-import MainBottomNav from "@/components/main-bottom-nav";
 
 const statistics = [
   { label: "Selected projects", value: content.projects.items.length, icon: FolderKanban },
@@ -53,7 +52,6 @@ export default function StatsPage() {
           </div>
         </section>
       </div>
-      <MainBottomNav />
     </main>
   );
 }

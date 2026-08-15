@@ -1,5 +1,4 @@
 import ChatAssistant from "@/components/chat-assistant";
-import MainBottomNav from "@/components/main-bottom-nav";
 
 export default function ChatPage() {
   return (
@@ -20,7 +19,6 @@ export default function ChatPage() {
           <ChatAssistant />
         </div>
       </div>
-      <MainBottomNav />
     </main>
   );
 }

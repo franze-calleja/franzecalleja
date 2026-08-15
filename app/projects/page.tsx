@@ -2,7 +2,6 @@ import { ArrowUpRight } from "lucide-react";
 import type { Metadata } from "next";
 
 import content from "@/app/profile-data.json";
-import MainBottomNav from "@/components/main-bottom-nav";
 
 export const metadata: Metadata = {
   title: "Projects",
@@ -59,7 +58,6 @@ export default function ProjectsPage() {
           ))}
         </ul>
       </div>
-      <MainBottomNav />
     </main>
   );
 }

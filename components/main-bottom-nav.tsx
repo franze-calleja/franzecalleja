@@ -12,7 +12,13 @@ const navigationItems = [
 
 export default function MainBottomNav() {
   const pathname = usePathname();
+
+  if (pathname.startsWith("/b-side")) {
+    return null;
+  }
+
   const activeIndex = navigationItems.findIndex((item) => item.href === pathname);
+  const hasActive = activeIndex !== -1;
 
   return (
     <nav
@@ -22,7 +28,9 @@ export default function MainBottomNav() {
       <div className="main-bottom-nav__shell relative flex items-center gap-1 rounded-full p-1.5">
         <span
           aria-hidden="true"
-          className="main-bottom-nav__indicator absolute h-11 w-11 rounded-full"
+          className={`main-bottom-nav__indicator pointer-events-none absolute h-11 w-11 rounded-full transition-opacity duration-200 ${
+            hasActive ? "opacity-100" : "opacity-0"
+          }`}
           style={{ transform: `translateX(${Math.max(activeIndex, 0) * 3}rem)` }}
         />
         {navigationItems.map((item) => {
@@ -35,7 +43,7 @@ export default function MainBottomNav() {
               href={item.href}
               aria-current={isActive ? "page" : undefined}
               title={item.label}
-              className={`main-bottom-nav__item relative z-10 inline-flex h-11 w-11 items-center justify-center rounded-full ${
+              className={`main-bottom-nav__item relative z-10 inline-flex h-11 w-11 items-center justify-center rounded-full transition-colors duration-200 ${
                 isActive
                   ? "main-bottom-nav__item--active"
                   : "hover:bg-(--nav-hover)"

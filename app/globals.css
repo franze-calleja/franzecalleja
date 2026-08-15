@@ -82,15 +82,48 @@ body *::after {
 .main-bottom-nav__indicator {
   left: 0.375rem;
   background: var(--nav-active);
-  transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1), background-color 360ms ease;
+  transition: transform 300ms cubic-bezier(0.2, 0.9, 0.2, 1), opacity 200ms ease, background-color 360ms ease;
 }
 
 .main-bottom-nav__item {
   color: var(--nav-foreground);
+  transition: color 240ms ease;
 }
 
 .main-bottom-nav__item--active {
   color: var(--nav-active-foreground);
+}
+
+/* Timeline Accordion Transitions */
+.timeline-accordion {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  margin-top: 0;
+  transition:
+    grid-template-rows 350ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 280ms ease,
+    margin-top 350ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.timeline-accordion--open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  margin-top: 1rem;
+}
+
+.timeline-accordion__inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.timeline-accordion__content {
+  transform: translateY(-8px);
+  transition: transform 350ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.timeline-accordion--open .timeline-accordion__content {
+  transform: translateY(0);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -124,8 +157,32 @@ body *::after {
   }
 }
 
-.animate-card-enter {
-  animation: card-enter 420ms ease-out both;
+@keyframes modal-backdrop-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-card-in {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-modal-backdrop {
+  animation: modal-backdrop-in 220ms ease-out both;
+}
+
+.animate-modal-card {
+  animation: modal-card-in 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @keyframes chat-panel-enter {

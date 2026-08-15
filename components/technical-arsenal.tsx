@@ -1,61 +1,158 @@
+import Link from "next/link";
+import { ArrowUpRight, Code2, Server, Activity, Sparkles, type LucideIcon } from "lucide-react";
+
 import content from "@/app/profile-data.json";
 
-const selectTechnologies = (labels: string[]) =>
-  content.techstack.items
-    .filter((item) => labels.includes(item.label))
-    .map((item) => item.label);
+type ArsenalCategory = {
+  index: string;
+  title: string;
+  subtitle: string;
+  icon: LucideIcon;
+  items: string[];
+};
 
-const aiAndInfrastructure =
-  content.skills.categories.find((category) => category.name === "AI & Infrastructure")?.items.map(
-    (item) => item.label,
-  ) ?? [];
-
-const arsenalGroups = [
+const arsenalCategories: ArsenalCategory[] = [
   {
-    title: "Frontend",
-    items: selectTechnologies(["TypeScript", "React", "Next.js", "Tailwind CSS"]),
+    index: "01",
+    title: "Frontend & Interfaces",
+    subtitle: "Component design systems, responsive web, and cross-platform mobile",
+    icon: Code2,
+    items: [
+      "TypeScript",
+      "React",
+      "Next.js",
+      "React Native",
+      "Expo",
+      "Tailwind CSS",
+      "Zustand",
+      "HTML5 / Modern CSS",
+    ],
   },
   {
-    title: "Backend",
-    items: selectTechnologies(["Node.js", "Express.js", "Prisma", "PHP", "Axum"]),
+    index: "02",
+    title: "Backend & Systems",
+    subtitle: "High-throughput services, API architecture, and database engineering",
+    icon: Server,
+    items: [
+      "Node.js",
+      "Express.js",
+      "Prisma ORM",
+      "PostgreSQL",
+      "MySQL",
+      "PHP",
+      "Rust (Axum)",
+      "RESTful APIs",
+    ],
   },
   {
-    title: "Data & Infrastructure",
-    items: selectTechnologies(["MySQL", "PostgreSQL", "Docker", "Git"]),
+    index: "03",
+    title: "DevOps & Observability",
+    subtitle: "Containerization, telemetry metrics, log aggregation, and uptime alerts",
+    icon: Activity,
+    items: [
+      "Docker",
+      "Grafana",
+      "Prometheus",
+      "Loki",
+      "Alloy",
+      "Uptime Kuma",
+      "Node Exporter",
+      "Dozzle",
+      "CI/CD Pipelines",
+    ],
   },
   {
-    title: "AI & Infrastructure",
-    items: aiAndInfrastructure,
+    index: "04",
+    title: "AI & Cloud Architecture",
+    subtitle: "Agentic workflows, model orchestration, and production cloud infrastructure",
+    icon: Sparkles,
+    items: [
+      "Agentic Workflows",
+      "Gemini API",
+      "Model Orchestration",
+      "Git & Automation",
+      "AWS",
+      "GCP",
+      "Hostinger Cloud",
+      "RBAC / CASL",
+    ],
   },
 ];
 
 export default function TechnicalArsenal() {
   return (
     <section id="technical-arsenal" className="border-t border-foreground/35 py-12 sm:py-16">
-      <div className="border-b border-foreground/35 pb-4">
-        <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-(--muted)">
-          {content.techstack.eyebrow}
-        </p>
-        <h2 className="mt-2 text-3xl font-black uppercase tracking-tight sm:text-4xl">
-          Technical Arsenal
-        </h2>
+      {/* Section Header */}
+      <div className="flex items-end justify-between gap-6 border-b border-foreground/35 pb-4">
+        <div>
+          <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-(--muted)">
+            {content.techstack.eyebrow}
+          </p>
+          <h2 className="mt-2 text-3xl font-black uppercase tracking-tight sm:text-4xl">
+            Technical Arsenal
+          </h2>
+        </div>
+        <Link
+          href="/stack"
+          className="inline-flex h-10 shrink-0 items-center gap-2 border border-foreground px-3 text-xs font-bold uppercase tracking-[0.12em] transition-colors hover:bg-foreground hover:text-background sm:h-11 sm:px-4"
+        >
+          <span className="hidden sm:inline">View Full Stack & Skills</span>
+          <span className="sm:hidden">Full Stack</span>
+          <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+        </Link>
       </div>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4 xl:gap-7">
-        {arsenalGroups.map((group) => (
-          <article key={group.title} className="border border-foreground/55 p-6 sm:p-7">
-            <h3 className="border-b border-foreground/35 pb-3 font-mono text-xs font-semibold uppercase tracking-[0.1em]">
-              {group.title}
-            </h3>
-            <ul className="mt-5 flex flex-wrap gap-2">
-              {group.items.map((item) => (
-                <li key={item} className="border border-foreground/55 px-2.5 py-1 font-mono text-xs font-semibold">
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </article>
-        ))}
+      {/* Bento Grid */}
+      <div className="mt-8 grid gap-4 md:grid-cols-2 lg:gap-6">
+        {arsenalCategories.map((group) => {
+          const Icon = group.icon;
+
+          return (
+            <article
+              key={group.index}
+              className="group flex flex-col border border-foreground/55 p-6 transition-all duration-300 hover:border-foreground hover:shadow-lg sm:p-7"
+            >
+              {/* Header with index and icon */}
+              <div className="flex items-center justify-between gap-4">
+                <span className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-(--muted)">
+                  {group.index} / ARSENAL
+                </span>
+                <span className="flex h-8 w-8 items-center justify-center border border-foreground/30 text-foreground transition-colors group-hover:border-foreground group-hover:bg-foreground group-hover:text-background">
+                  <Icon className="h-4 w-4" aria-hidden="true" />
+                </span>
+              </div>
+
+              {/* Title & Subtitle */}
+              <h3 className="mt-3 text-xl font-bold tracking-tight sm:text-2xl">
+                {group.title}
+              </h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-(--muted)">
+                {group.subtitle}
+              </p>
+
+              {/* Divider */}
+              <div className="my-5 border-t border-foreground/20" />
+
+              {/* Technology Badges */}
+              <ul className="flex flex-wrap gap-2" aria-label={`${group.title} technologies`}>
+                {group.items.map((item) => (
+                  <li key={item}>
+                    <span className="inline-block border border-foreground/35 px-2.5 py-1 font-mono text-xs font-semibold text-foreground/90 transition-all duration-200 hover:border-foreground hover:bg-foreground hover:text-background">
+                      {item}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
+              {/* Bottom pill count */}
+              <div className="mt-auto pt-6">
+                <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-(--muted)">
+                  {group.items.length} core technologies
+                </p>
+              </div>
+            </article>
+          );
+        })}
       </div>
     </section>
   );

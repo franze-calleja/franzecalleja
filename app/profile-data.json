@@ -36,11 +36,77 @@
     "eyebrow": "Experience",
     "title": "Professional timeline",
     "steps": [
-      { "step": "01", "title": "Fullstack Software Engineer", "caption": "MSEUF-CI", "period": "August 2025 - Present", "current": true },
-      { "step": "02", "title": "Lead Software Engineer", "caption": "R-A-Ones Corporation", "period": "January 2026 - Present", "current": true },
-      { "step": "03", "title": "Web Developer", "caption": "Techbears Solutions", "period": "August 2025 - January 2026", "current": false },
-      { "step": "04", "title": "Freelance Lead Developer", "caption": "Ellipsense(Freelance Group)", "period": "2023 - Present", "current": true },
-      { "step": "05", "title": "Frontend Developer Intern", "caption": "Linoflap Technology", "period": "February - May 2025", "current": false }
+      {
+        "step": "01",
+        "title": "Fullstack Software Engineer",
+        "caption": "MSEUF-CI",
+        "period": "August 2025 - Present",
+        "current": true,
+        "description": "Leading the end-to-end development of internal enterprise systems, software infrastructures, and production observability platforms across university operations.",
+        "highlights": [
+          "Architecting, implementing, and maintaining scalable full-stack web and mobile systems for university operations.",
+          "Architected and deployed image-based containerized environments (Docker) and engineered an end-to-end observability stack using Grafana, Prometheus, Loki, Alloy, Node Exporter, Dozzle, and Uptime Kuma for real-time telemetry, centralized logging, and infrastructure uptime monitoring.",
+          "Managing CI/CD deployment pipelines, cloud infrastructure, and staging/production environments.",
+          "Overseeing system reliability, engineering standards, technical documentation, and best practices."
+        ],
+        "technologies": ["Next.js", "Docker", "Grafana", "Prometheus", "Loki", "Uptime Kuma", "Node.js", "PostgreSQL", "CI/CD"]
+      },
+      {
+        "step": "02",
+        "title": "Lead Software Engineer",
+        "caption": "R-A-Ones Corporation",
+        "period": "January 2026 - Present",
+        "current": true,
+        "description": "Leading end-to-end engineering for a startup, architecting core system designs, cloud infrastructure, backend services, and mobile applications.",
+        "highlights": [
+          "Architecting scalable system infrastructure and high-throughput backend services.",
+          "Leading mobile and backend development teams to deliver core product features on tight release cycles.",
+          "Designing robust database schemas, secure API integrations, and cloud automation workflows."
+        ],
+        "technologies": ["Node.js", "Express.js", "React Native", "TypeScript", "PostgreSQL", "Docker", "CI/CD"]
+      },
+      {
+        "step": "03",
+        "title": "Web Developer",
+        "caption": "Techbears Solutions",
+        "period": "August 2025 - January 2026",
+        "current": false,
+        "description": "Developed the core administrative web dashboard for a commercial ride-hailing and fleet dispatching platform.",
+        "highlights": [
+          "Engineered a high-performance admin dashboard in Next.js and TypeScript for real-time dispatch and fleet oversight.",
+          "Implemented fine-grained Role-Based Access Control (RBAC) using CASL to secure operational data.",
+          "Integrated real-time APIs, telemetry data feeds, and interactive tables for rapid dispatch management."
+        ],
+        "technologies": ["Next.js", "React", "TypeScript", "CASL (RBAC)", "Tailwind CSS", "REST APIs"]
+      },
+      {
+        "step": "04",
+        "title": "Freelance Lead Developer",
+        "caption": "Ellipsense(Freelance Group)",
+        "period": "2023 - Present",
+        "current": true,
+        "description": "Leading an independent development group engineering custom full-stack software and mobile solutions for global clients.",
+        "highlights": [
+          "Managing project roadmaps, client communications, technical scoping, and end-to-end delivery.",
+          "Designing resilient backend architectures and intuitive, responsive frontend interfaces tailored to client needs.",
+          "Enforcing code quality, testing standards, and seamless deployments across production systems."
+        ],
+        "technologies": ["Next.js", "TypeScript", "Node.js", "React", "Tailwind CSS", "Prisma", "MySQL"]
+      },
+      {
+        "step": "05",
+        "title": "Frontend Developer Intern",
+        "caption": "Linoflap Technology",
+        "period": "February - May 2025",
+        "current": false,
+        "description": "Contributed to the design and development of modern web applications using contemporary frontend technologies.",
+        "highlights": [
+          "Collaborated with cross-functional engineering teams to implement responsive, pixel-perfect user interfaces.",
+          "Integrated RESTful APIs and assisted with backend service communication and state synchronization.",
+          "Participated in agile sprints, peer code reviews, and automated testing to maintain robust code standards."
+        ],
+        "technologies": ["React", "TypeScript", "JavaScript", "HTML/CSS", "Git", "REST APIs"]
+      }
     ]
   },
   "techstack": {
@@ -55,9 +121,13 @@
       { "label": "Prisma", "icon": "box", "level": 90 },
       { "label": "Git", "icon": "git-branch", "level": 90 },
       { "label": "Tailwind CSS", "icon": "paintbrush", "level": 86 },
+      { "label": "Docker", "icon": "container", "level": 86 },
+      { "label": "Grafana", "icon": "layers", "level": 85 },
+      { "label": "Prometheus", "icon": "server", "level": 85 },
+      { "label": "Uptime Kuma", "icon": "zap", "level": 85 },
       { "label": "MySQL", "icon": "database", "level": 85 },
       { "label": "PostgreSQL", "icon": "database", "level": 85 },
-      { "label": "Docker", "icon": "container", "level": 82 },
+      { "label": "Loki", "icon": "database", "level": 82 },
       { "label": "PHP", "icon": "pen-tool", "level": 80 },
       { "label": "Axum", "icon": "box", "level": 65 },
       { "label": "Rust", "icon": "box", "level": 65 }
@@ -69,7 +139,7 @@
     "overall": [
       { "label": "Frontend", "level": 92 },
       { "label": "Backend", "level": 90 },
-      { "label": "Infrastructure", "level": 80 },
+      { "label": "Infrastructure & DevOps", "level": 86 },
       { "label": "AI", "level": 90 }
     ],
     "categories": [
@@ -96,11 +166,11 @@
       {
         "name": "AI & Infrastructure",
         "items": [
-          { "label": "Agentic development", "level": 90 },
-          { "label": "Model orchestration", "level": 85 },
-          { "label": "Cloud infrastructure (AWS/GCP/Hostinger)", "level": 76 },
-          { "label": "Containerization (Docker)", "level": 80 },
-          { "label": "CI/CD", "level": 80 }
+          { "label": "Observability & Monitoring (Grafana, Prometheus, Loki, Alloy, Dozzle, Node Exporter)", "level": 88 },
+          { "label": "Uptime & Service Health Checks (Uptime Kuma)", "level": 86 },
+          { "label": "Image-based Containerization (Docker)", "level": 86 },
+          { "label": "CI/CD & Cloud Infrastructure (AWS/GCP/Hostinger)", "level": 82 },
+          { "label": "Agentic development & Model orchestration", "level": 90 }
         ]
       }
     ]
@@ -130,8 +200,8 @@
       {
         "name": "EUC CITHM NFC Attendance",
         "description": "Attendance system using NFC-enabled flows for fast and reliable check-ins.",
-        "href": "https://euccithmattendance.com",
-        "technologies": ["VueJS", "Laravel"]
+        "href": "https://euccithm.com",
+        "technologies": ["Next.js", "TypeScript", "Prisma", "MySQL"]
       },
       {
         "name": "Investo",
@@ -144,18 +214,6 @@
         "description": "Web admin dashboard for a ride-hailing application, focused on operational control, monitoring, and administration.",
         "href": "https://play.google.com/store/apps/details?id=ph.utol.utolapp",
         "technologies": ["Next.js", "SSO", "ZOHO Oauth"]
-      },
-      {
-        "name": "Submission Tracker",
-        "description": "Full-stack submission tracking platform with database-backed record management.",
-        "href": "https://submissiontracker.mseufcandelaria.com",
-        "technologies": ["Next.js", "Full-Stack", "Prisma", "MySQL"]
-      },
-      {
-        "name": "MinIO Selfhosted Object Storage",
-        "description": "Self-hosted object storage setup for local or private infrastructure deployments.",
-        "href": "https://github.com/franze-calleja/minio-cdn",
-        "technologies": ["Docker", "Shell"]
       },
       {
         "name": "NQ Trend Trading Website and LMS",
@@ -173,7 +231,15 @@
         "institution": "Manuel S. Enverga University Foundation - Candelaria Inc.",
         "year": "2021 – 2025",
         "honors": "Class Salutatorian, Magna Cum Laude",
-        "description": "Graduated with honors; coursework focused on software engineering, algorithms, and systems."
+        "honorsList": ["Magna Cum Laude", "Class Salutatorian"],
+        "focusAreas": [
+          "Software Architecture & Design",
+          "Algorithms & Complexity",
+          "Distributed Systems",
+          "Database Engineering",
+          "Enterprise Application Systems"
+        ],
+        "description": "Graduated as Class Salutatorian and Magna Cum Laude with a rigorous foundation in software architecture, algorithm design, distributed computing, and full-stack enterprise systems."
       }
     ]
   },

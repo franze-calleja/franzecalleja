@@ -1,7 +1,7 @@
 "use client";
 
 import { Github, Users } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { GitHubCalendar } from "react-github-calendar";
 import BrutalBlock from "./brutal-block";
 
@@ -21,29 +21,47 @@ function lastNWeeks(weeks: number) {
   };
 }
 
+function subscribeToTheme(callback: () => void) {
+  const root = document.documentElement;
+  const observer = new MutationObserver(callback);
+  observer.observe(root, { attributes: true, attributeFilter: ["data-theme"] });
+  return () => observer.disconnect();
+}
+
+function getThemeSnapshot(): "light" | "dark" {
+  return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+}
+
+function getThemeServerSnapshot(): "light" | "dark" {
+  return "light";
+}
+
+function subscribeToMobile(callback: () => void) {
+  const mq = window.matchMedia("(max-width: 639px)");
+  mq.addEventListener("change", callback);
+  return () => mq.removeEventListener("change", callback);
+}
+
+function getMobileSnapshot() {
+  return window.matchMedia("(max-width: 639px)").matches;
+}
+
+function getMobileServerSnapshot() {
+  return false;
+}
+
 export default function BSideGithubContributions() {
-  const [colorScheme, setColorScheme] = useState<"light" | "dark">("light");
+  const colorScheme = useSyncExternalStore(
+    subscribeToTheme,
+    getThemeSnapshot,
+    getThemeServerSnapshot,
+  );
   const [followers, setFollowers] = useState<number | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const root = document.documentElement;
-    const sync = () =>
-      setColorScheme(root.dataset.theme === "dark" ? "dark" : "light");
-    sync();
-
-    const observer = new MutationObserver(sync);
-    observer.observe(root, { attributes: true, attributeFilter: ["data-theme"] });
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 639px)");
-    setIsMobile(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
+  const isMobile = useSyncExternalStore(
+    subscribeToMobile,
+    getMobileSnapshot,
+    getMobileServerSnapshot,
+  );
 
   useEffect(() => {
     fetch(`https://api.github.com/users/${USERNAME}`, {

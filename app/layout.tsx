@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import DimensionPortal from "@/components/dimension-portal";
+import MainBottomNav from "@/components/main-bottom-nav";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -89,6 +90,7 @@ export default function RootLayout({
       >
         {children}
         <DimensionPortal />
+        <MainBottomNav />
       </body>
     </html>
   );

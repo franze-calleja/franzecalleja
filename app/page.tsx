@@ -2,7 +2,6 @@ import EducationSection from "@/components/education-section";
 import ExperienceTimeline from "@/components/experience-timeline";
 import FeaturedProjects from "@/components/featured-projects";
 import HomeHero from "@/components/home-hero";
-import MainBottomNav from "@/components/main-bottom-nav";
 import TechnicalArsenal from "@/components/technical-arsenal";
 
 export default function Home() {
@@ -15,7 +14,6 @@ export default function Home() {
         <EducationSection />
         <TechnicalArsenal />
       </div>
-      <MainBottomNav />
     </main>
   );
 }

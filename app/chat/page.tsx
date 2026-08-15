@@ -1,21 +1,71 @@
+import { Terminal } from "lucide-react";
 import ChatAssistant from "@/components/chat-assistant";
+
+export const metadata = {
+  title: "CLI Terminal & Assistant",
+  description:
+    "Interactive terminal REPL and Gemini AI agent with live context of Franze William Calleja's projects, experience, and tech stack.",
+};
+
+const cheatsheet = [
+  { cmd: "/projects", desc: "List project catalog & URLs" },
+  { cmd: "/devops", desc: "Docker & Observability stack" },
+  { cmd: "/experience", desc: "Career timeline & roles" },
+  { cmd: "/stack", desc: "Full tech & skill matrix" },
+  { cmd: "/education", desc: "Academic honors & degree" },
+  { cmd: "/contact", desc: "Email, GitHub & LinkedIn" },
+];
 
 export default function ChatPage() {
   return (
-    <main className="min-h-screen bg-background px-5 pb-28 pt-5 sm:px-10 sm:pb-32 sm:pt-8 lg:px-16">
-      <div className="mx-auto grid min-h-[calc(100vh-9rem)] max-w-6xl items-center gap-10 lg:grid-cols-[minmax(16rem,0.7fr)_minmax(0,1.3fr)]">
-        <section>
-          <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-(--muted)">
-            Portfolio assistant / live context
-          </p>
-          <h1 className="mt-4 text-5xl font-black leading-[0.92] tracking-tight sm:text-6xl">
-            ASK ABOUT THE WORK.
-          </h1>
-          <p className="mt-6 border-l-2 border-foreground pl-4 text-lg leading-7 text-foreground/80">
-            The assistant has the portfolio&apos;s projects, experience, stack, education, and availability ready to discuss.
-          </p>
+    <main className="min-h-screen w-full overflow-x-hidden bg-background px-4 pb-28 pt-4 sm:px-8 sm:pb-32 sm:pt-8 lg:px-16">
+      <div className="mx-auto grid w-full min-w-0 max-w-6xl items-center gap-8 sm:gap-10 lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)]">
+        {/* Left Column: Context & Cheatsheet */}
+        <section className="w-full min-w-0 space-y-5 sm:space-y-6">
+          <div>
+            <div className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-[0.16em] text-(--muted)">
+              <Terminal className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>Runtime REPL // Agent</span>
+            </div>
+            <h1 className="mt-3 text-3xl font-black leading-[0.96] tracking-tight sm:mt-4 sm:text-5xl lg:text-6xl">
+              QUERY THE SYSTEM.
+            </h1>
+            <p className="mt-4 border-l-2 border-foreground pl-3 text-sm leading-6 text-foreground/80 sm:pl-4 sm:text-base sm:leading-7 lg:text-lg">
+              Interactive CLI terminal loaded with runtime context of Franze&apos;s full-stack applications, production systems, and DevOps infrastructure.
+            </p>
+          </div>
+
+          {/* Quick Manual Cheatsheet */}
+          <div className="w-full min-w-0 border border-foreground/40 bg-(--surface)/50 p-4 sm:p-5">
+            <div className="flex items-center justify-between border-b border-foreground/20 pb-3">
+              <span className="font-mono text-xs font-bold uppercase tracking-wider text-foreground">
+                CLI Command Cheatsheet
+              </span>
+              <span className="font-mono text-[10px] uppercase tracking-wider text-(--muted)">
+                v2.6
+              </span>
+            </div>
+
+            <div className="mt-3.5 space-y-2 font-mono text-xs">
+              {cheatsheet.map((item) => (
+                <div key={item.cmd} className="flex flex-wrap items-baseline justify-between gap-2 sm:flex-nowrap sm:gap-4">
+                  <span className="font-bold text-foreground">{item.cmd}</span>
+                  <span className="text-right text-(--muted)">{item.desc}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 border-t border-foreground/20 pt-3">
+              <p className="font-mono text-[11px] text-(--muted)">
+                Or ask natural questions: <br />
+                <span className="text-foreground/80">&quot;How is your Prometheus stack set up?&quot;</span>
+              </p>
+            </div>
+          </div>
         </section>
-        <div>
+
+        {/* Right Column: Terminal Component */}
+        <div className="w-full min-w-0">
           <ChatAssistant />
         </div>
       </div>

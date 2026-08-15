@@ -2,6 +2,7 @@
 
 import { Bot, Eraser, Send, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 
 type ChatMessage = {
   role: "user" | "assistant";
@@ -30,6 +31,8 @@ const chatCallouts = [
 ];
 
 export default function ChatAssistant() {
+  const pathname = usePathname();
+  const usesMainNavigation = pathname === "/" || pathname === "/chat" || pathname === "/stats";
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>(starterMessages);
   const [input, setInput] = useState("");
@@ -41,6 +44,13 @@ export default function ChatAssistant() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const openAssistant = () => setOpen(true);
+
+    window.addEventListener("portfolio:open-chat", openAssistant);
+    return () => window.removeEventListener("portfolio:open-chat", openAssistant);
+  }, []);
+
+  useEffect(() => {
     if (!open) {
       return;
     }
@@ -50,6 +60,11 @@ export default function ChatAssistant() {
 
   useEffect(() => {
     if (open) {
+      setCalloutVisible(false);
+      return;
+    }
+
+    if (usesMainNavigation) {
       setCalloutVisible(false);
       return;
     }
@@ -68,7 +83,7 @@ export default function ChatAssistant() {
       window.clearTimeout(hideTimeout);
       window.clearTimeout(nextTimeout);
     };
-  }, [open, calloutIndex]);
+  }, [open, calloutIndex, usesMainNavigation]);
 
   function clearChat() {
     setMessages(starterMessages);
@@ -211,7 +226,7 @@ export default function ChatAssistant() {
 
   return (
     <>
-      <div className="pointer-events-none fixed bottom-5 right-5 z-50 sm:bottom-6 sm:right-6">
+      <div className={`pointer-events-none fixed right-5 z-50 sm:right-6 ${usesMainNavigation ? "bottom-24 sm:bottom-6" : "bottom-5 sm:bottom-6"}`}>
         <div
           className={`pointer-events-none absolute right-19 bottom-3 transition-[opacity,transform] duration-300 ease-out motion-reduce:transition-none ${
             calloutVisible && !open
@@ -239,7 +254,7 @@ export default function ChatAssistant() {
           }`}
           aria-hidden={!open}
         >
-          <div className="flex h-128 flex-col overflow-hidden rounded-2xl">
+          <div className="flex h-[min(32rem,calc(100dvh-11rem))] flex-col overflow-hidden rounded-2xl">
             <div className="flex items-center justify-between border-b border-(--border) px-4 py-3">
               <div className="space-y-0.5">
                 <p className="text-sm font-semibold text-foreground">

@@ -36,13 +36,11 @@
     "eyebrow": "Experience",
     "title": "Professional timeline",
     "steps": [
-      { "step": "01", "title": "Fullstack Software Engineer", "caption": "MSEUF-CI" },
-      { "step": "02", "title": "Lead Developer", "caption": "R-A-Ones Corporation" },
-      { "step": "03", "title": "Web Developer", "caption": "Techbears Solutions" },
-      { "step": "04", "title": "Frontend Developer Intern", "caption": "Linoflap Technology" },
-      { "step": "05", "title": "Freelance Lead Developer", "caption": "Ellipsense(Freelance Group)" },
-      { "step": "06", "title": "Student Developer", "caption": "Freelance" },
-      { "step": "07", "title": "Computer Science Student", "caption": "MSEUF-CI" }
+      { "step": "01", "title": "Fullstack Software Engineer", "caption": "MSEUF-CI", "period": "August 2025 - Present" },
+      { "step": "02", "title": "Lead Software Engineer", "caption": "R-A-Ones Corporation", "period": "January 2026 - Present" },
+      { "step": "03", "title": "Web Developer", "caption": "Techbears Solutions", "period": "August 2025 - January 2026" },
+      { "step": "04", "title": "Freelance Lead Developer", "caption": "Ellipsense(Freelance Group)", "period": "2023 - Present" },
+      { "step": "05", "title": "Frontend Developer Intern", "caption": "Linoflap Technology", "period": "February - May 2025" }
     ]
   },
   "techstack": {

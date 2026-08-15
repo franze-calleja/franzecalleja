@@ -13,7 +13,7 @@ export default function ExperienceTimeline() {
           </h2>
         </div>
         <p className="hidden font-mono text-xs font-semibold uppercase tracking-[0.12em] text-(--muted) sm:block">
-          {content.experience.steps.length} roles
+          2023 - Present
         </p>
       </div>
 
@@ -36,7 +36,7 @@ export default function ExperienceTimeline() {
               </p>
             </div>
             <p className="font-mono text-xs font-semibold uppercase tracking-[0.12em] text-(--muted) sm:pt-1 sm:text-right">
-              Role {item.step} / {String(content.experience.steps.length).padStart(2, "0")}
+              {item.period}
             </p>
           </li>
         ))}

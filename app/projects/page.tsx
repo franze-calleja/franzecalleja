@@ -1,8 +1,8 @@
-import { ArrowLeft, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import content from "@/app/profile-data.json";
+import MainBottomNav from "@/components/main-bottom-nav";
 
 export const metadata: Metadata = {
   title: "Projects",
@@ -12,61 +12,54 @@ export const metadata: Metadata = {
 
 export default function ProjectsPage() {
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-6 py-4 font-sans sm:px-10 sm:py-7 lg:px-16 lg:py-8">
-      <div className="space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          <div className="space-y-1">
-            <p className="text-xs font-medium uppercase tracking-[0.22em] text-(--muted)">
-              {content.projects.eyebrow}
-            </p>
-            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-              All Projects
-            </h1>
-          </div>
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1 rounded-full border border-(--border) px-3 py-1.5 text-xs font-medium text-(--muted) transition-colors hover:bg-(--hover) hover:text-foreground"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Back
-          </Link>
-        </div>
+    <main className="min-h-screen bg-background px-5 pb-28 pt-5 sm:px-10 sm:pb-32 sm:pt-8 lg:px-16">
+      <div className="mx-auto max-w-7xl">
+        <header className="border-b border-foreground/35 pb-4">
+          <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-(--muted)">
+            {content.projects.eyebrow} / Full index
+          </p>
+          <h1 className="mt-2 text-4xl font-black uppercase tracking-tight sm:text-5xl">
+            All Projects
+          </h1>
+          <p className="mt-4 max-w-2xl text-base leading-7 text-foreground/75 sm:text-lg">
+            A selection of web, mobile, operations, and infrastructure work.
+          </p>
+        </header>
 
-        <ul className="grid gap-2 sm:grid-cols-2 auto-rows-fr">
+        <ul className="mt-8 grid gap-4 md:grid-cols-2 lg:gap-8">
           {content.projects.items.map((project, index) => (
-            <li
-              key={project.name}
-              className="h-full animate-card-enter motion-reduce:animate-none"
-              style={{ animationDelay: `${index * 90}ms` }}
-            >
+            <li key={project.name}>
               <a
                 href={project.href}
                 target="_blank"
                 rel="noreferrer"
-                className="group flex h-full min-h-56 flex-col gap-1 rounded-lg border border-(--border) bg-(--surface) p-4 transition-colors hover:bg-(--hover)"
+                className="group flex min-h-64 flex-col border border-foreground/55 p-6 transition-colors hover:bg-foreground hover:text-background sm:p-7"
               >
-                <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm font-semibold sm:text-base">{project.name}</p>
-                  <ArrowUpRight className="h-4 w-4 shrink-0 text-(--muted) transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                <div className="flex items-start justify-between gap-6">
+                  <div>
+                    <p className="font-mono text-xs font-semibold tracking-[0.12em] text-(--muted) transition-colors group-hover:text-background/70">
+                      {String(index + 1).padStart(2, "0")}
+                    </p>
+                    <h2 className="mt-3 text-2xl font-bold leading-tight sm:text-3xl">{project.name}</h2>
+                  </div>
+                  <ArrowUpRight className="mt-1 h-4 w-4 shrink-0 text-(--muted) transition-colors group-hover:text-background" aria-hidden="true" />
                 </div>
-                <p className="text-sm leading-6 text-(--muted)">
+                <p className="mt-5 text-base leading-7 text-(--muted) transition-colors group-hover:text-background/70">
                   {project.description}
                 </p>
-                <div className="mt-auto flex flex-wrap gap-1 pt-2">
+                <ul className="mt-auto flex flex-wrap gap-2 pt-7" aria-label={`${project.name} technologies`}>
                   {project.technologies.map((technology) => (
-                    <span
-                      key={technology}
-                      className="rounded-full border border-(--border) px-2 py-0.5 text-[0.62rem] font-medium uppercase tracking-[0.16em] text-(--muted)"
-                    >
+                    <li key={technology} className="border border-foreground/55 px-2.5 py-1 font-mono text-xs font-semibold transition-colors group-hover:border-background/70">
                       {technology}
-                    </span>
+                    </li>
                   ))}
-                </div>
+                </ul>
               </a>
             </li>
           ))}
         </ul>
       </div>
+      <MainBottomNav />
     </main>
   );
 }

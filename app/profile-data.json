@@ -29,8 +29,18 @@
     "body": [
       "I am a full-stack software engineer who develops enterprise solutions and end-to-end web and mobile applications. I work across the stack, building frontend experiences in React/Next.js, implementing backend services with NodeJS/Express and Rust (Axum), and designing the infrastructure that keeps systems reliable and secure.",
       "I currently work as Lead Fullstack Software Engineer at Manuel S. Enverga University Foundation - Candelaria Inc. I also serve as a Lead Software Engineer on a part-time contractual basis at R-A-Ones Corporation in Canada, and lead a freelance group delivering software solutions for clients worldwide. I coordinate teams, own delivery, and translate product goals into pragmatic technical solutions.",
-      "Recently, I’ve been exploring AI and cloud infrastructure—focusing on agentic workflows, model orchestration, and scalable architectures to bring AI into production effectively."
+      "Recently, I’ve been heavily invested in agentic AI workflows, developer harnesses, and autonomous coding tools—leveraging Claude Code, Antigravity (AGY), and Codex to accelerate software architecture and delivery.",
+      "Outside of software engineering, I am a passionate PS5 gamer (playing NBA 2K, Red Dead Redemption 2, and Cult of the Lamb) and a die-hard basketball fan who loyally follows LeBron James (the undisputed GOAT)."
     ]
+  },
+  "interests": {
+    "gaming": ["PS5", "NBA 2K", "Red Dead Redemption 2", "Cult of the Lamb", "Indie Games"],
+    "sports": {
+      "favoriteSport": "Basketball",
+      "goat": "LeBron James",
+      "allegiance": "Loyal to LeBron James wherever he plays"
+    },
+    "aiTooling": ["Claude Code", "Antigravity CLI (AGY)", "Codex", "Gemini 2.5 Flash", "MCP Tool Harnesses", "Multi-Agent Orchestration"]
   },
   "experience": {
     "eyebrow": "Experience",
@@ -59,39 +69,39 @@
         "current": true,
         "description": "Leading end-to-end engineering for a startup, architecting core system designs, cloud infrastructure, backend services, and mobile applications.",
         "highlights": [
-          "Architecting scalable system infrastructure and high-throughput backend services.",
-          "Leading mobile and backend development teams to deliver core product features on tight release cycles.",
-          "Designing robust database schemas, secure API integrations, and cloud automation workflows."
+          "Directing full-lifecycle development across high-throughput backend APIs, microservices, and cross-platform mobile apps.",
+          "Architecting distributed cloud infrastructure, containerized deployments, and database schemas for optimal performance.",
+          "Translating business and product requirements into clean, scalable system architecture and production roadmaps."
         ],
-        "technologies": ["Node.js", "Express.js", "React Native", "TypeScript", "PostgreSQL", "Docker", "CI/CD"]
+        "technologies": ["Next.js", "React Native", "Expo", "Node.js", "Prisma", "PostgreSQL", "Cloud"]
       },
       {
         "step": "03",
-        "title": "Web Developer",
-        "caption": "Techbears Solutions",
-        "period": "August 2025 - January 2026",
-        "current": false,
-        "description": "Developed the core administrative web dashboard for a commercial ride-hailing and fleet dispatching platform.",
-        "highlights": [
-          "Engineered a high-performance admin dashboard in Next.js and TypeScript for real-time dispatch and fleet oversight.",
-          "Implemented fine-grained Role-Based Access Control (RBAC) using CASL to secure operational data.",
-          "Integrated real-time APIs, telemetry data feeds, and interactive tables for rapid dispatch management."
-        ],
-        "technologies": ["Next.js", "React", "TypeScript", "CASL (RBAC)", "Tailwind CSS", "REST APIs"]
-      },
-      {
-        "step": "04",
         "title": "Freelance Lead Developer",
-        "caption": "Ellipsense(Freelance Group)",
+        "caption": "Ellipsense",
         "period": "2023 - Present",
         "current": true,
-        "description": "Leading an independent development group engineering custom full-stack software and mobile solutions for global clients.",
+        "description": "Leading a freelance team delivering full-stack web platforms and mobile applications for global clients.",
         "highlights": [
           "Managing project roadmaps, client communications, technical scoping, and end-to-end delivery.",
           "Designing resilient backend architectures and intuitive, responsive frontend interfaces tailored to client needs.",
           "Enforcing code quality, testing standards, and seamless deployments across production systems."
         ],
         "technologies": ["Next.js", "TypeScript", "Node.js", "React", "Tailwind CSS", "Prisma", "MySQL"]
+      },
+      {
+        "step": "04",
+        "title": "Web Developer",
+        "caption": "Techbears Solutions",
+        "period": "August 2025 - January 2026",
+        "current": false,
+        "description": "Developed the web administration and operational dashboard for a ride-hailing transportation platform.",
+        "highlights": [
+          "Engineered the responsive administrative web dashboard using Next.js, TypeScript, and modern frontend paradigms.",
+          "Implemented granular Role-Based Access Control (RBAC) utilizing CASL for secure permission management across distinct user tiers.",
+          "Integrated real-time APIs for live dispatch management, operational monitoring, and fleet administration."
+        ],
+        "technologies": ["Next.js", "TypeScript", "CASL", "RBAC", "Tailwind CSS", "REST APIs"]
       },
       {
         "step": "05",
@@ -114,6 +124,9 @@
     "viewAllHref": "/stack",
     "items": [
       { "label": "TypeScript", "icon": "code", "level": 95 },
+      { "label": "Claude Code", "icon": "terminal", "level": 94 },
+      { "label": "Antigravity (AGY)", "icon": "bot", "level": 93 },
+      { "label": "Codex", "icon": "code", "level": 90 },
       { "label": "Node.js", "icon": "server", "level": 92 },
       { "label": "Express.js", "icon": "server", "level": 92 },
       { "label": "React", "icon": "layers", "level": 92 },
@@ -140,7 +153,7 @@
       { "label": "Frontend", "level": 92 },
       { "label": "Backend", "level": 90 },
       { "label": "Infrastructure & DevOps", "level": 86 },
-      { "label": "AI", "level": 90 }
+      { "label": "AI & Agentic Orchestration", "level": 94 }
     ],
     "categories": [
       {
@@ -166,11 +179,12 @@
       {
         "name": "AI & Infrastructure",
         "items": [
+          { "label": "Agentic AI Orchestration & Developer Harnesses (Claude Code, Antigravity, Codex)", "level": 94 },
+          { "label": "Agentic development & Model orchestration (Gemini API)", "level": 90 },
           { "label": "Observability & Monitoring (Grafana, Prometheus, Loki, Alloy, Dozzle, Node Exporter)", "level": 88 },
           { "label": "Uptime & Service Health Checks (Uptime Kuma)", "level": 86 },
           { "label": "Image-based Containerization (Docker)", "level": 86 },
-          { "label": "CI/CD & Cloud Infrastructure (AWS/GCP/Hostinger)", "level": 82 },
-          { "label": "Agentic development & Model orchestration", "level": 90 }
+          { "label": "CI/CD & Cloud Infrastructure (AWS/GCP/Hostinger)", "level": 82 }
         ]
       }
     ]

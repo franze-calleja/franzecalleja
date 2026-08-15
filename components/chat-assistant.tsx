@@ -247,10 +247,10 @@ Cloud & Infrastructure:
             id: `res-${Date.now()}`,
             type: "assistant",
             content: `[TECHNICAL STACK & CAPABILITIES]
+AI & Tooling:   Claude Code, Antigravity CLI (AGY), Codex, Gemini API, Multi-Agent Harnesses
 Frontend:       TypeScript, React, Next.js, React Native, Expo, Tailwind CSS, Zustand
 Backend:        Node.js, Express.js, Prisma ORM, PostgreSQL, MySQL, PHP, Rust (Axum)
-Infrastructure: Docker, Grafana, Prometheus, Loki, Alloy, Uptime Kuma, CI/CD, AWS, GCP
-AI & Systems:   Agentic Workflows, Gemini API, Model Orchestration, CASL (RBAC)`,
+Infrastructure: Docker, Grafana, Prometheus, Loki, Alloy, Uptime Kuma, CI/CD, AWS, GCP`,
             timestamp: getTimestamp(),
           },
         ]);

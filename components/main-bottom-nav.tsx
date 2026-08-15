@@ -12,13 +12,19 @@ const navigationItems = [
 
 export default function MainBottomNav() {
   const pathname = usePathname();
+  const activeIndex = navigationItems.findIndex((item) => item.href === pathname);
 
   return (
     <nav
       aria-label="Main navigation"
       className="fixed inset-x-0 bottom-5 z-60 flex justify-center px-5 sm:bottom-7"
     >
-      <div className="flex items-center gap-1 rounded-full border border-foreground/15 bg-background/95 p-1.5 shadow-[0_12px_30px_rgba(14,16,15,0.14)] backdrop-blur-sm">
+      <div className="main-bottom-nav__shell relative flex items-center gap-1 rounded-full p-1.5">
+        <span
+          aria-hidden="true"
+          className="main-bottom-nav__indicator absolute h-11 w-11 rounded-full"
+          style={{ transform: `translateX(${Math.max(activeIndex, 0) * 3}rem)` }}
+        />
         {navigationItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
@@ -29,10 +35,10 @@ export default function MainBottomNav() {
               href={item.href}
               aria-current={isActive ? "page" : undefined}
               title={item.label}
-              className={`inline-flex h-11 w-11 items-center justify-center rounded-full transition-colors ${
+              className={`main-bottom-nav__item relative z-10 inline-flex h-11 w-11 items-center justify-center rounded-full ${
                 isActive
-                  ? "bg-foreground text-background"
-                  : "text-foreground hover:bg-foreground/8"
+                  ? "main-bottom-nav__item--active"
+                  : "hover:bg-(--nav-hover)"
               }`}
             >
               <Icon className="h-4 w-4" aria-hidden="true" />

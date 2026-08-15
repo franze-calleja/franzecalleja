@@ -37,12 +37,6 @@ async function playWarp(overlay: HTMLElement, after: () => void) {
   }
 }
 
-const DPAD = [
-  { k: "ArrowUp", s: "↑" }, { k: "ArrowDown", s: "↓" },
-  { k: "ArrowLeft", s: "←" }, { k: "ArrowRight", s: "→" },
-  { k: "b", s: "B" }, { k: "a", s: "A" },
-];
-
 export default function DimensionPortal() {
   const router = useRouter();
   const pathname = usePathname();
@@ -50,7 +44,6 @@ export default function DimensionPortal() {
   const matcherRef = useRef(createSequenceMatcher(KONAMI_SEQUENCE));
   const clickerRef = useRef(createMultiClickCounter({ threshold: 5, windowMs: 3000 }));
   const warpingRef = useRef(false);
-  const [showDpad, setShowDpad] = useState(false);
   const [warpLabel, setWarpLabel] = useState("ENTERING THE B-SIDE…");
 
   const onB = pathname.startsWith("/b-side");
@@ -170,46 +163,6 @@ export default function DimensionPortal() {
       >
         {warpLabel}
       </div>
-
-      {/* touch d-pad: only on the main site, toggled by a small glyph */}
-      {!onB && (
-        <div style={{ position: "fixed", right: 12, bottom: 12, zIndex: 50 }}>
-          {showDpad ? (
-            <div
-              style={{ display: "grid", gridTemplateColumns: "repeat(3, 2.2rem)", gap: 4, background: "var(--background)", border: "2px solid var(--foreground)", padding: 6 }}
-            >
-              {DPAD.map(({ k, s }) => (
-                <button
-                  key={k}
-                  type="button"
-                  aria-label={`Code key ${s}`}
-                  onClick={() => feedKey(k)}
-                  style={{ border: "2px solid var(--foreground)", background: "transparent", color: "var(--foreground)", fontFamily: "monospace", height: "2.2rem", cursor: "pointer" }}
-                >
-                  {s}
-                </button>
-              ))}
-              <button
-                type="button"
-                aria-label="Hide code pad"
-                onClick={() => setShowDpad(false)}
-                style={{ gridColumn: "span 3", border: "2px solid var(--foreground)", background: "transparent", color: "var(--foreground)", fontFamily: "monospace", cursor: "pointer" }}
-              >
-                ✕
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              aria-label="Open secret code pad"
-              onClick={() => setShowDpad(true)}
-              style={{ width: "1.6rem", height: "1.6rem", border: "1px solid var(--border)", background: "transparent", color: "var(--muted)", fontFamily: "monospace", opacity: 0.5, cursor: "pointer" }}
-            >
-              ◳
-            </button>
-          )}
-        </div>
-      )}
     </>
   );
 }

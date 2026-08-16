@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import CursorFollower from "@/components/cursor-follower";
 import MainBottomNav from "@/components/main-bottom-nav";
 import "./globals.css";
 
@@ -96,6 +97,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <CursorFollower />
         {children}
         <MainBottomNav />
       </body>

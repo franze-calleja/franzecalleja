@@ -68,6 +68,21 @@
   box-sizing: border-box;
 }
 
+/* Subtle border per day in GitHub Contribution Calendar */
+.github-calendar-wrapper svg rect,
+.react-activity-calendar svg rect {
+  stroke: rgba(14, 16, 15, 0.2);
+  stroke-width: 0.8px;
+  rx: 2px;
+  ry: 2px;
+}
+
+[data-theme="dark"] .github-calendar-wrapper svg rect,
+[data-theme="dark"] .react-activity-calendar svg rect {
+  stroke: rgba(255, 255, 255, 0.12);
+  stroke-width: 0.8px;
+}
+
 html {
   background: var(--background);
 }

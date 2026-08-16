@@ -5,7 +5,7 @@ import { Github, Users, GitCommit, Flame } from "lucide-react";
 import { GitHubCalendar } from "react-github-calendar";
 
 const CALENDAR_THEME = {
-  light: ["#e4e0ce", "#b0aa98", "#7a7462", "#44402e", "#0E100F"],
+  light: ["#e8e3cf", "#9be9a8", "#40c463", "#30a14e", "#216e39"],
   dark: ["#1e2020", "#2c3a2a", "#3e5a38", "#5a8050", "#86b878"],
 };
 
@@ -117,7 +117,7 @@ export default function GithubStatsCalendar() {
       </div>
 
       {/* Calendar Area */}
-      <div className="mt-6 flex w-full justify-center overflow-x-auto pb-2">
+      <div className="github-calendar-wrapper mt-6 flex w-full justify-center overflow-x-auto pb-2">
         <GitHubCalendar
           username={USERNAME}
           colorScheme={colorScheme}

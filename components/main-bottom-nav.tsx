@@ -13,10 +13,6 @@ const navigationItems = [
 export default function MainBottomNav() {
   const pathname = usePathname();
 
-  if (pathname.startsWith("/b-side")) {
-    return null;
-  }
-
   const activeIndex = navigationItems.findIndex((item) => item.href === pathname);
   const hasActive = activeIndex !== -1;
 

@@ -123,67 +123,71 @@
     "eyebrow": "Tech Stack",
     "viewAllHref": "/stack",
     "items": [
-      { "label": "TypeScript", "icon": "code", "level": 95 },
-      { "label": "Claude Code", "icon": "terminal", "level": 94 },
-      { "label": "Codex", "icon": "code", "level": 92 },
-      { "label": "Node.js", "icon": "server", "level": 92 },
-      { "label": "Express.js", "icon": "server", "level": 92 },
-      { "label": "React", "icon": "layers", "level": 92 },
-      { "label": "Next.js", "icon": "zap", "level": 92 },
-      { "label": "Prisma", "icon": "box", "level": 90 },
-      { "label": "Git", "icon": "git-branch", "level": 90 },
-      { "label": "Tailwind CSS", "icon": "paintbrush", "level": 86 },
-      { "label": "Docker", "icon": "container", "level": 86 },
-      { "label": "Grafana", "icon": "layers", "level": 85 },
-      { "label": "Prometheus", "icon": "server", "level": 85 },
-      { "label": "Uptime Kuma", "icon": "zap", "level": 85 },
-      { "label": "MySQL", "icon": "database", "level": 85 },
-      { "label": "PostgreSQL", "icon": "database", "level": 85 },
-      { "label": "Loki", "icon": "database", "level": 82 },
-      { "label": "PHP", "icon": "pen-tool", "level": 80 },
-      { "label": "Axum", "icon": "box", "level": 65 },
-      { "label": "Rust", "icon": "box", "level": 65 }
+      { "label": "TypeScript", "category": "Frontend & Systems", "icon": "code" },
+      { "label": "Claude Code", "category": "AI Orchestration", "icon": "terminal" },
+      { "label": "Codex", "category": "AI Orchestration", "icon": "code" },
+      { "label": "Node.js", "category": "Backend", "icon": "server" },
+      { "label": "Express.js", "category": "Backend", "icon": "server" },
+      { "label": "React", "category": "Frontend", "icon": "layers" },
+      { "label": "Next.js", "category": "Frontend & Fullstack", "icon": "zap" },
+      { "label": "Prisma", "category": "Database & ORM", "icon": "box" },
+      { "label": "Git", "category": "Automation & DevOps", "icon": "git-branch" },
+      { "label": "Tailwind CSS", "category": "Frontend & UI", "icon": "paintbrush" },
+      { "label": "Docker", "category": "DevOps & Containers", "icon": "container" },
+      { "label": "Grafana", "category": "Observability", "icon": "layers" },
+      { "label": "Prometheus", "category": "Observability", "icon": "server" },
+      { "label": "Uptime Kuma", "category": "Observability", "icon": "zap" },
+      { "label": "MySQL", "category": "Databases", "icon": "database" },
+      { "label": "PostgreSQL", "category": "Databases", "icon": "database" },
+      { "label": "Loki", "category": "Observability", "icon": "database" },
+      { "label": "PHP", "category": "Backend", "icon": "pen-tool" },
+      { "label": "Axum", "category": "Systems & Backend", "icon": "box" },
+      { "label": "Rust", "category": "Systems & Backend", "icon": "box" }
     ]
   },
   "skills": {
-    "eyebrow": "Skills",
+    "eyebrow": "Skills & Competencies",
     "viewAllHref": "/stack",
-    "overall": [
-      { "label": "Frontend", "level": 92 },
-      { "label": "Backend", "level": 90 },
-      { "label": "Infrastructure & DevOps", "level": 86 },
-      { "label": "AI & Agentic Orchestration", "level": 94 }
-    ],
     "categories": [
       {
-        "name": "Frontend",
+        "name": "Frontend & Cross-Platform",
+        "description": "Component design systems, responsive web, and cross-platform mobile apps",
         "items": [
-          { "label": "Component-driven UI / design systems", "level": 95 },
-          { "label": "Responsive layouts & accessibility", "level": 90 },
-          { "label": "State management (TanStack, Redux, Zustand)", "level": 88 },
-          { "label": "Testing (Jest, React Testing Library)", "level": 80 },
-          { "label": "Mobile development (React Native, Expo)", "level": 85 }
+          "Component-driven UI & design systems",
+          "Responsive layouts & web accessibility",
+          "State management (TanStack, Redux, Zustand)",
+          "Automated testing (Vitest, Jest, RTL)",
+          "Cross-platform mobile (React Native, Expo)"
         ]
       },
       {
-        "name": "Backend",
+        "name": "Backend & Distributed Systems",
+        "description": "High-throughput APIs, modular architectures, and database engineering",
         "items": [
-          { "label": "REST APIs", "level": 95 },
-          { "label": "Modular/MVC/Horizontal Architectures", "level": 90 },
-          { "label": "Database design, migrations & ORMs (Prisma)", "level": 85 },
-          { "label": "Authentication, authorization & sessions", "level": 85 },
-          { "label": "Background jobs, queues & scheduling", "level": 75 }
+          "RESTful API design & real-time endpoints",
+          "Modular / MVC / Horizontal architectures",
+          "Database design, migrations & ORMs (Prisma, MySQL, PostgreSQL)",
+          "Granular RBAC, authentication & session security (CASL)",
+          "Background jobs, queues & asynchronous task pipelines"
         ]
       },
       {
-        "name": "AI & Infrastructure",
+        "name": "DevOps & Production Observability",
+        "description": "Telemetry monitoring, distributed logging, containerization, and cloud pipelines",
         "items": [
-          { "label": "Agentic AI Orchestration & Developer Harnesses (Claude Code, Codex)", "level": 94 },
-          { "label": "Agentic development & Model orchestration (Gemini API)", "level": 90 },
-          { "label": "Observability & Monitoring (Grafana, Prometheus, Loki, Alloy, Dozzle, Node Exporter)", "level": 88 },
-          { "label": "Uptime & Service Health Checks (Uptime Kuma)", "level": 86 },
-          { "label": "Image-based Containerization (Docker)", "level": 86 },
-          { "label": "CI/CD & Cloud Infrastructure (AWS/GCP/Hostinger)", "level": 82 }
+          "Full-stack observability (Grafana, Prometheus, Loki, Alloy, Dozzle)",
+          "Service health monitoring & uptime alerts (Uptime Kuma, node_exporter)",
+          "Image-based containerization & multi-stage Docker builds",
+          "Cloud infrastructure & deployment automation (AWS, GCP, Hostinger VPS, CI/CD)"
+        ]
+      },
+      {
+        "name": "Agentic AI & Developer Flow",
+        "description": "Autonomous developer workflows, prompt harnesses, and multi-agent coordination",
+        "items": [
+          "Agentic AI orchestration & tool harnesses (Claude Code, Codex)",
+          "Model orchestration & streaming APIs (Gemini API, LLM sidecars)",
+          "Keyboard-driven CLI tooling and developer flow acceleration"
         ]
       }
     ]
@@ -256,16 +260,6 @@
       }
     ]
   },
-  "testimonials": {
-    "eyebrow": "Testimonials",
-    "items": [
-      {
-        "quote": "Franze is one of the most reliable engineers I've worked with. His attention to UI detail is exceptional.",
-        "name": "Alliah Mikaela Revedezo",
-        "role": "Software Engineer and UI/UX Designer"
-      }
-    ]
-  },
   "availability": {
     "eyebrow": "Availability",
     "status": "Open to work",
@@ -274,81 +268,20 @@
     "preferredRoles": ["Full Stack Developer"],
     "contactHref": "mailto:franzewilliamcalleja@gmail.com"
   },
-  "gallery": {
-    "eyebrow": "Gallery",
-    "subtitle": "A quick visual row of recent work, ideas, and snapshots.",
-    "items": [
-      {
-        "label": "01",
-        "title": "Franze",
-        "caption": "A calm setup for focused builds.",
-        "tone": "from-slate-950 via-slate-800 to-slate-600",
-        "image": "/profile.png"
-      },
-      {
-        "label": "02",
-        "title": "Logo",
-        "caption": "Small experiments for layout rhythm.",
-        "tone": "from-stone-900 via-stone-700 to-stone-500",
-        "image": "/icon.png"
-      },
-      {
-        "label": "03",
-        "title": "Franze",
-        "caption": "Light and dark surfaces with soft contrast.",
-        "tone": "from-zinc-950 via-zinc-700 to-zinc-500",
-        "image": "/profile.png"
-      },
-      {
-        "label": "04",
-        "title": "Logo",
-        "caption": "Simple structure for quick scanning.",
-        "tone": "from-neutral-950 via-neutral-700 to-neutral-500",
-        "image": "/icon.png"
-      },
-      {
-        "label": "05",
-        "title": "Franze",
-        "caption": "Reusable pieces with tight spacing.",
-        "tone": "from-slate-900 via-zinc-700 to-stone-500",
-        "image": "/profile.png"
-      },
-      {
-        "label": "06",
-        "title": "Logo",
-        "caption": "Loose ideas collected before refinement.",
-        "tone": "from-stone-950 via-slate-700 to-zinc-500",
-        "image": "/icon.png"
-      },
-      {
-        "label": "07",
-        "title": "Franze",
-        "caption": "Progress captures from active projects.",
-        "tone": "from-zinc-900 via-stone-700 to-neutral-500",
-        "image": "/profile.png"
-      },
-      {
-        "label": "08",
-        "title": "Logo",
-        "caption": "Texture, spacing, and contrast studies.",
-        "tone": "from-neutral-900 via-slate-700 to-stone-500",
-        "image": "/icon.png"
-      }
-    ]
-  },
   "footer": {
     "eyebrow": "Franze William Calleja",
     "tagline": "Full-stack engineer building production-ready systems.",
     "quickLinks": [
-      { "label": "About", "href": "#about" },
-      { "label": "Projects", "href": "#projects" },
-      { "label": "Gallery", "href": "#gallery" },
+      { "label": "About", "href": "/" },
+      { "label": "Projects", "href": "/projects" },
+      { "label": "Stack", "href": "/stack" },
+      { "label": "Stats", "href": "/stats" },
+      { "label": "Chat", "href": "/chat" },
       { "label": "Contact", "href": "mailto:franzewilliamcalleja@gmail.com" }
     ],
     "social": [
       { "label": "GitHub", "href": "https://github.com/franze-calleja", "icon": "github" },
-      { "label": "LinkedIn", "href": "https://www.linkedin.com/in/franze-calleja", "icon": "linkedin" },
-      { "label": "Instagram", "href": "https://www.instagram.com/franze_william/", "icon": "instagram" }
+      { "label": "LinkedIn", "href": "https://www.linkedin.com/in/franze-calleja", "icon": "linkedin" }
     ]
   }
 }

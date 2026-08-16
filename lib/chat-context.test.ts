@@ -8,12 +8,12 @@ describe("portfolioContext", () => {
       "profile",
       "links",
       "about",
+      "interests",
       "experience",
       "techstack",
       "skills",
       "projects",
       "education",
-      "testimonials",
       "availability",
     ];
 
@@ -31,7 +31,6 @@ describe("portfolioContext", () => {
   });
 
   it("excludes presentation-only keys", () => {
-    expect(portfolioContext).not.toHaveProperty("gallery");
     expect(portfolioContext).not.toHaveProperty("footer");
   });
 });

@@ -8,7 +8,7 @@ import content from "../app/profile-data.json";
  * key added to profile-data.json later, which is exactly how `skills` and
  * `links` went missing from the model's context.
  */
-const EXCLUDED_KEYS = ["gallery", "footer"] as const;
+const EXCLUDED_KEYS = ["footer"] as const;
 
 type ExcludedKey = (typeof EXCLUDED_KEYS)[number];
 

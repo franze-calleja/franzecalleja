@@ -1,6 +1,8 @@
 import {
   ArrowLeft,
+  Bot,
   Box,
+  CheckCircle2,
   Code,
   Container,
   Database,
@@ -9,6 +11,8 @@ import {
   Paintbrush,
   PenTool,
   Server,
+  Sparkles,
+  Terminal,
   Zap,
   type LucideIcon,
 } from "lucide-react";
@@ -16,23 +20,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import content from "@/app/profile-data.json";
-import SectionCard from "@/components/section-card";
 
 export const metadata: Metadata = {
   title: "Tech Stack & Skills",
   description:
-    "Franze William Calleja's organized tech stack and skill capability levels, ordered by familiarity.",
-};
-
-type TechItem = {
-  label: string;
-  icon: string;
-  level: number;
-};
-
-type SkillSummaryItem = {
-  label: string;
-  level: number;
+    "Comprehensive overview of Franze William Calleja's production technologies, infrastructure toolchains, agentic AI harnesses, and core engineering competencies.",
 };
 
 const iconMap: Record<string, LucideIcon> = {
@@ -46,144 +38,168 @@ const iconMap: Record<string, LucideIcon> = {
   "git-branch": GitBranch,
   "pen-tool": PenTool,
   container: Container,
+  terminal: Terminal,
+  bot: Bot,
+  sparkles: Sparkles,
 };
 
-const sortedTechStack = [...(content.techstack.items as TechItem[])].sort(
-  (left, right) => right.level - left.level,
-);
-
-const skillsSummary = content.skills.overall as SkillSummaryItem[];
-
 export default function StackPage() {
+  const techItems = content.techstack.items;
+  const categories = content.skills.categories;
+
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-4 font-sans sm:px-10 sm:py-7 lg:px-16 lg:py-8">
-      <div className="w-full space-y-4 sm:space-y-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 rounded-full border border-(--border) bg-(--surface) px-3 py-1 text-xs font-medium uppercase tracking-[0.22em] text-(--muted)">
-              Combined view
-            </div>
-            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl lg:text-4xl">
-              Tech Stack & Skills
+    <main className="min-h-screen bg-background px-4 pb-28 pt-5 sm:px-8 sm:pb-32 sm:pt-8 lg:px-16">
+      <div className="mx-auto max-w-6xl space-y-12 sm:space-y-16">
+        {/* Page Header */}
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-(--muted)">
+              Profile Index // Technical Arsenal
+            </p>
+            <h1 className="mt-3 text-4xl font-black leading-[0.92] tracking-tight sm:mt-4 sm:text-6xl lg:text-7xl">
+              TECH STACK & SKILLS.
             </h1>
-            <p className="max-w-2xl text-sm leading-6 text-(--muted) sm:text-[0.95rem]">
-              Ordered by familiarity so the strongest tools and capabilities are
-              easy to scan first.
+            <p className="mt-4 max-w-2xl text-base leading-relaxed text-foreground/80 sm:text-lg">
+              A comprehensive breakdown of active production technologies, cloud infrastructure, AI orchestration workflows, and full-stack engineering competencies.
             </p>
           </div>
 
           <Link
             href="/"
-            className="inline-flex items-center gap-1 self-start rounded-full border border-(--border) px-3 py-1.5 text-xs font-medium text-(--muted) transition-colors hover:bg-(--hover) hover:text-foreground"
+            className="inline-flex h-10 shrink-0 items-center gap-2 border border-foreground/60 px-4 font-mono text-xs font-bold uppercase tracking-[0.12em] transition-colors hover:border-foreground hover:bg-foreground hover:text-background sm:h-11 sm:px-5"
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Back
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            <span>Back to Home</span>
           </Link>
         </div>
 
-        <div className="grid gap-3 lg:grid-cols-2 lg:items-start">
-          <SectionCard style={{ animationDelay: "0ms" }}>
-            <div className="space-y-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-foreground" aria-hidden="true" />
-                    <p className="text-xs font-medium uppercase tracking-[0.22em] text-(--muted)">
-                      {content.techstack.eyebrow}
-                    </p>
+        {/* Section 1: Core Technologies & Daily Drivers */}
+        <section className="space-y-6">
+          <div className="flex items-end justify-between border-b border-foreground/35 pb-3">
+            <div>
+              <p className="font-mono text-xs font-semibold uppercase tracking-[0.14em] text-(--muted)">
+                {"01 // Technologies & Tools"}
+              </p>
+              <h2 className="mt-1 text-2xl font-black uppercase tracking-tight sm:text-3xl">
+                Core Toolchain ({techItems.length})
+              </h2>
+            </div>
+            <span className="hidden font-mono text-xs text-(--muted) sm:inline">
+              Production Active
+            </span>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {techItems.map((tech) => {
+              const Icon = iconMap[tech.icon] ?? Code;
+
+              return (
+                <article
+                  key={tech.label}
+                  className="group flex items-center justify-between border border-foreground/35 bg-background p-3.5 transition-all duration-200 hover:border-foreground hover:bg-foreground/5 hover:shadow-sm"
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center border border-foreground/30 text-foreground transition-colors group-hover:border-foreground group-hover:bg-foreground group-hover:text-background">
+                      <Icon className="h-4 w-4" aria-hidden="true" />
+                    </span>
+                    <div className="min-w-0">
+                      <h3 className="truncate text-sm font-bold text-foreground">
+                        {tech.label}
+                      </h3>
+                      <p className="truncate font-mono text-[11px] text-(--muted)">
+                        {tech.category}
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-sm text-(--muted)">
-                    Ordered from strongest to emerging familiarity.
-                  </p>
+
+                  <span
+                    className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500"
+                    title="Active in production"
+                    aria-label="Active in production"
+                  />
+                </article>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Section 2: Core Engineering Competencies */}
+        <section className="space-y-6">
+          <div className="border-b border-foreground/35 pb-3">
+            <p className="font-mono text-xs font-semibold uppercase tracking-[0.14em] text-(--muted)">
+              {"02 // Domain Competencies"}
+            </p>
+            <h2 className="mt-1 text-2xl font-black uppercase tracking-tight sm:text-3xl">
+              Architectural & Domain Mastery
+            </h2>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2">
+            {categories.map((cat, idx) => (
+              <article
+                key={cat.name}
+                className="flex flex-col border border-foreground/50 bg-background p-6 transition-all duration-200 hover:border-foreground sm:p-7"
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <span className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-(--muted)">
+                    {`0${idx + 1} // DOMAIN`}
+                  </span>
+                  <span className="font-mono text-[11px] font-semibold text-(--muted)">
+                    {cat.items.length} Focus Areas
+                  </span>
                 </div>
-                
-              </div>
 
-              <div className="grid gap-2 sm:grid-cols-2">
-                {sortedTechStack.map((tech) => {
-                  const Icon = iconMap[tech.icon] ?? Code;
-
-                  return (
-                    <article
-                      key={tech.label}
-                      className="space-y-3 rounded-lg border border-(--border) bg-(--surface) p-3 transition-colors hover:bg-(--hover)"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-(--border) bg-(--hover)">
-                            <Icon className="h-4 w-4 text-(--muted)" />
-                          </span>
-                          <div>
-                            <p className="text-sm font-semibold leading-tight text-foreground">
-                              {tech.label}
-                            </p>
-                            <p className="text-[0.7rem] text-(--muted)">
-                              Familiarity meter
-                            </p>
-                          </div>
-                        </div>
-                        <p className="text-xs font-medium text-(--muted)">
-                          {tech.level}%
-                        </p>
-                      </div>
-                      <div className="h-2 overflow-hidden rounded-full bg-(--hover)">
-                        <div
-                          className="h-full rounded-full bg-foreground transition-[width] duration-500 ease-out"
-                          style={{ width: `${tech.level}%` }}
-                        />
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            </div>
-          </SectionCard>
-
-          <SectionCard style={{ animationDelay: "120ms" }}>
-            <div className="space-y-5">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-foreground" aria-hidden="true" />
-                  <p className="text-xs font-medium uppercase tracking-[0.22em] text-(--muted)">
-                    {content.skills.eyebrow}
-                  </p>
-                </div>
-                <p className="text-sm text-(--muted)">
-                  Overall capability by area.
+                <h3 className="mt-3 text-xl font-bold tracking-tight sm:text-2xl">
+                  {cat.name}
+                </h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-(--muted)">
+                  {cat.description}
                 </p>
-              </div>
 
-              <div className="grid gap-3 sm:grid-cols-2">
-                {skillsSummary.map((skill) => (
-                  <SkillMeter key={skill.label} item={skill} />
-                ))}
-              </div>
+                <div className="my-5 border-t border-foreground/20" />
 
-              <div className="rounded-lg border border-(--border) bg-(--surface) p-3 text-xs leading-6 text-(--muted)">
-                Detailed breakdown is preserved in the data source for future use
-                and deeper pages.
-              </div>
+                <ul className="space-y-2.5">
+                  {cat.items.map((item) => (
+                    <li key={item} className="flex items-start gap-2.5 text-sm text-foreground/90">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-foreground" aria-hidden="true" />
+                      <span className="leading-snug">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        {/* Bottom Navigation CTA */}
+        <section className="border-t border-foreground/35 pt-8">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <p className="font-mono text-xs text-(--muted)">
+              Franze William Calleja // 2026
+            </p>
+            <div className="flex flex-wrap gap-2 sm:gap-3">
+              <Link
+                href="/projects"
+                className="inline-flex h-9 items-center border border-foreground/40 px-3.5 font-mono text-xs font-semibold uppercase tracking-wider text-foreground transition-colors hover:border-foreground hover:bg-foreground hover:text-background"
+              >
+                View Projects →
+              </Link>
+              <Link
+                href="/stats"
+                className="inline-flex h-9 items-center border border-foreground/40 px-3.5 font-mono text-xs font-semibold uppercase tracking-wider text-foreground transition-colors hover:border-foreground hover:bg-foreground hover:text-background"
+              >
+                Telemetry & Vitals →
+              </Link>
+              <Link
+                href="/chat"
+                className="inline-flex h-9 items-center border border-foreground/40 px-3.5 font-mono text-xs font-semibold uppercase tracking-wider text-foreground transition-colors hover:border-foreground hover:bg-foreground hover:text-background"
+              >
+                Open Terminal →
+              </Link>
             </div>
-          </SectionCard>
-        </div>
+          </div>
+        </section>
       </div>
     </main>
-  );
-}
-
-function SkillMeter({ item }: { item: SkillSummaryItem }) {
-  return (
-    <div className="space-y-1.5 rounded-md border border-(--border) bg-(--surface) p-3">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-medium text-foreground">{item.label}</p>
-        <p className="text-xs font-medium text-(--muted)">{item.level}%</p>
-      </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-(--hover)">
-        <div
-          className="h-full rounded-full bg-foreground transition-[width] duration-500 ease-out"
-          style={{ width: `${item.level}%` }}
-        />
-      </div>
-    </div>
   );
 }

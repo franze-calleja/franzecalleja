@@ -236,7 +236,7 @@ Cloud & Infrastructure:
             content: `[PROFESSIONAL CAREER TIMELINE]
 01. MSEUF-CI (August 2025 - Present) [ACTIVE]
     Role:  Fullstack Software Engineer
-    Scope: Enterprise university platforms, Docker containerization, Prometheus/Grafana observability.
+    Scope: Large-scale enterprise systems, Docker containerization, Prometheus/Grafana observability.
 
 02. R-A-Ones Corporation (January 2026 - Present) [ACTIVE]
     Role:  Lead Software Engineer

@@ -69,8 +69,7 @@ export default function HomeHero() {
             <div className="relative h-full overflow-hidden bg-foreground">
               <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-2/5 p-3 font-mono text-[0.55rem] leading-4 text-background/55 sm:p-5 sm:text-[0.65rem]">
                 &lt;build /&gt;<br />
-                stack: react<br />
-                services: node<br />
+                arch: fullstack<br />
                 infra: cloud<br />
                 status: online<br />
                 deploy: ready

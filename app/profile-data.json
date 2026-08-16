@@ -25,10 +25,10 @@
   ],
   "about": {
     "eyebrow": "About",
-    "title": "Full-stack software engineer focused on production-ready systems.",
+    "title": "Full-stack software engineer focused on production-ready systems and scalable architecture.",
     "body": [
-      "I am a full-stack software engineer who develops enterprise solutions and end-to-end web and mobile applications. I work across the stack, building frontend experiences in React/Next.js, implementing backend services with NodeJS/Express and Rust (Axum), and designing the infrastructure that keeps systems reliable and secure.",
-      "I currently work as Lead Fullstack Software Engineer at Manuel S. Enverga University Foundation - Candelaria Inc. I also serve as a Lead Software Engineer on a part-time contractual basis at R-A-Ones Corporation in Canada, and lead a freelance group delivering software solutions for clients worldwide. I coordinate teams, own delivery, and translate product goals into pragmatic technical solutions.",
+      "Full-stack software engineer specializing in scalable enterprise systems, robust cloud infrastructure, and end-to-end product architecture. Leading engineering across large-scale enterprise platforms and startup products with a strong focus on reliability, clean system design, and developer velocity.",
+      "I currently work as Lead Fullstack Software Engineer at Manuel S. Enverga University Foundation - Candelaria Inc., leading mission-critical enterprise software infrastructures and production systems. I also direct cloud architecture and cross-platform mobile development at R-A-Ones Corporation, and lead a freelance group delivering software solutions for clients worldwide.",
       "Recently, I’ve been heavily invested in agentic AI workflows, developer harnesses, and autonomous coding tools—leveraging Claude Code and Codex to accelerate software architecture and delivery.",
       "Outside of software engineering, I am a passionate PS5 gamer (playing NBA 2K, Red Dead Redemption 2, and Cult of the Lamb) and a die-hard basketball fan who loyally follows LeBron James (the undisputed GOAT)."
     ]
@@ -52,9 +52,9 @@
         "caption": "MSEUF-CI",
         "period": "August 2025 - Present",
         "current": true,
-        "description": "Leading the end-to-end development of internal enterprise systems, software infrastructures, and production observability platforms across university operations.",
+        "description": "Leading the end-to-end development of internal enterprise systems, software infrastructures, and production observability platforms across large-scale institutional operations.",
         "highlights": [
-          "Architecting, implementing, and maintaining scalable full-stack web and mobile systems for university operations.",
+          "Architecting, implementing, and maintaining scalable full-stack web and mobile systems for mission-critical enterprise operations.",
           "Architected and deployed image-based containerized environments (Docker) and engineered an end-to-end observability stack using Grafana, Prometheus, Loki, Alloy, Node Exporter, Dozzle, and Uptime Kuma for real-time telemetry, centralized logging, and infrastructure uptime monitoring.",
           "Managing CI/CD deployment pipelines, cloud infrastructure, and staging/production environments.",
           "Overseeing system reliability, engineering standards, technical documentation, and best practices."

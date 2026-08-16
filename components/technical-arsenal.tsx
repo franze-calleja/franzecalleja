@@ -68,7 +68,6 @@ const arsenalCategories: ArsenalCategory[] = [
     icon: Sparkles,
     items: [
       "Claude Code",
-      "Antigravity (AGY)",
       "Codex",
       "Agentic Workflows",
       "Gemini API",

@@ -54,6 +54,7 @@ export default function ChatAssistant() {
   ]);
   const [input, setInput] = useState("");
   const [isExecuting, setIsExecuting] = useState(false);
+  const [elapsedTime, setElapsedTime] = useState(0);
   const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
 
@@ -64,6 +65,20 @@ export default function ChatAssistant() {
   useEffect(() => {
     terminalEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [entries, isExecuting]);
+
+  // Elapsed timer while executing / thinking (Claude Code style)
+  useEffect(() => {
+    if (!isExecuting) {
+      setElapsedTime(0);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setElapsedTime((prev) => prev + 1);
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [isExecuting]);
 
   // Focus terminal input on mount
   useEffect(() => {
@@ -83,28 +98,60 @@ export default function ChatAssistant() {
     setHistoryIndex(-1);
   }
 
-  // Handle local slash commands instantly
-  function handleSlashCommand(cmd: string): boolean {
+  // Handle local slash commands with Claude Code style thinking state
+  async function handleSlashCommand(cmd: string): Promise<boolean> {
     const normalized = cmd.trim().toLowerCase();
 
-    switch (normalized) {
-      case "/clear":
-      case "clear":
-      case "cls":
-        clearTerminal();
-        return true;
+    if (normalized === "/clear" || normalized === "clear" || normalized === "cls") {
+      clearTerminal();
+      return true;
+    }
 
+    const knownCommands = [
+      "/help",
+      "help",
+      "/projects",
+      "projects",
+      "/devops",
+      "/observability",
+      "devops",
+      "/experience",
+      "experience",
+      "/stack",
+      "stack",
+      "/education",
+      "education",
+      "/contact",
+      "contact",
+      "/about",
+      "about",
+    ];
+
+    if (!knownCommands.includes(normalized)) {
+      return false;
+    }
+
+    // Add user entry first
+    setEntries((prev) => [
+      ...prev,
+      {
+        id: `cmd-${Date.now()}`,
+        type: "user",
+        command: cmd,
+        content: cmd,
+        timestamp: getTimestamp(),
+      },
+    ]);
+
+    // Show thinking indicator for a realistic moment
+    setIsExecuting(true);
+    await new Promise((resolve) => setTimeout(resolve, 450));
+
+    switch (normalized) {
       case "/help":
       case "help":
         setEntries((prev) => [
           ...prev,
-          {
-            id: `cmd-${Date.now()}`,
-            type: "user",
-            command: cmd,
-            content: cmd,
-            timestamp: getTimestamp(),
-          },
           {
             id: `res-${Date.now()}`,
             type: "system",
@@ -115,29 +162,22 @@ export default function ChatAssistant() {
   /stack          Print complete tech stack & skill familiarity matrix
   /education      View academic degree, honors (Salutatorian, Magna Cum Laude)
   /contact        Show email, GitHub, LinkedIn & location
-  /about          Display full engineer bio & technical focus
+  /about          Display full engineer bio, PS5 gaming & LeBron James loyalty
   /clear          Clear terminal scrollback buffer
   /help           Show this command manual
 
 Natural language queries are also supported:
-  e.g. "What backend technologies does Franze use?"
+  e.g. "What AI tools does Franze use?"
   e.g. "Tell me about his work at MSEUF-CI."`,
             timestamp: getTimestamp(),
           },
         ]);
-        return true;
+        break;
 
       case "/projects":
       case "projects":
         setEntries((prev) => [
           ...prev,
-          {
-            id: `cmd-${Date.now()}`,
-            type: "user",
-            command: cmd,
-            content: cmd,
-            timestamp: getTimestamp(),
-          },
           {
             id: `res-${Date.now()}`,
             type: "assistant",
@@ -156,20 +196,13 @@ Type any project name for deeper architecture details.`,
             timestamp: getTimestamp(),
           },
         ]);
-        return true;
+        break;
 
       case "/devops":
       case "/observability":
       case "devops":
         setEntries((prev) => [
           ...prev,
-          {
-            id: `cmd-${Date.now()}`,
-            type: "user",
-            command: cmd,
-            content: cmd,
-            timestamp: getTimestamp(),
-          },
           {
             id: `res-${Date.now()}`,
             type: "assistant",
@@ -191,19 +224,12 @@ Cloud & Infrastructure:
             timestamp: getTimestamp(),
           },
         ]);
-        return true;
+        break;
 
       case "/experience":
       case "experience":
         setEntries((prev) => [
           ...prev,
-          {
-            id: `cmd-${Date.now()}`,
-            type: "user",
-            command: cmd,
-            content: cmd,
-            timestamp: getTimestamp(),
-          },
           {
             id: `res-${Date.now()}`,
             type: "assistant",
@@ -230,44 +256,30 @@ Cloud & Infrastructure:
             timestamp: getTimestamp(),
           },
         ]);
-        return true;
+        break;
 
       case "/stack":
       case "stack":
         setEntries((prev) => [
           ...prev,
           {
-            id: `cmd-${Date.now()}`,
-            type: "user",
-            command: cmd,
-            content: cmd,
-            timestamp: getTimestamp(),
-          },
-          {
             id: `res-${Date.now()}`,
             type: "assistant",
             content: `[TECHNICAL STACK & CAPABILITIES]
-AI & Tooling:   Claude Code, Antigravity CLI (AGY), Codex, Gemini API, Multi-Agent Harnesses
+AI & Tooling:   Claude Code, Codex, Gemini API, Multi-Agent Harnesses
 Frontend:       TypeScript, React, Next.js, React Native, Expo, Tailwind CSS, Zustand
 Backend:        Node.js, Express.js, Prisma ORM, PostgreSQL, MySQL, PHP, Rust (Axum)
 Infrastructure: Docker, Grafana, Prometheus, Loki, Alloy, Uptime Kuma, CI/CD, AWS, GCP`,
             timestamp: getTimestamp(),
           },
         ]);
-        return true;
+        break;
 
       case "/education":
       case "education":
         const edu = content.education.items[0];
         setEntries((prev) => [
           ...prev,
-          {
-            id: `cmd-${Date.now()}`,
-            type: "user",
-            command: cmd,
-            content: cmd,
-            timestamp: getTimestamp(),
-          },
           {
             id: `res-${Date.now()}`,
             type: "assistant",
@@ -279,19 +291,12 @@ Focus:        Software Architecture, Distributed Systems, Algorithms, Database S
             timestamp: getTimestamp(),
           },
         ]);
-        return true;
+        break;
 
       case "/contact":
       case "contact":
         setEntries((prev) => [
           ...prev,
-          {
-            id: `cmd-${Date.now()}`,
-            type: "user",
-            command: cmd,
-            content: cmd,
-            timestamp: getTimestamp(),
-          },
           {
             id: `res-${Date.now()}`,
             type: "assistant",
@@ -304,19 +309,12 @@ Status:   ${content.availability.status} (${content.availability.description})`,
             timestamp: getTimestamp(),
           },
         ]);
-        return true;
+        break;
 
       case "/about":
       case "about":
         setEntries((prev) => [
           ...prev,
-          {
-            id: `cmd-${Date.now()}`,
-            type: "user",
-            command: cmd,
-            content: cmd,
-            timestamp: getTimestamp(),
-          },
           {
             id: `res-${Date.now()}`,
             type: "assistant",
@@ -327,11 +325,11 @@ ${content.about.body.join("\n\n")}`,
             timestamp: getTimestamp(),
           },
         ]);
-        return true;
-
-      default:
-        return false;
+        break;
     }
+
+    setIsExecuting(false);
+    return true;
   }
 
   async function executeInput(rawText: string) {
@@ -357,7 +355,8 @@ ${content.about.body.join("\n\n")}`,
         "about",
       ].includes(trimmed.toLowerCase())
     ) {
-      if (handleSlashCommand(trimmed)) {
+      const handled = await handleSlashCommand(trimmed);
+      if (handled) {
         return;
       }
     }
@@ -624,9 +623,12 @@ ${content.about.body.join("\n\n")}`,
         })}
 
         {isExecuting && (
-          <div className="flex items-center gap-2 border-l-2 border-foreground/40 pl-3 text-(--muted) sm:pl-3.5">
-            <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
-            <span className="font-mono text-xs">processing query...</span>
+          <div className="flex items-center gap-2 border-l-2 border-foreground/40 pl-3 font-mono text-xs text-(--muted) sm:pl-3.5">
+            <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" aria-hidden="true" />
+            <span className="font-semibold text-foreground/90">Thinking...</span>
+            <span className="text-[11px] text-(--muted)">
+              ({(elapsedTime / 10).toFixed(1)}s)
+            </span>
           </div>
         )}
 

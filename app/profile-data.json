@@ -29,7 +29,7 @@
     "body": [
       "I am a full-stack software engineer who develops enterprise solutions and end-to-end web and mobile applications. I work across the stack, building frontend experiences in React/Next.js, implementing backend services with NodeJS/Express and Rust (Axum), and designing the infrastructure that keeps systems reliable and secure.",
       "I currently work as Lead Fullstack Software Engineer at Manuel S. Enverga University Foundation - Candelaria Inc. I also serve as a Lead Software Engineer on a part-time contractual basis at R-A-Ones Corporation in Canada, and lead a freelance group delivering software solutions for clients worldwide. I coordinate teams, own delivery, and translate product goals into pragmatic technical solutions.",
-      "Recently, I’ve been heavily invested in agentic AI workflows, developer harnesses, and autonomous coding tools—leveraging Claude Code, Antigravity (AGY), and Codex to accelerate software architecture and delivery.",
+      "Recently, I’ve been heavily invested in agentic AI workflows, developer harnesses, and autonomous coding tools—leveraging Claude Code and Codex to accelerate software architecture and delivery.",
       "Outside of software engineering, I am a passionate PS5 gamer (playing NBA 2K, Red Dead Redemption 2, and Cult of the Lamb) and a die-hard basketball fan who loyally follows LeBron James (the undisputed GOAT)."
     ]
   },
@@ -40,7 +40,7 @@
       "goat": "LeBron James",
       "allegiance": "Loyal to LeBron James wherever he plays"
     },
-    "aiTooling": ["Claude Code", "Antigravity CLI (AGY)", "Codex", "Gemini 2.5 Flash", "MCP Tool Harnesses", "Multi-Agent Orchestration"]
+    "aiTooling": ["Claude Code", "Codex", "Gemini 2.5 Flash", "MCP Tool Harnesses", "Multi-Agent Orchestration"]
   },
   "experience": {
     "eyebrow": "Experience",
@@ -125,8 +125,7 @@
     "items": [
       { "label": "TypeScript", "icon": "code", "level": 95 },
       { "label": "Claude Code", "icon": "terminal", "level": 94 },
-      { "label": "Antigravity (AGY)", "icon": "bot", "level": 93 },
-      { "label": "Codex", "icon": "code", "level": 90 },
+      { "label": "Codex", "icon": "code", "level": 92 },
       { "label": "Node.js", "icon": "server", "level": 92 },
       { "label": "Express.js", "icon": "server", "level": 92 },
       { "label": "React", "icon": "layers", "level": 92 },
@@ -179,7 +178,7 @@
       {
         "name": "AI & Infrastructure",
         "items": [
-          { "label": "Agentic AI Orchestration & Developer Harnesses (Claude Code, Antigravity, Codex)", "level": 94 },
+          { "label": "Agentic AI Orchestration & Developer Harnesses (Claude Code, Codex)", "level": 94 },
           { "label": "Agentic development & Model orchestration (Gemini API)", "level": 90 },
           { "label": "Observability & Monitoring (Grafana, Prometheus, Loki, Alloy, Dozzle, Node Exporter)", "level": 88 },
           { "label": "Uptime & Service Health Checks (Uptime Kuma)", "level": 86 },

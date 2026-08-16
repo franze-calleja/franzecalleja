@@ -1,10 +1,22 @@
 import { Terminal } from "lucide-react";
+import type { Metadata } from "next";
 import ChatAssistant from "@/components/chat-assistant";
+import { SITE_URL } from "@/lib/site";
 
-export const metadata = {
-  title: "CLI Terminal & Assistant",
+export const metadata: Metadata = {
+  title: "CLI Terminal & Agent Interface",
   description:
     "Interactive terminal REPL and Gemini AI agent with live context of Franze William Calleja's projects, experience, and tech stack.",
+  alternates: {
+    canonical: "/chat",
+  },
+  openGraph: {
+    title: "CLI Terminal & Agent Interface | Franze William Calleja",
+    description:
+      "Interactive terminal REPL and Gemini AI agent with live context of Franze William Calleja's projects, experience, and tech stack.",
+    url: `${SITE_URL}/chat`,
+    images: ["/profile.png"],
+  },
 };
 
 const cheatsheet = [

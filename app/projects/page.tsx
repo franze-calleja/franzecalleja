@@ -2,11 +2,22 @@ import { ArrowUpRight } from "lucide-react";
 import type { Metadata } from "next";
 
 import content from "@/app/profile-data.json";
+import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Projects",
+  title: "Projects & Production Systems",
   description:
-    "Selected projects by Franze William Calleja, including web, mobile, and full-stack systems with their technologies.",
+    "Selected engineering projects by Franze William Calleja, including enterprise web platforms, mobile systems, cloud infrastructure, and headless CMS architectures.",
+  alternates: {
+    canonical: "/projects",
+  },
+  openGraph: {
+    title: "Projects & Production Systems | Franze William Calleja",
+    description:
+      "Selected engineering projects by Franze William Calleja, including enterprise web platforms, mobile systems, cloud infrastructure, and headless CMS architectures.",
+    url: `${SITE_URL}/projects`,
+    images: ["/profile.png"],
+  },
 };
 
 export default function ProjectsPage() {
@@ -31,7 +42,7 @@ export default function ProjectsPage() {
               <a
                 href={project.href}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="group flex min-h-64 flex-col border border-foreground/55 p-6 transition-colors hover:bg-foreground hover:text-background sm:p-7"
               >
                 <div className="flex items-start justify-between gap-6">

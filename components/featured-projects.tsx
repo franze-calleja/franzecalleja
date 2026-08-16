@@ -33,7 +33,7 @@ export default function FeaturedProjects() {
             key={project.name}
             href={project.href}
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             className="group flex min-h-56 flex-col border border-foreground/55 p-6 transition-colors hover:bg-foreground hover:text-background sm:p-7"
           >
             <div className="flex items-start justify-between gap-6">

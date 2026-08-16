@@ -20,11 +20,22 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import content from "@/app/profile-data.json";
+import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Tech Stack & Skills",
+  title: "Tech Stack & Engineering Arsenal",
   description:
     "Comprehensive overview of Franze William Calleja's production technologies, infrastructure toolchains, agentic AI harnesses, and core engineering competencies.",
+  alternates: {
+    canonical: "/stack",
+  },
+  openGraph: {
+    title: "Tech Stack & Engineering Arsenal | Franze William Calleja",
+    description:
+      "Comprehensive overview of Franze William Calleja's production technologies, infrastructure toolchains, agentic AI harnesses, and core engineering competencies.",
+    url: `${SITE_URL}/stack`,
+    images: ["/profile.png"],
+  },
 };
 
 const iconMap: Record<string, LucideIcon> = {

@@ -47,7 +47,7 @@ export default function HomeHero() {
                   key={link.label}
                   href={link.href}
                   target={isEmail ? undefined : "_blank"}
-                  rel={isEmail ? undefined : "noreferrer"}
+                  rel={isEmail ? undefined : "noopener noreferrer"}
                   className={`inline-flex h-12 items-center gap-2 border px-4 text-xs font-bold uppercase tracking-[0.12em] transition-colors ${
                     isEmail
                       ? "border-foreground bg-foreground text-background hover:bg-transparent hover:text-foreground"

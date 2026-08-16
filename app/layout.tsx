@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import CursorFollower from "@/components/cursor-follower";
 import MainBottomNav from "@/components/main-bottom-nav";
+import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,40 +16,66 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://franzecalleja.dev"),
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "Franze William Calleja",
+    default: "Franze William Calleja — Full-Stack Software Engineer",
     template: "%s | Franze William Calleja",
   },
   description:
-    "Franze William Calleja's personal portfolio featuring full-stack software engineering work, projects, experience, and tech stack.",
-  applicationName: "Franze William Calleja",
-  authors: [{ name: "Franze William Calleja" }],
+    "Full-stack software engineer specializing in scalable enterprise systems, robust cloud infrastructure, and end-to-end product architecture.",
+  applicationName: "Franze William Calleja Portfolio",
+  authors: [{ name: "Franze William Calleja", url: SITE_URL }],
   creator: "Franze William Calleja",
   publisher: "Franze William Calleja",
   keywords: [
     "Franze William Calleja",
+    "Franze Calleja",
     "Software Engineer",
-    "Full-Stack Developer",
-    "Next.js",
-    "React",
+    "Full-Stack Software Engineer",
+    "Enterprise Systems Architecture",
+    "Next.js Developer",
+    "React Engineer",
     "TypeScript",
+    "Node.js",
+    "Express.js",
+    "Prisma ORM",
+    "Docker Containers",
+    "Grafana Prometheus Observability",
+    "Agentic AI Developer",
+    "MSEUF-CI",
     "Portfolio",
   ],
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
-    type: "website",
-    title: "Franze William Calleja",
+    type: "profile",
+    firstName: "Franze William",
+    lastName: "Calleja",
+    username: "franze-calleja",
+    gender: "male",
+    title: "Franze William Calleja — Full-Stack Software Engineer",
     description:
-      "Full-stack software engineer focused on production-ready systems.",
+      "Full-stack software engineer specializing in scalable enterprise systems, robust cloud infrastructure, and end-to-end product architecture.",
     siteName: "Franze William Calleja",
-    images: [{ url: "/icon.png", width: 512, height: 512, alt: "Franze William Calleja" }],
+    url: SITE_URL,
+    images: [
+      {
+        url: "/profile.png",
+        width: 1200,
+        height: 1200,
+        alt: "Franze William Calleja — Full-Stack Software Engineer",
+      },
+    ],
+    locale: "en_US",
   },
   twitter: {
-    card: "summary",
-    title: "Franze William Calleja",
+    card: "summary_large_image",
+    title: "Franze William Calleja — Full-Stack Software Engineer",
     description:
-      "Full-stack software engineer focused on production-ready systems.",
-    images: ["/icon.png"],
+      "Full-stack software engineer specializing in scalable enterprise systems, robust cloud infrastructure, and end-to-end product architecture.",
+    images: ["/profile.png"],
+    creator: "@franze_calleja",
   },
   icons: {
     icon: [
@@ -72,6 +99,59 @@ export const metadata: Metadata = {
   },
 };
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Person",
+      "@id": `${SITE_URL}/#person`,
+      name: "Franze William Calleja",
+      url: SITE_URL,
+      image: `${SITE_URL}/profile.png`,
+      jobTitle: "Full-Stack Software Engineer",
+      description:
+        "Full-stack software engineer specializing in scalable enterprise systems, robust cloud infrastructure, and end-to-end product architecture.",
+      alumniOf: {
+        "@type": "EducationalOrganization",
+        name: "Manuel S. Enverga University Foundation - Candelaria Inc.",
+      },
+      sameAs: [
+        "https://github.com/franze-calleja",
+        "https://linkedin.com/in/franzecalleja",
+      ],
+      knowsAbout: [
+        "TypeScript",
+        "JavaScript",
+        "Next.js",
+        "React",
+        "Node.js",
+        "Express.js",
+        "Prisma ORM",
+        "MySQL",
+        "PostgreSQL",
+        "Docker",
+        "Grafana",
+        "Prometheus",
+        "Telemetry Observability",
+        "Agentic AI",
+        "Cloud Infrastructure",
+      ],
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${SITE_URL}/#website`,
+      url: SITE_URL,
+      name: "Franze William Calleja — Portfolio",
+      description:
+        "Personal portfolio and technical engineering archive of Franze William Calleja.",
+      publisher: {
+        "@id": `${SITE_URL}/#person`,
+      },
+      inLanguage: "en-US",
+    },
+  ],
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -80,6 +160,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `

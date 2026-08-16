@@ -13,13 +13,26 @@ import {
   Compass,
 } from "lucide-react";
 
+import type { Metadata } from "next";
+
 import content from "@/app/profile-data.json";
 import GithubStatsCalendar from "@/components/github-stats-calendar";
+import { SITE_URL } from "@/lib/site";
 
-export const metadata = {
-  title: "Stats & Telemetry",
+export const metadata: Metadata = {
+  title: "Stats & Engineering Telemetry",
   description:
     "Engineering metrics, public commit activity, observability telemetry, and developer vitals of Franze William Calleja.",
+  alternates: {
+    canonical: "/stats",
+  },
+  openGraph: {
+    title: "Stats & Engineering Telemetry | Franze William Calleja",
+    description:
+      "Engineering metrics, public commit activity, observability telemetry, and developer vitals of Franze William Calleja.",
+    url: `${SITE_URL}/stats`,
+    images: ["/profile.png"],
+  },
 };
 
 const primaryStats = [

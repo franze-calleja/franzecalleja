@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     description:
       "Comprehensive overview of Franze William Calleja's production technologies, infrastructure toolchains, agentic AI harnesses, and core engineering competencies.",
     url: `${SITE_URL}/stack`,
-    images: ["/profile.png"],
+    images: ["/og-image.png"],
   },
 };
 

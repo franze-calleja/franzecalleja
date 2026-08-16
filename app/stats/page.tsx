@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     description:
       "Engineering metrics, public commit activity, observability telemetry, and developer vitals of Franze William Calleja.",
     url: `${SITE_URL}/stats`,
-    images: ["/profile.png"],
+    images: ["/og-image.png"],
   },
 };
 

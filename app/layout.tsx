@@ -49,11 +49,7 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    type: "profile",
-    firstName: "Franze William",
-    lastName: "Calleja",
-    username: "franze-calleja",
-    gender: "male",
+    type: "website",
     title: "Franze William Calleja — Full-Stack Software Engineer",
     description:
       "Full-stack software engineer specializing in scalable enterprise systems, robust cloud infrastructure, and end-to-end product architecture.",
@@ -61,10 +57,11 @@ export const metadata: Metadata = {
     url: SITE_URL,
     images: [
       {
-        url: "/profile.png",
+        url: "/og-image.png",
         width: 1200,
         height: 1200,
-        alt: "Franze William Calleja — Full-Stack Software Engineer",
+        alt: "Franze William Calleja — </Franze>",
+        type: "image/png",
       },
     ],
     locale: "en_US",
@@ -74,7 +71,7 @@ export const metadata: Metadata = {
     title: "Franze William Calleja — Full-Stack Software Engineer",
     description:
       "Full-stack software engineer specializing in scalable enterprise systems, robust cloud infrastructure, and end-to-end product architecture.",
-    images: ["/profile.png"],
+    images: ["/og-image.png"],
     creator: "@franze_calleja",
   },
   icons: {

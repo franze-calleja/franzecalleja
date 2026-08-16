@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     description:
       "Selected engineering projects by Franze William Calleja, including enterprise web platforms, mobile systems, cloud infrastructure, and headless CMS architectures.",
     url: `${SITE_URL}/projects`,
-    images: ["/profile.png"],
+    images: ["/og-image.png"],
   },
 };
 

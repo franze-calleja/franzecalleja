@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     description:
       "Interactive terminal REPL and Gemini AI agent with live context of Franze William Calleja's projects, experience, and tech stack.",
     url: `${SITE_URL}/chat`,
-    images: ["/profile.png"],
+    images: ["/og-image.png"],
   },
 };
 

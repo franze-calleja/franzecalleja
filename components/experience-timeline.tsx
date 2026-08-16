@@ -74,7 +74,7 @@ export default function ExperienceTimeline() {
             {content.experience.eyebrow}
           </p>
           <h2 className="mt-2 text-3xl font-black uppercase tracking-tight sm:text-4xl">
-            Experience
+            Professional Timeline
           </h2>
         </div>
         <p className="hidden font-mono text-xs font-semibold uppercase tracking-[0.12em] text-(--muted) sm:block">

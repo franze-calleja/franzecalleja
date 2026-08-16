@@ -24,7 +24,7 @@ export default function EducationSection() {
           {content.education.eyebrow}
         </p>
         <h2 className="mt-2 text-3xl font-black uppercase tracking-tight sm:text-4xl">
-          Education
+          Academic Background
         </h2>
       </div>
 

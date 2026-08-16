@@ -18,14 +18,14 @@ const DESKTOP_SYSTEM_BANNER = `┌───────────────�
 │  FRANZE_CLI :: PORTFOLIO RUNTIME INTERFACE [v2.6]            │
 │  Interactive agent engine powered by Gemini + live context.   │
 └──────────────────────────────────────────────────────────────┘
-[sys] Context initialized: 5 roles, 8 projects, 18 stack tools, 1 degree
+[sys] Context initialized: 5 roles, 9 projects, 20 stack tools, 1 degree
 [sys] Type any question or run slash commands. Try /help for manual.`;
 
 const MOBILE_SYSTEM_BANNER = `┌──────────────────────────────────────────────┐
 │ FRANZE_CLI :: PORTFOLIO RUNTIME INTERFACE    │
 │ Gemini engine + live context loaded [v2.6]   │
 └──────────────────────────────────────────────┘
-[sys] Context initialized: 5 roles, 8 projects, 18 tools, 1 degree
+[sys] Context initialized: 5 roles, 9 projects, 20 tools, 1 degree
 [sys] Type any question or run slash commands. Try /help.`;
 
 const QUICK_COMMANDS = [

@@ -175,7 +175,7 @@ export default function StackPage() {
         <section className="border-t border-foreground/35 pt-8">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <p className="font-mono text-xs text-(--muted)">
-              Franze William Calleja // 2026
+              Franze William Calleja // {new Date().getFullYear()}
             </p>
             <div className="flex flex-wrap gap-2 sm:gap-3">
               <Link

@@ -11,11 +11,13 @@ const iconMap = {
 } as const;
 
 export default function HomeHero() {
+  const currentYear = new Date().getFullYear();
+
   return (
     <>
       <header className="flex items-center justify-between border-b border-foreground/20 pb-4">
         <p className="font-mono text-xs font-semibold uppercase tracking-[0.14em]">
-          FWC / 2026
+          FWC / {currentYear}
         </p>
         <ThemeToggle />
       </header>

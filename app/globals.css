@@ -49,6 +49,21 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* View Transition Theme Ripple Animation */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 99999;
+}
+
 * {
   box-sizing: border-box;
 }

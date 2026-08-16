@@ -1,20 +1,13 @@
 "use client";
 
 import { Moon, SunMedium } from "lucide-react";
+import { toggleThemeWithRipple } from "@/lib/theme-toggle";
 
 export default function ThemeToggle() {
-  const toggleTheme = () => {
-    const root = document.documentElement;
-    const nextTheme = root.dataset.theme === "dark" ? "light" : "dark";
-
-    root.dataset.theme = nextTheme;
-    window.localStorage.setItem("theme", nextTheme);
-  };
-
   return (
     <button
       type="button"
-      onClick={toggleTheme}
+      onClick={(e) => toggleThemeWithRipple(e)}
       className="theme-switch shrink-0 rounded-full border border-(--border) bg-transparent p-1 text-foreground transition-colors hover:bg-(--hover)"
       aria-label="Toggle color theme"
     >

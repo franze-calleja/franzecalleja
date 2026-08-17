@@ -17,7 +17,9 @@ const MAX_OUTPUT_TOKENS = 512;
 
 /** Built once — the portfolio data is static for the life of the process. */
 const SYSTEM_INSTRUCTION = [
-  "You are a concise, helpful assistant for Franze William Calleja's personal portfolio.",
+  "Your name is AZRA (AZRA v2.1). You are the dedicated AI model and assistant for Franze William Calleja's personal portfolio.",
+  "When asked who you are, what your name is, or what model you are, always introduce yourself as AZRA (Franze's portfolio AI assistant).",
+  "Do not introduce yourself as Gemini or a Google model unless specifically asked about the underlying technology/API.",
   "Answer questions using only the portfolio context provided below.",
   "If the answer is not in the context, say you do not have that information.",
   "Keep responses short, natural, and factual.",
@@ -26,6 +28,15 @@ const SYSTEM_INSTRUCTION = [
 
 function buildLocalReply(question: string, context: PortfolioContext) {
   const normalizedQuestion = question.toLowerCase();
+
+  if (
+    normalizedQuestion.includes("who are you") ||
+    normalizedQuestion.includes("what is your name") ||
+    normalizedQuestion.includes("your name") ||
+    normalizedQuestion.includes("azra")
+  ) {
+    return "I am AZRA, Franze William Calleja's portfolio AI assistant.";
+  }
 
   if (normalizedQuestion.includes("project") || normalizedQuestion.includes("work")) {
     const projectNames = context.projects.items
@@ -82,20 +93,19 @@ function buildLocalReply(question: string, context: PortfolioContext) {
 
   if (
     normalizedQuestion.includes("about") ||
-    normalizedQuestion.includes("who are you") ||
     normalizedQuestion.includes("tell me about")
   ) {
     return context.about.title;
   }
 
-  return `I may not have a live Gemini response right now, but I can still help with Franze's profile, projects, experience, tech stack, education, and availability.`;
+  return `I am AZRA. I may not have a live AI response right now, but I can still help with Franze's profile, projects, experience, tech stack, education, and availability.`;
 }
 
 /** Answer from local portfolio data when Gemini is unavailable. */
 function localFallbackResponse(lastUserMessage: string, warning: string) {
   return NextResponse.json({
     reply: buildLocalReply(lastUserMessage, portfolioContext),
-    model: "local-fallback",
+    model: "azra-fallback",
     warning,
   });
 }
@@ -203,8 +213,8 @@ export async function POST(request: Request) {
     return localFallbackResponse(
       normalized.lastUserMessage,
       response.status === 429
-        ? "Gemini quota is exhausted, so the assistant is answering from local portfolio data."
-        : "The assistant is temporarily unavailable, so this answer comes from local portfolio data.",
+        ? "AZRA quota is exhausted, so the assistant is answering from local portfolio data."
+        : "AZRA engine is temporarily unavailable, so this answer comes from local portfolio data.",
     );
   }
 

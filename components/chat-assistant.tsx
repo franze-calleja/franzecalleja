@@ -15,15 +15,15 @@ type CliEntry = {
 };
 
 const DESKTOP_SYSTEM_BANNER = `┌──────────────────────────────────────────────────────────────┐
-│  FRANZE_CLI :: PORTFOLIO RUNTIME INTERFACE [v2.6]            │
-│  Interactive agent engine powered by Gemini + live context.   │
+│  AZRA_CLI :: PORTFOLIO RUNTIME INTERFACE [v2.1]              │
+│  Interactive AZRA engine powered by Gemini + live context.   │
 └──────────────────────────────────────────────────────────────┘
 [sys] Context initialized: 5 roles, 9 projects, 20 stack tools, 1 degree
 [sys] Type any question or run slash commands. Try /help for manual.`;
 
 const MOBILE_SYSTEM_BANNER = `┌──────────────────────────────────────────────┐
-│ FRANZE_CLI :: PORTFOLIO RUNTIME INTERFACE    │
-│ Gemini engine + live context loaded [v2.6]   │
+│ AZRA_CLI :: PORTFOLIO RUNTIME INTERFACE      │
+│ AZRA engine (Gemini) + context loaded [v2.1] │
 └──────────────────────────────────────────────┘
 [sys] Context initialized: 5 roles, 9 projects, 20 tools, 1 degree
 [sys] Type any question or run slash commands. Try /help.`;
@@ -528,7 +528,7 @@ ${content.about.body.join("\n\n")}`,
         {/* Title */}
         <div className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-foreground sm:text-xs">
           <Terminal className="h-3.5 w-3.5" aria-hidden="true" />
-          <span>franze-cli v2.6</span>
+          <span>azra-cli v2.1</span>
         </div>
 
         {/* Status & Actions */}
@@ -609,7 +609,7 @@ ${content.about.body.join("\n\n")}`,
             <div key={entry.id} className="w-full min-w-0 space-y-1.5 border-l-2 border-foreground/40 pl-3 text-foreground/90 sm:pl-3.5">
               <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-(--muted) select-none sm:text-[11px]">
                 <Sparkles className="h-3 w-3" />
-                <span>agent // response</span>
+                <span>azra // response</span>
                 {entry.timestamp && <span className="ml-auto text-[10px]">{entry.timestamp}</span>}
               </div>
               <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-foreground/90 sm:text-[13px]">

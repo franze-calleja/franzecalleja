@@ -4,16 +4,16 @@ import ChatAssistant from "@/components/chat-assistant";
 import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "CLI Terminal & Agent Interface",
+  title: "AZRA CLI Terminal & AI Agent",
   description:
-    "Interactive terminal REPL and Gemini AI agent with live context of Franze William Calleja's projects, experience, and tech stack.",
+    "Interactive terminal REPL and AZRA AI agent with live context of Franze William Calleja's projects, experience, and tech stack.",
   alternates: {
     canonical: "/chat",
   },
   openGraph: {
-    title: "CLI Terminal & Agent Interface | Franze William Calleja",
+    title: "AZRA CLI Terminal & AI Agent | Franze William Calleja",
     description:
-      "Interactive terminal REPL and Gemini AI agent with live context of Franze William Calleja's projects, experience, and tech stack.",
+      "Interactive terminal REPL and AZRA AI agent with live context of Franze William Calleja's projects, experience, and tech stack.",
     url: `${SITE_URL}/chat`,
     images: ["/og-image.png"],
   },
@@ -37,13 +37,13 @@ export default function ChatPage() {
           <div>
             <div className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-[0.16em] text-(--muted)">
               <Terminal className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>Runtime REPL // Agent</span>
+              <span>AZRA REPL // AI Agent</span>
             </div>
             <h1 className="mt-3 text-3xl font-black leading-[0.96] tracking-tight sm:mt-4 sm:text-5xl lg:text-6xl">
               QUERY THE SYSTEM.
             </h1>
             <p className="mt-4 border-l-2 border-foreground pl-3 text-sm leading-6 text-foreground/80 sm:pl-4 sm:text-base sm:leading-7 lg:text-lg">
-              Interactive CLI terminal loaded with runtime context of Franze&apos;s full-stack applications, production systems, and DevOps infrastructure.
+              Interactive AZRA CLI terminal loaded with runtime context of Franze&apos;s full-stack applications, production systems, and DevOps infrastructure.
             </p>
           </div>
 
@@ -51,10 +51,10 @@ export default function ChatPage() {
           <div className="w-full min-w-0 border border-foreground/40 bg-(--surface)/50 p-4 sm:p-5">
             <div className="flex items-center justify-between border-b border-foreground/20 pb-3">
               <span className="font-mono text-xs font-bold uppercase tracking-wider text-foreground">
-                CLI Command Cheatsheet
+                AZRA CLI Command Cheatsheet
               </span>
               <span className="font-mono text-[10px] uppercase tracking-wider text-(--muted)">
-                v2.6
+                v2.1
               </span>
             </div>
 

@@ -18,14 +18,14 @@ const DESKTOP_SYSTEM_BANNER = `┌───────────────�
 │  AZRA_CLI :: PORTFOLIO RUNTIME INTERFACE [v2.1]              │
 │  Interactive AZRA engine powered by Gemini + live context.   │
 └──────────────────────────────────────────────────────────────┘
-[sys] Context initialized: 5 roles, 9 projects, 20 stack tools, 1 degree
+[sys] Context initialized: 5 roles, 10 projects, 20 stack tools, 1 degree
 [sys] Type any question or run slash commands. Try /help for manual.`;
 
 const MOBILE_SYSTEM_BANNER = `┌──────────────────────────────────────────────┐
 │ AZRA_CLI :: PORTFOLIO RUNTIME INTERFACE      │
 │ AZRA engine (Gemini) + context loaded [v2.1] │
 └──────────────────────────────────────────────┘
-[sys] Context initialized: 5 roles, 9 projects, 20 tools, 1 degree
+[sys] Context initialized: 5 roles, 10 projects, 20 tools, 1 degree
 [sys] Type any question or run slash commands. Try /help.`;
 
 const QUICK_COMMANDS = [

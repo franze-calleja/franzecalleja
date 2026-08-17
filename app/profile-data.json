@@ -203,6 +203,12 @@
         "technologies": ["Next.js 16", "React 19", "Express.js", "Prisma", "MySQL", "MinIO (S3)", "TipTap", "Zod"]
       },
       {
+        "name": "AEM System — Algorithmic Educational Management",
+        "description": "High school student support and intervention planning platform featuring explainable algorithmic risk scoring, multi-scope pattern detection, role-segregated governance, and audited intervention workflows.",
+        "href": "https://aemsystem.online/",
+        "technologies": ["Next.js 16", "React 19", "TypeScript", "PostgreSQL", "Prisma 7", "Auth.js v5", "Docker", "Gemini API", "Tailwind CSS"]
+      },
+      {
         "name": "Unified Plant, Facilities, and Property System (UPFPS)",
         "description": "Enterprise operations platform coordinating university facilities, institutional property records, asset tracking, maintenance workflows, and PDF/Excel report automation.",
         "href": "https://upfps.mseufcandelaria.com",
@@ -271,6 +277,10 @@
         "description": "Graduated as Class Salutatorian and Magna Cum Laude with a rigorous foundation in software architecture, algorithm design, distributed computing, and full-stack enterprise systems."
       }
     ]
+  },
+  "certificates": {
+    "eyebrow": "Certifications & Accreditations",
+    "items": []
   },
   "availability": {
     "eyebrow": "Availability",

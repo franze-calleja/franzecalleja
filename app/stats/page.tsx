@@ -1,10 +1,12 @@
 import {
+  Award,
   BriefcaseBusiness,
   Code2,
   FolderKanban,
   GraduationCap,
   GitCommit,
   Crown,
+  ExternalLink,
   Gamepad2,
   ShieldAlert,
   Bot,
@@ -237,34 +239,112 @@ export default function StatsPage() {
           </div>
         </section>
 
-        {/* Bottom Context: Core Stack & Availability */}
+        {/* Bottom Context: Certifications & Availability */}
         <section className="grid gap-8 border-t border-foreground/35 pt-8 lg:grid-cols-2">
-          <div className="border border-foreground/35 p-6">
-            <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-(--muted)">
-              Core Technical Stack
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {content.techstack.items.slice(0, 10).map((item) => (
-                <span
-                  key={item.label}
-                  className="border border-foreground/35 px-3 py-1.5 font-mono text-xs font-semibold transition-colors hover:border-foreground hover:bg-foreground hover:text-background"
-                >
-                  {item.label}
+          {/* Certifications & Accreditations */}
+          <div className="flex flex-col justify-between border border-foreground/35 p-6 sm:p-7">
+            <div>
+              <div className="flex items-center justify-between border-b border-foreground/20 pb-3">
+                <div className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-[0.16em] text-(--muted)">
+                  <Award className="h-4 w-4 text-foreground" aria-hidden="true" />
+                  <span>Certifications & Accreditations</span>
+                </div>
+                <span className="font-mono text-[10px] uppercase text-(--muted)">
+                  {(content.certificates?.items?.length ?? 0) > 0
+                    ? `${content.certificates.items.length} Active`
+                    : "Indexing"}
                 </span>
-              ))}
+              </div>
+
+              {(content.certificates?.items && content.certificates.items.length > 0) ? (
+                <div className="mt-4 space-y-3">
+                  {(
+                    content.certificates.items as Array<{
+                      name: string;
+                      issuer: string;
+                      issueDate?: string;
+                      credentialUrl?: string;
+                      credentialId?: string;
+                    }>
+                  ).map((cert) => (
+                    <article
+                      key={cert.name}
+                      className="border border-foreground/25 bg-foreground/5 p-3.5 transition-colors hover:border-foreground"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h4 className="text-sm font-bold text-foreground">{cert.name}</h4>
+                          <p className="font-mono text-xs text-(--muted)">
+                            {cert.issuer}
+                            {cert.issueDate ? ` · ${cert.issueDate}` : ""}
+                          </p>
+                        </div>
+                        {cert.credentialUrl && (
+                          <a
+                            href={cert.credentialUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-(--muted) hover:text-foreground"
+                            aria-label={`Verify ${cert.name}`}
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </a>
+                        )}
+                      </div>
+                      {cert.credentialId && (
+                        <p className="mt-1.5 font-mono text-[10px] text-(--muted)">
+                          ID: {cert.credentialId}
+                        </p>
+                      )}
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div className="mt-4 space-y-2">
+                  <p className="text-xl font-bold uppercase tracking-tight text-foreground sm:text-2xl">
+                    Coming Soon
+                  </p>
+                  <p className="text-sm leading-relaxed text-(--muted)">
+                    Professional certifications, cloud credentials, and accredited engineering verifications are currently being cataloged.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 flex items-center justify-between border-t border-foreground/15 pt-4 font-mono text-[11px] text-(--muted)">
+              <span>Status</span>
+              <span className="inline-flex items-center gap-1.5 font-semibold text-foreground">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                {(content.certificates?.items?.length ?? 0) > 0
+                  ? "Verified Credentials"
+                  : "In Verification"}
+              </span>
             </div>
           </div>
 
-          <div className="border border-foreground/35 p-6">
-            <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-(--muted)">
-              Current Availability & Status
-            </p>
-            <p className="mt-4 text-2xl font-bold uppercase tracking-tight">
-              {content.availability.status}
-            </p>
-            <p className="mt-2 leading-relaxed text-foreground/75">
-              {content.availability.description}
-            </p>
+          {/* Current Availability & Status */}
+          <div className="flex flex-col justify-between border border-foreground/35 p-6 sm:p-7">
+            <div>
+              <div className="flex items-center justify-between border-b border-foreground/20 pb-3">
+                <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-(--muted)">
+                  Current Availability & Status
+                </p>
+                <span className="font-mono text-[10px] uppercase text-(--muted)">
+                  ● Live
+                </span>
+              </div>
+              <p className="mt-4 text-2xl font-bold uppercase tracking-tight text-foreground sm:text-3xl">
+                {content.availability.status}
+              </p>
+              <p className="mt-2 text-sm leading-relaxed text-foreground/75 sm:text-base">
+                {content.availability.description}
+              </p>
+            </div>
+
+            <div className="mt-6 flex items-center justify-between border-t border-foreground/15 pt-4 font-mono text-[11px] text-(--muted)">
+              <span>Location / Timezone</span>
+              <span className="font-semibold text-foreground">Philippines (UTC+8)</span>
+            </div>
           </div>
         </section>
       </div>

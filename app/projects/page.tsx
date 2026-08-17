@@ -7,14 +7,14 @@ import { SITE_URL } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Projects & Production Systems",
   description:
-    "Selected engineering projects by Franze William Calleja, including enterprise web platforms, mobile systems, cloud infrastructure, and headless CMS architectures.",
+    "Selected engineering projects by Franze William Calleja, including enterprise web platforms, mobile systems, cloud infrastructure, and custom CMS architectures.",
   alternates: {
     canonical: "/projects",
   },
   openGraph: {
     title: "Projects & Production Systems | Franze William Calleja",
     description:
-      "Selected engineering projects by Franze William Calleja, including enterprise web platforms, mobile systems, cloud infrastructure, and headless CMS architectures.",
+      "Selected engineering projects by Franze William Calleja, including enterprise web platforms, mobile systems, cloud infrastructure, and custom CMS architectures.",
     url: `${SITE_URL}/projects`,
     images: ["/og-image.png"],
   },

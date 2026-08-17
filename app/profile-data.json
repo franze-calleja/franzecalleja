@@ -197,8 +197,8 @@
     "viewAllHref": "https://github.com/franze-calleja",
     "items": [
       {
-        "name": "MSEUF-Candelaria Institutional Portal & Headless CMS",
-        "description": "Official university portal and decoupled CMS for admissions, academic programs, and announcements, backed by MinIO object storage and granular capability-based access control.",
+        "name": "MSEUF-Candelaria Institutional Portal & Custom CMS",
+        "description": "Official university portal and custom CMS for admissions, academic programs, and announcements, backed by MinIO object storage and granular capability-based access control.",
         "href": "https://mseufcandelaria.com",
         "technologies": ["Next.js 16", "React 19", "Express.js", "Prisma", "MySQL", "MinIO (S3)", "TipTap", "Zod"]
       },

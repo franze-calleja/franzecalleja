@@ -181,35 +181,6 @@ export default function StackPage() {
             ))}
           </div>
         </section>
-
-        {/* Bottom Navigation CTA */}
-        <section className="border-t border-foreground/35 pt-8">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <p className="font-mono text-xs text-(--muted)">
-              Franze William Calleja // {new Date().getFullYear()}
-            </p>
-            <div className="flex flex-wrap gap-2 sm:gap-3">
-              <Link
-                href="/projects"
-                className="inline-flex h-9 items-center border border-foreground/40 px-3.5 font-mono text-xs font-semibold uppercase tracking-wider text-foreground transition-colors hover:border-foreground hover:bg-foreground hover:text-background"
-              >
-                View Projects →
-              </Link>
-              <Link
-                href="/stats"
-                className="inline-flex h-9 items-center border border-foreground/40 px-3.5 font-mono text-xs font-semibold uppercase tracking-wider text-foreground transition-colors hover:border-foreground hover:bg-foreground hover:text-background"
-              >
-                Telemetry & Vitals →
-              </Link>
-              <Link
-                href="/chat"
-                className="inline-flex h-9 items-center border border-foreground/40 px-3.5 font-mono text-xs font-semibold uppercase tracking-wider text-foreground transition-colors hover:border-foreground hover:bg-foreground hover:text-background"
-              >
-                Open Terminal →
-              </Link>
-            </div>
-          </div>
-        </section>
       </div>
     </main>
   );

@@ -1,11 +1,17 @@
+"use client";
+
+import { useState } from "react";
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 
 import content from "@/app/profile-data.json";
+import ProjectHoverPreview, { type ProjectPreviewData } from "@/components/project-hover-preview";
 
 const featuredProjects = content.projects.items.slice(0, 4);
 
 export default function FeaturedProjects() {
+  const [activePreview, setActivePreview] = useState<ProjectPreviewData | null>(null);
+
   return (
     <section id="projects" className="border-t border-foreground/35 py-12 sm:py-16">
       <div className="flex items-end justify-between gap-6 border-b border-foreground/35 pb-4">
@@ -34,6 +40,8 @@ export default function FeaturedProjects() {
             href={project.href}
             target="_blank"
             rel="noopener noreferrer"
+            onMouseEnter={() => setActivePreview(project)}
+            onMouseLeave={() => setActivePreview(null)}
             className="group flex min-h-56 flex-col border border-foreground/55 p-6 transition-colors hover:bg-foreground hover:text-background sm:p-7"
           >
             <div className="flex items-start justify-between gap-6">
@@ -59,6 +67,7 @@ export default function FeaturedProjects() {
         ))}
       </div>
 
+      <ProjectHoverPreview activeProject={activePreview} />
     </section>
   );
 }

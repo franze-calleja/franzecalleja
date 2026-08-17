@@ -200,60 +200,70 @@
         "name": "MSEUF-Candelaria Institutional Portal & Custom CMS",
         "description": "Official university portal and custom CMS for admissions, academic programs, and announcements, backed by MinIO object storage and granular capability-based access control.",
         "href": "https://mseufcandelaria.com",
+        "image": "/projects/website.png",
         "technologies": ["Next.js 16", "React 19", "Express.js", "Prisma", "MySQL", "MinIO (S3)", "TipTap", "Zod"]
       },
       {
         "name": "AEM System — Algorithmic Educational Management",
         "description": "High school student support and intervention planning platform featuring explainable algorithmic risk scoring, multi-scope pattern detection, role-segregated governance, and audited intervention workflows.",
         "href": "https://aemsystem.online/",
+        "image": "/projects/aem.png",
         "technologies": ["Next.js 16", "React 19", "TypeScript", "PostgreSQL", "Prisma 7", "Auth.js v5", "Docker", "Gemini API", "Tailwind CSS"]
       },
       {
         "name": "Unified Plant, Facilities, and Property System (UPFPS)",
         "description": "Enterprise operations platform coordinating university facilities, institutional property records, asset tracking, maintenance workflows, and PDF/Excel report automation.",
         "href": "https://upfps.mseufcandelaria.com",
+        "image": "/projects/upfps.png",
         "technologies": ["Next.js 16", "React 19", "Express.js", "Prisma", "MySQL", "TanStack Query", "Zustand"]
       },
       {
         "name": "PHD Map — Urban Parking Discovery & Reservation Platform",
         "description": "Peer-to-peer parking marketplace resolving urban parking scarcity and latent supply with real-time geospatial discovery, booking workflows, and host management in Toronto.",
         "href": "https://phdmap.raones.cloud",
+        "image": "/projects/phd.png",
         "technologies": ["React Native", "Expo", "Express.js", "Prisma", "PostgreSQL", "Zustand", "Next.js"]
       },
       {
         "name": "CITHM Smart NFC Attendance & Event Tracking System",
         "description": "High-throughput hardware-integrated attendance system using NFC card tapping for real-time student check-ins, automated event logging, and containerized Docker services.",
         "href": "https://euccithm.com",
+        "image": "/projects/nfc.png",
         "technologies": ["Next.js 16", "TypeScript", "Prisma 7", "MySQL 8", "Docker", "TanStack Query", "Zustand"]
       },
       {
         "name": "EUC Academic Portal",
         "description": "Comprehensive institutional academic portal covering digital admissions, student enrollment, grade evaluation, course management, and unified academic services for students and faculty.",
         "href": "https://collegeportal.mseufcandelaria.com/",
+        "image": "/projects/college-portal.png",
         "technologies": ["Next.js 16", "React 19", "Express.js", "Prisma 7", "MariaDB", "AWS S3", "TanStack Query", "Zod", "Framer Motion"]
       },
       {
         "name": "Human Resource Information Management System (HRIMS)",
         "description": "Internal enterprise HR portal for employee lifecycle tracking, department hierarchy coordination, automated leave workflows, and administrative compliance.",
         "href": "https://hrims.mseufcandelaria.com",
+        "image": "/projects/hrims.png",
         "technologies": ["Next.js", "Express.js", "Prisma", "MySQL", "JWT Auth"]
       },
       {
         "name": "Investo",
         "description": "Mobile investment experience focused on streamlined portfolio tracking, market insights, and account interactions.",
         "href": "https://github.com/franze-calleja/investo",
+        "image": "",
         "technologies": ["React Native", "Expo", "TypeScript", "Zustand"]
       },
       {
         "name": "UTOL Web Dashboard",
         "description": "Web admin dashboard for a ride-hailing application, focused on operational control, driver monitoring, and administration.",
         "href": "https://play.google.com/store/apps/details?id=ph.utol.utolapp",
+        "image": "",
         "technologies": ["Next.js", "SSO", "ZOHO Oauth"]
       },
       {
         "name": "NQ Trend Trading Website and LMS",
         "description": "Trading website and learning management system built for educational content delivery and student management.",
         "href": "https://nqtrendtrading.com",
+        "image": "",
         "technologies": ["Next.js", "ASP .NET"]
       }
     ]

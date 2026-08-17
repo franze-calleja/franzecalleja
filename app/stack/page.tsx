@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   Code,
   Container,
+  Cpu,
   Database,
   GitBranch,
   Layers,
@@ -52,6 +53,8 @@ const iconMap: Record<string, LucideIcon> = {
   terminal: Terminal,
   bot: Bot,
   sparkles: Sparkles,
+  "check-circle-2": CheckCircle2,
+  cpu: Cpu,
 };
 
 export default function StackPage() {

@@ -40,7 +40,7 @@
       "goat": "LeBron James",
       "allegiance": "Loyal to LeBron James wherever he plays"
     },
-    "aiTooling": ["Claude Code", "Codex", "Gemini 2.5 Flash", "MCP Tool Harnesses", "Multi-Agent Orchestration"]
+    "aiTooling": ["Claude Code", "Codex", "Ollama", "n8n", "Gemini 2.5 Flash", "MCP Tool Harnesses", "Multi-Agent Orchestration"]
   },
   "experience": {
     "eyebrow": "Experience",
@@ -124,6 +124,14 @@
     "viewAllHref": "/stack",
     "items": [
       { "label": "TypeScript", "category": "Frontend & Systems", "icon": "code" },
+      { "label": "shadcn/ui", "category": "Frontend & UI", "icon": "paintbrush" },
+      { "label": "Vitest", "category": "Testing & QA", "icon": "check-circle-2" },
+      { "label": "Hermes", "category": "Mobile & Runtime", "icon": "cpu" },
+      { "label": "Python", "category": "Backend & AI", "icon": "code" },
+      { "label": "Flask", "category": "Backend & Microservices", "icon": "server" },
+      { "label": "Ollama", "category": "Local LLMs & AI", "icon": "bot" },
+      { "label": "n8n", "category": "Workflow Automation", "icon": "zap" },
+      { "label": "TanStack", "category": "Frontend & State", "icon": "layers" },
       { "label": "Claude Code", "category": "AI Orchestration", "icon": "terminal" },
       { "label": "Codex", "category": "AI Orchestration", "icon": "code" },
       { "label": "Node.js", "category": "Backend", "icon": "server" },
@@ -153,18 +161,18 @@
         "name": "Frontend & Cross-Platform",
         "description": "Component design systems, responsive web, and cross-platform mobile apps",
         "items": [
-          "Component-driven UI & design systems",
+          "Component-driven UI & design systems (shadcn/ui, Tailwind CSS)",
           "Responsive layouts & web accessibility",
-          "State management (TanStack, Redux, Zustand)",
-          "Automated testing (Vitest, Jest, RTL)",
-          "Cross-platform mobile (React Native, Expo)"
+          "State management (TanStack Query / Table, Redux, Zustand)",
+          "Automated unit & integration testing (Vitest, Jest, RTL)",
+          "Cross-platform mobile & JavaScript engine optimization (React Native, Expo, Hermes)"
         ]
       },
       {
         "name": "Backend & Distributed Systems",
         "description": "High-throughput APIs, modular architectures, and database engineering",
         "items": [
-          "RESTful API design & real-time endpoints",
+          "RESTful API design & real-time endpoints (Node.js, Express, Python, Flask, Rust)",
           "Modular / MVC / Horizontal architectures",
           "Database design, migrations & ORMs (Prisma, MySQL, PostgreSQL)",
           "Granular RBAC, authentication & session security (CASL)",
@@ -182,10 +190,12 @@
         ]
       },
       {
-        "name": "Agentic AI & Developer Flow",
-        "description": "Autonomous developer workflows, prompt harnesses, and multi-agent coordination",
+        "name": "Agentic AI & Workflow Automation",
+        "description": "Autonomous developer workflows, local model execution, and integration pipelines",
         "items": [
           "Agentic AI orchestration & tool harnesses (Claude Code, Codex)",
+          "Local LLM runtime & prompt pipelines (Ollama)",
+          "Automated integration & webhook orchestration (n8n)",
           "Model orchestration & streaming APIs (Gemini API, LLM sidecars)",
           "Keyboard-driven CLI tooling and developer flow acceleration"
         ]

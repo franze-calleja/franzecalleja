@@ -18,14 +18,14 @@ const DESKTOP_SYSTEM_BANNER = `┌───────────────�
 │  AZRA_CLI :: PORTFOLIO RUNTIME INTERFACE [v2.1]              │
 │  Interactive AZRA engine powered by Gemini + live context.   │
 └──────────────────────────────────────────────────────────────┘
-[sys] Context initialized: 5 roles, 10 projects, 20 stack tools, 1 degree
+[sys] Context initialized: 5 roles, 10 projects, 28 stack tools, 1 degree
 [sys] Type any question or run slash commands. Try /help for manual.`;
 
 const MOBILE_SYSTEM_BANNER = `┌──────────────────────────────────────────────┐
 │ AZRA_CLI :: PORTFOLIO RUNTIME INTERFACE      │
 │ AZRA engine (Gemini) + context loaded [v2.1] │
 └──────────────────────────────────────────────┘
-[sys] Context initialized: 5 roles, 10 projects, 20 tools, 1 degree
+[sys] Context initialized: 5 roles, 10 projects, 28 tools, 1 degree
 [sys] Type any question or run slash commands. Try /help.`;
 
 const QUICK_COMMANDS = [
@@ -266,9 +266,9 @@ Cloud & Infrastructure:
             id: `res-${Date.now()}`,
             type: "assistant",
             content: `[TECHNICAL STACK & CAPABILITIES]
-AI & Tooling:   Claude Code, Codex, Gemini API, Multi-Agent Harnesses
-Frontend:       TypeScript, React, Next.js, React Native, Expo, Tailwind CSS, Zustand
-Backend:        Node.js, Express.js, Prisma ORM, PostgreSQL, MySQL, PHP, Rust (Axum)
+AI & Automation: Claude Code, Codex, Ollama, n8n, Gemini API, Multi-Agent Harnesses
+Frontend:       TypeScript, React, Next.js, shadcn/ui, TanStack, React Native, Expo, Hermes, Tailwind, Vitest, Zustand
+Backend:        Node.js, Express.js, Python, Flask, Prisma ORM, PostgreSQL, MySQL, PHP, Rust (Axum)
 Infrastructure: Docker, Grafana, Prometheus, Loki, Alloy, Uptime Kuma, CI/CD, AWS, GCP`,
             timestamp: getTimestamp(),
           },

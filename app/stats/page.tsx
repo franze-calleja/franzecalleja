@@ -46,7 +46,7 @@ const primaryStats = [
   },
   {
     label: "Core Technologies",
-    value: "18+",
+    value: `${content.techstack.items.length}+`,
     detail: "Frontend, Backend & DevOps",
     icon: Code2,
   },

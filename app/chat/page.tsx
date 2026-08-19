@@ -26,6 +26,7 @@ const cheatsheet = [
   { cmd: "/stack", desc: "Full tech & skill matrix" },
   { cmd: "/education", desc: "Academic honors & degree" },
   { cmd: "/contact", desc: "Email, GitHub & LinkedIn" },
+  { cmd: "/book", desc: "Schedule a call via Calendly" },
 ];
 
 export default function ChatPage() {

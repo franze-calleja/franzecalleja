@@ -35,6 +35,7 @@ const QUICK_COMMANDS = [
   { label: "/experience", desc: "Career timeline" },
   { label: "/stack", desc: "Core technologies" },
   { label: "/contact", desc: "Get in touch" },
+  { label: "/book", desc: "Schedule a call" },
   { label: "/clear", desc: "Clear screen" },
 ] as const;
 
@@ -123,6 +124,8 @@ export default function ChatAssistant() {
       "education",
       "/contact",
       "contact",
+      "/book",
+      "book",
       "/about",
       "about",
     ];
@@ -162,6 +165,7 @@ export default function ChatAssistant() {
   /stack          Print complete tech stack & skill familiarity matrix
   /education      View academic degree, honors (Salutatorian, Magna Cum Laude)
   /contact        Show email, GitHub, LinkedIn & location
+  /book           Schedule a call via Calendly
   /about          Display full engineer bio, PS5 gaming & LeBron James loyalty
   /clear          Clear terminal scrollback buffer
   /help           Show this command manual
@@ -304,8 +308,27 @@ Focus:        Software Architecture, Distributed Systems, Algorithms, Database S
 Email:    franzewilliamcalleja@gmail.com
 GitHub:   https://github.com/franze-calleja
 LinkedIn: https://www.linkedin.com/in/franze-calleja
+Book:     ${content.availability.bookingHref}
 Location: Candelaria, Quezon, Philippines
 Status:   ${content.availability.status} (${content.availability.description})`,
+            timestamp: getTimestamp(),
+          },
+        ]);
+        break;
+
+      case "/book":
+      case "book":
+        setEntries((prev) => [
+          ...prev,
+          {
+            id: `res-${Date.now()}`,
+            type: "assistant",
+            content: `[SCHEDULE A CALL]
+Booking:    ${content.availability.bookingHref}
+Status:     ${content.availability.status}
+Timezone:   Philippines (UTC+8)
+
+Open the link above to pick any available slot on Franze's calendar.`,
             timestamp: getTimestamp(),
           },
         ]);
@@ -352,6 +375,7 @@ ${content.about.body.join("\n\n")}`,
         "experience",
         "devops",
         "contact",
+        "book",
         "about",
       ].includes(trimmed.toLowerCase())
     ) {

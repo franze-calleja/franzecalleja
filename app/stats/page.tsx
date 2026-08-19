@@ -1,6 +1,7 @@
 import {
   Award,
   BriefcaseBusiness,
+  CalendarDays,
   Code2,
   FolderKanban,
   GraduationCap,
@@ -339,6 +340,16 @@ export default function StatsPage() {
               <p className="mt-2 text-sm leading-relaxed text-foreground/75 sm:text-base">
                 {content.availability.description}
               </p>
+
+              <a
+                href={content.availability.bookingHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-5 inline-flex h-11 items-center gap-2 border border-foreground bg-foreground px-4 text-xs font-bold uppercase tracking-[0.12em] text-background transition-colors hover:bg-transparent hover:text-foreground"
+              >
+                <CalendarDays className="h-4 w-4" aria-hidden="true" />
+                {content.availability.bookingLabel}
+              </a>
             </div>
 
             <div className="mt-6 flex items-center justify-between border-t border-foreground/15 pt-4 font-mono text-[11px] text-(--muted)">

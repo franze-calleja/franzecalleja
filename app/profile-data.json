@@ -308,7 +308,9 @@
     "statusType": "open",
     "description": "Currently open to part-time roles and freelance projects. Based in the Philippines, available to work remotely with teams worldwide.",
     "preferredRoles": ["Full Stack Developer"],
-    "contactHref": "mailto:franzewilliamcalleja@gmail.com"
+    "contactHref": "mailto:franzewilliamcalleja@gmail.com",
+    "bookingHref": "https://calendly.com/franzewilliamcalleja/meet-with-me",
+    "bookingLabel": "Book a call"
   },
   "footer": {
     "eyebrow": "Franze William Calleja",

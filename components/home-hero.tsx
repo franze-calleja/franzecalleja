@@ -1,14 +1,25 @@
 import Image from "next/image";
-import { Github, Link as LinkIcon, Linkedin, Mail } from "lucide-react";
+import { CalendarDays, Github, Link as LinkIcon, Linkedin, Mail } from "lucide-react";
 
 import content from "@/app/profile-data.json";
 import ThemeToggle from "@/components/theme-toggle";
 
 const iconMap = {
+  calendar: CalendarDays,
   mail: Mail,
   github: Github,
   linkedin: Linkedin,
 } as const;
+
+/** Booking leads: it is the strongest call to action while status is "Open to work". */
+const heroLinks = [
+  {
+    label: content.availability.bookingLabel,
+    href: content.availability.bookingHref,
+    icon: "calendar",
+  },
+  ...content.links,
+];
 
 export default function HomeHero() {
   const currentYear = new Date().getFullYear();
@@ -38,18 +49,19 @@ export default function HomeHero() {
           </p>
 
           <div className="mt-9 flex flex-wrap gap-3">
-            {content.links.map((link) => {
+            {heroLinks.map((link) => {
               const Icon = iconMap[link.icon as keyof typeof iconMap] ?? LinkIcon;
-              const isEmail = link.icon === "mail";
+              const isPrimary = link.icon === "calendar";
+              const isExternal = !link.href.startsWith("mailto:");
 
               return (
                 <a
                   key={link.label}
                   href={link.href}
-                  target={isEmail ? undefined : "_blank"}
-                  rel={isEmail ? undefined : "noopener noreferrer"}
+                  target={isExternal ? "_blank" : undefined}
+                  rel={isExternal ? "noopener noreferrer" : undefined}
                   className={`inline-flex h-12 items-center gap-2 border px-4 text-xs font-bold uppercase tracking-[0.12em] transition-colors ${
-                    isEmail
+                    isPrimary
                       ? "border-foreground bg-foreground text-background hover:bg-transparent hover:text-foreground"
                       : "border-foreground/55 hover:border-foreground hover:bg-foreground hover:text-background"
                   }`}

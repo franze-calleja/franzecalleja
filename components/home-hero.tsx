@@ -97,8 +97,8 @@ export default function HomeHero() {
                 className="object-cover object-[56%_center] grayscale contrast-125"
               />
               <div className="absolute inset-0 bg-linear-to-r from-foreground/40 via-transparent to-transparent" />
-              <span className="absolute bottom-3 right-3 border border-background/70 bg-background px-2 py-1 font-mono text-[0.6rem] font-semibold uppercase text-foreground">
-                SYS.ARCH // PH
+              <span className="absolute bottom-3 right-3 border border-background/70 bg-background px-2 py-1 font-mono text-[0.6rem] font-semibold text-foreground">
+                macOS · M5
               </span>
             </div>
           </div>

@@ -126,7 +126,7 @@
       { "label": "TypeScript", "category": "Frontend & Systems", "icon": "code" },
       { "label": "shadcn/ui", "category": "Frontend & UI", "icon": "paintbrush" },
       { "label": "Vitest", "category": "Testing & QA", "icon": "check-circle-2" },
-      { "label": "Hermes", "category": "Mobile & Runtime", "icon": "cpu" },
+      { "label": "Expo", "category": "Mobile & Runtime", "icon": "cpu" },
       { "label": "Python", "category": "Backend & AI", "icon": "code" },
       { "label": "Flask", "category": "Backend & Microservices", "icon": "server" },
       { "label": "Ollama", "category": "Local LLMs & AI", "icon": "bot" },

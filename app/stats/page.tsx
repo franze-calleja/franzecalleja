@@ -5,7 +5,7 @@ import {
   Code2,
   FolderKanban,
   GraduationCap,
-  GitCommit,
+  FlaskConical,
   Crown,
   ExternalLink,
   Gamepad2,
@@ -19,6 +19,7 @@ import {
 import type { Metadata } from "next";
 
 import content from "@/app/profile-data.json";
+import { countTestCases } from "@/lib/test-count";
 import GithubStatsCalendar from "@/components/github-stats-calendar";
 import { SITE_URL } from "@/lib/site";
 
@@ -64,10 +65,10 @@ const primaryStats = [
     icon: GraduationCap,
   },
   {
-    label: "Public Git Commits",
-    value: "1.8k+",
-    detail: "Shipped on GitHub @franze-calleja",
-    icon: GitCommit,
+    label: "Passing Tests",
+    value: String(countTestCases()),
+    detail: "Vitest, green — on this very site",
+    icon: FlaskConical,
   },
   {
     label: "Remote Collaboration",

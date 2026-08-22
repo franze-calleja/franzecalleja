@@ -89,7 +89,7 @@ const quirkyStats = [
   },
   {
     title: "PS5 & Gaming Sanctuary",
-    value: "NBA 2K · RDR2 · Cult",
+    value: "NBA 2K · RDR2 · COTL",
     description: "Decompressing on PS5 with NBA 2K, Red Dead Redemption 2, Cult of the Lamb, and great indie titles.",
     icon: Gamepad2,
     tag: "Gaming",

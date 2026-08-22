@@ -270,8 +270,8 @@ Cloud & Infrastructure:
             id: `res-${Date.now()}`,
             type: "assistant",
             content: `[TECHNICAL STACK & CAPABILITIES]
-AI & Automation: Claude Code, Codex, Ollama, n8n, Gemini API, Multi-Agent Harnesses
-Frontend:       TypeScript, React, Next.js, shadcn/ui, TanStack, React Native, Expo, Hermes, Tailwind, Vitest, Zustand
+AI & Automation: Claude Code, Codex, Ollama, Hermes, n8n, Gemini API, Multi-Agent Harnesses
+Frontend:       TypeScript, React, Next.js, shadcn/ui, TanStack, React Native, Expo, Tailwind, Vitest, Zustand
 Backend:        Node.js, Express.js, Python, Flask, Prisma ORM, PostgreSQL, MySQL, PHP, Rust (Axum)
 Infrastructure: Docker, Grafana, Prometheus, Loki, Alloy, Uptime Kuma, CI/CD, AWS, GCP`,
             timestamp: getTimestamp(),

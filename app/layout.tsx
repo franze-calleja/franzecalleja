@@ -183,8 +183,7 @@ export default function RootLayout({
               (() => {
                 try {
                   const savedTheme = localStorage.getItem('theme');
-                  const preferredTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-                  document.documentElement.dataset.theme = savedTheme || preferredTheme;
+                  document.documentElement.dataset.theme = savedTheme === 'dark' ? 'dark' : 'light';
                 } catch (error) {}
               })();
             `,

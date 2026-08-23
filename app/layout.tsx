@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     template: "%s | Franze William Calleja",
   },
   description:
-    "Full-stack software engineer specializing in scalable enterprise systems, robust cloud infrastructure, and end-to-end product architecture.",
+    "Full-stack software engineer specializing in scalable systems, cloud infrastructure, and product architecture across enterprise, consumer, and mobile products.",
   applicationName: "Franze William Calleja Portfolio",
   authors: [{ name: "Franze William Calleja", url: SITE_URL }],
   creator: "Franze William Calleja",
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
     type: "website",
     title: "Franze William Calleja — Full-Stack Software Engineer",
     description:
-      "Full-stack software engineer specializing in scalable enterprise systems, robust cloud infrastructure, and end-to-end product architecture.",
+      "Full-stack software engineer specializing in scalable systems, cloud infrastructure, and product architecture across enterprise, consumer, and mobile products.",
     siteName: "Franze William Calleja",
     url: SITE_URL,
     images: [
@@ -78,7 +78,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Franze William Calleja — Full-Stack Software Engineer",
     description:
-      "Full-stack software engineer specializing in scalable enterprise systems, robust cloud infrastructure, and end-to-end product architecture.",
+      "Full-stack software engineer specializing in scalable systems, cloud infrastructure, and product architecture across enterprise, consumer, and mobile products.",
     images: ["/og-image.png"],
     creator: "@franze_calleja",
   },
@@ -115,7 +115,7 @@ const jsonLd = {
       image: `${SITE_URL}/profile.png`,
       jobTitle: "Full-Stack Software Engineer",
       description:
-        "Full-stack software engineer specializing in scalable enterprise systems, robust cloud infrastructure, and end-to-end product architecture.",
+        "Full-stack software engineer specializing in scalable systems, cloud infrastructure, and product architecture across enterprise, consumer, and mobile products.",
       alumniOf: {
         "@type": "EducationalOrganization",
         name: "Manuel S. Enverga University Foundation - Candelaria Inc.",

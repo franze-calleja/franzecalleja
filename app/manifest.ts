@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Franze William Calleja — Full-Stack Software Engineer",
     short_name: "Franze Calleja",
     description:
-      "Personal portfolio of Franze William Calleja featuring enterprise software architecture, full-stack systems, projects, and technical skills.",
+      "Personal portfolio of Franze William Calleja featuring full-stack systems, cloud architecture, mobile and web projects, and technical skills.",
     start_url: "/",
     display: "standalone",
     background_color: "#f3efdd",

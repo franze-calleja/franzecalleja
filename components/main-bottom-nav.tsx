@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { ChartNoAxesColumn, House, MessageCircle } from "lucide-react";
+import { ChartNoAxesColumn, Gamepad2, House, MessageCircle } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 const navigationItems = [
   { href: "/", label: "Home", icon: House },
+  { href: "/game", label: "World", icon: Gamepad2 },
   { href: "/chat", label: "Chat", icon: MessageCircle },
   { href: "/stats", label: "Stats", icon: ChartNoAxesColumn },
 ] as const;

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Send, Bot, User, Sparkles, X, Loader2 } from "lucide-react";
+import { Send, Bot, User, Sparkles, X, Loader2, GraduationCap, Wrench, Cpu } from "lucide-react";
 import { retroAudio } from "./game-audio";
 import { NPC, WorldObject } from "./game-data";
 
@@ -232,12 +232,27 @@ export default function GameDialogue({
                 ) : npc?.id === "npc-allia" ? (
                   <div className="flex h-full w-full flex-col items-center justify-center rounded bg-pink-950 text-pink-300">
                     <Sparkles className="h-7 w-7 text-pink-400 animate-pulse" />
-                    <span className="text-[8px] font-mono font-bold tracking-widest text-pink-300">DEV 💖</span>
+                    <span className="text-[8px] font-mono font-bold tracking-widest text-pink-300">ALLIAH 💖</span>
                   </div>
                 ) : npc?.id === "npc-dog" ? (
                   <div className="flex h-full w-full flex-col items-center justify-center rounded bg-amber-950 text-amber-300">
                     <span className="text-2xl">🐶</span>
                     <span className="text-[8px] font-mono font-bold tracking-widest text-amber-400">KISSES</span>
+                  </div>
+                ) : npc?.id === "npc-professor" ? (
+                  <div className="flex h-full w-full flex-col items-center justify-center rounded bg-red-950 text-amber-300">
+                    <GraduationCap className="h-7 w-7 text-amber-400" />
+                    <span className="text-[7.5px] font-mono font-bold tracking-wider text-amber-300">NIWDLA 🎓</span>
+                  </div>
+                ) : npc?.id === "npc-engineer" ? (
+                  <div className="flex h-full w-full flex-col items-center justify-center rounded bg-blue-950 text-sky-300">
+                    <Wrench className="h-7 w-7 text-sky-400" />
+                    <span className="text-[7.5px] font-mono font-bold tracking-wider text-sky-300">ASTRO 🛠️</span>
+                  </div>
+                ) : npc?.id === "npc-devops" ? (
+                  <div className="flex h-full w-full flex-col items-center justify-center rounded bg-emerald-950 text-emerald-300">
+                    <Cpu className="h-7 w-7 text-emerald-400" />
+                    <span className="text-[7.5px] font-mono font-bold tracking-wider text-emerald-300">NODE ⚡</span>
                   </div>
                 ) : (
                   <div className="flex h-full w-full items-center justify-center rounded bg-amber-950 text-amber-300">

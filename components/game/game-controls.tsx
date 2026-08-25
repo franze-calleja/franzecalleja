@@ -8,6 +8,7 @@ interface GameControlsProps {
   onDirectionChange: (direction: "up" | "down" | "left" | "right" | null) => void;
   onInteract: () => void;
   onRunToggle: (running: boolean) => void;
+  onChangeSkin?: () => void;
   isInteractingDisabled?: boolean;
 }
 
@@ -15,6 +16,7 @@ export default function GameControls({
   onDirectionChange,
   onInteract,
   onRunToggle,
+  onChangeSkin,
   isInteractingDisabled = false,
 }: GameControlsProps) {
   const handleTouchStart = (dir: "up" | "down" | "left" | "right") => {
@@ -111,7 +113,26 @@ export default function GameControls({
       </div>
 
       {/* Retro Action Buttons (Right) */}
-      <div className="pointer-events-auto flex items-center gap-3 pb-2 select-none touch-none">
+      <div className="pointer-events-auto flex items-center gap-2.5 pb-2 select-none touch-none">
+        {/* [C] Change Skin Button */}
+        {onChangeSkin && (
+          <button
+            onTouchStart={(e) => {
+              e.preventDefault();
+              retroAudio.playInteract();
+              onChangeSkin();
+            }}
+            onClick={() => {
+              retroAudio.playInteract();
+              onChangeSkin();
+            }}
+            className="flex h-11 w-11 items-center justify-center rounded-full border-3 border-foreground bg-purple-600 font-mono text-sm font-black text-white shadow-[0_3px_0_0_#4c1d95] active:translate-y-1 active:shadow-none"
+            aria-label="C Button (Change Skin)"
+          >
+            C
+          </button>
+        )}
+
         {/* [B] Run / Cancel Button */}
         <button
           onTouchStart={(e) => {

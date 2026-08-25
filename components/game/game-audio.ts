@@ -236,6 +236,64 @@ class RetroAudioEngine {
       osc.stop(now + 0.03);
     } catch {}
   }
+
+  /**
+   * Quick retro cursor tick for menu hovering
+   */
+  public playMenuHover() {
+    if (this.isMuted) return;
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    try {
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(660, now);
+
+      gain.gain.setValueAtTime(0.03, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.04);
+    } catch {}
+  }
+
+  /**
+   * Uplifting retro fanfare for equipping items / skins
+   */
+  public playSuccess() {
+    if (this.isMuted) return;
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    try {
+      const notes = [587.33, 739.99, 880.0, 1174.66]; // D5, F#5, A5, D6
+      const now = ctx.currentTime;
+
+      notes.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(freq, now + i * 0.06);
+
+        gain.gain.setValueAtTime(0.07, now + i * 0.06);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + (i + 1) * 0.06 + 0.08);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(now + i * 0.06);
+        osc.stop(now + (i + 1) * 0.06 + 0.08);
+      });
+    } catch {}
+  }
 }
 
 export const retroAudio = new RetroAudioEngine();

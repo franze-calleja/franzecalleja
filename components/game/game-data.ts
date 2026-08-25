@@ -1,4 +1,4 @@
-import profileData from "@/app/profile-data.json";
+import profileData from "../../app/profile-data.json";
 
 export interface WorldObject {
   id: string;
@@ -340,11 +340,11 @@ export const NPCS: NPC[] = [
       "Ask me anything you'd like to know!",
     ],
   },
-  // 2. Lead Architect Red (Row 0: Adventurer Trainer near Projects Guild)
+  // 2. Lead Architect Astro (Row 0: Adventurer Trainer near Projects Guild)
   {
     id: "npc-engineer",
-    name: "Lead Architect Red",
-    nameTag: "Architect Red",
+    name: "Lead Architect Astro",
+    nameTag: "Architect Astro 🛠️",
     x: 140,
     y: 185,
     anchorX: 140,
@@ -359,11 +359,11 @@ export const NPCS: NPC[] = [
       "Head inside the Projects Guild to inspect live production portals and apps built with Next.js & React 19.",
     ],
   },
-  // 3. SRE Blue (Row 11: Armored Blue Engineer near DevOps Station)
+  // 3. SRE Node (Row 11: Armored Blue Engineer near DevOps Station)
   {
     id: "npc-devops",
-    name: "SRE Blue",
-    nameTag: "SRE Blue",
+    name: "SRE Node",
+    nameTag: "SRE Node ⚡",
     x: 130,
     y: 385,
     anchorX: 130,
@@ -378,11 +378,11 @@ export const NPCS: NPC[] = [
       "Prometheus, Grafana, and Loki are indexing live infrastructure metrics.",
     ],
   },
-  // 4. Professor Oak / Mentor (Row 1: Wise Elder near Academy of Enverga)
+  // 4. Professor Niwdla (Row 1: Wise Elder & Academic Mentor near Academy of Enverga)
   {
     id: "npc-professor",
-    name: "Professor Oak",
-    nameTag: "Professor Oak",
+    name: "Professor Niwdla",
+    nameTag: "Professor Niwdla 🎓",
     x: 220,
     y: 600,
     anchorX: 220,
@@ -439,6 +439,136 @@ export const NPCS: NPC[] = [
   },
 ];
 
+export interface CharacterSkin {
+  id: string;
+  name: string;
+  subtitle: string;
+  role: string;
+  spriteRow: number;
+  spriteType: "player" | "dog" | "sweetheart" | "azra";
+  customEffect?: "azra" | "allia" | "none";
+  iconEmoji: string;
+  themeColor: string;
+  badge: string;
+  description: string;
+  previewColor: string;
+}
+
+export const CHARACTER_SKINS: CharacterSkin[] = [
+  {
+    id: "franze",
+    name: "Franze",
+    subtitle: "Lead Full-Stack Developer",
+    role: "Town Creator & Architect",
+    spriteRow: 2,
+    spriteType: "player",
+    customEffect: "none",
+    iconEmoji: "🧢",
+    themeColor: "from-blue-600 to-indigo-600",
+    badge: "HERO ⚡",
+    description: "The original Franze Town hero with his signature cap and developer jacket.",
+    previewColor: "#3b82f6",
+  },
+  {
+    id: "alliah",
+    name: "Alliah Mikaela",
+    subtitle: "Frontend & Full-Stack Developer",
+    role: "Beloved Sweetheart & Dev",
+    spriteRow: 16,
+    spriteType: "sweetheart",
+    customEffect: "allia",
+    iconEmoji: "💖",
+    themeColor: "from-pink-600 to-rose-600",
+    badge: "SWEETHEART ✨",
+    description: "Blonde hair, red headband, elegant pink dress, and sparkling heart aura particles.",
+    previewColor: "#ec4899",
+  },
+  {
+    id: "kisses",
+    name: "Kisses the Shih Tzu",
+    subtitle: "Fluffy Shih Tzu Puppy",
+    role: "Town Mascot",
+    spriteRow: 0,
+    spriteType: "dog",
+    customEffect: "none",
+    iconEmoji: "🐶",
+    themeColor: "from-amber-500 to-yellow-600",
+    badge: "SHIH TZU 🐾",
+    description: "Cream coat, signature dark ears, arched plume tail, red collar, and cheerful puppy kisses!",
+    previewColor: "#f59e0b",
+  },
+  {
+    id: "azra",
+    name: "AZRA",
+    subtitle: "Gemini AI Agent",
+    role: "Arcane Intelligence Wizard",
+    spriteRow: 14,
+    spriteType: "azra",
+    customEffect: "azra",
+    iconEmoji: "🌌",
+    themeColor: "from-cyan-600 to-teal-600",
+    badge: "AI CORE 🔮",
+    description: "Arcane sorceress in star robes with floating cyan orb and pulsing quantum aura.",
+    previewColor: "#06b6d4",
+  },
+  {
+    id: "astro",
+    name: "Architect Astro",
+    subtitle: "Lead Systems Architect",
+    role: "Master Project Builder",
+    spriteRow: 0,
+    spriteType: "player",
+    customEffect: "none",
+    iconEmoji: "🛠️",
+    themeColor: "from-sky-600 to-blue-700",
+    badge: "ARCHITECT 📐",
+    description: "Red cap adventurer trainer, master of Next.js architecture and distributed apps.",
+    previewColor: "#0284c7",
+  },
+  {
+    id: "node",
+    name: "SRE Node",
+    subtitle: "DevOps & Observability Sentinel",
+    role: "Infrastructure Guardian",
+    spriteRow: 11,
+    spriteType: "player",
+    customEffect: "none",
+    iconEmoji: "⚡",
+    themeColor: "from-emerald-600 to-green-700",
+    badge: "DEVOPS 🟢",
+    description: "Armored cyber engineer monitoring Docker, Prometheus, and Grafana telemetry 24/7.",
+    previewColor: "#10b981",
+  },
+  {
+    id: "niwdla",
+    name: "Professor Niwdla",
+    subtitle: "Academic Mentor & Scholar",
+    role: "Magna Cum Laude Mentor",
+    spriteRow: 1,
+    spriteType: "player",
+    customEffect: "none",
+    iconEmoji: "🎓",
+    themeColor: "from-amber-700 to-red-800",
+    badge: "SCHOLAR 📜",
+    description: "Wise elder scholar in lab coat guiding students through academic honors.",
+    previewColor: "#b45309",
+  },
+  {
+    id: "shinobi",
+    name: "Cyber Shinobi",
+    subtitle: "Microservice Shadow Assassin",
+    role: "Zero-Latency Rogue",
+    spriteRow: 7,
+    spriteType: "player",
+    customEffect: "none",
+    iconEmoji: "🥷",
+    themeColor: "from-purple-600 to-violet-900",
+    badge: "SHINOBI ⚔️",
+    description: "Swift purple shinobi executing async tasks with zero memory leaks and ultra-fast reflexes.",
+    previewColor: "#8b5cf6",
+  },
+];
+
 export const CONTROLS_GUIDE = [
   { key: "W / ↑", label: "Walk Up" },
   { key: "S / ↓", label: "Walk Down" },
@@ -446,6 +576,7 @@ export const CONTROLS_GUIDE = [
   { key: "D / →", label: "Walk Right" },
   { key: "Click / Tap", label: "Walk to Location" },
   { key: "Space / E", label: "Interact / Talk" },
+  { key: "C", label: "Change Character Skin" },
   { key: "Shift / [B]", label: "Sprint / Run" },
   { key: "Esc", label: "Close Menu" },
 ];

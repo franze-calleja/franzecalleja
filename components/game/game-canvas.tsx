@@ -10,12 +10,15 @@ import {
   NPCS,
   WorldObject,
   NPC,
+  CHARACTER_SKINS,
+  CharacterSkin,
 } from "./game-data";
 import { retroAudio } from "./game-audio";
 import GameDialogue from "./game-dialogue";
 import GameModal from "./game-modals";
 import GameControls from "./game-controls";
-import { Volume2, VolumeX, Maximize2, MapPin, MousePointer } from "lucide-react";
+import GameCharacterSelect from "./game-character-select";
+import { Volume2, VolumeX, Maximize2, MapPin, MousePointer, Sparkles } from "lucide-react";
 
 interface Player {
   x: number;
@@ -1658,137 +1661,194 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
   const b1W = 140;
   const b1H = 110;
 
-  // 3D Drop Shadow
-  ctx.fillStyle = "rgba(0, 0, 0, 0.38)";
+  // 1. 3D Volumetric Drop Shadow
+  ctx.fillStyle = "rgba(0, 0, 0, 0.42)";
   ctx.beginPath();
-  ctx.ellipse(b1X + b1W / 2 + 4, b1Y + b1H + 2, b1W / 2 + 8, 14, 0, 0, Math.PI * 2);
+  ctx.ellipse(b1X + b1W / 2 + 6, b1Y + b1H + 2, b1W / 2 + 10, 15, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Stepped Ashlar Stone Foundation Plinth (3D Bevel)
+  // 2. Stepped Ashlar Stone Foundation Plinth (3D Chiseled Blocks)
+  ctx.fillStyle = "#0f172a";
+  ctx.fillRect(b1X + 2, b1Y + b1H - 18, b1W - 4, 18);
   ctx.fillStyle = "#1e293b";
-  ctx.fillRect(b1X + 4, b1Y + b1H - 16, b1W - 8, 16);
+  ctx.fillRect(b1X + 4, b1Y + b1H - 16, b1W - 8, 14);
   ctx.fillStyle = "#334155";
-  ctx.fillRect(b1X + 6, b1Y + b1H - 14, b1W - 12, 12);
+  ctx.fillRect(b1X + 6, b1Y + b1H - 14, b1W - 12, 10);
   ctx.fillStyle = "#475569";
-  ctx.fillRect(b1X + 8, b1Y + b1H - 14, b1W - 16, 3);
-  // Foundation Stone Masonry Grooves
-  ctx.strokeStyle = "#1e293b";
+  ctx.fillRect(b1X + 6, b1Y + b1H - 14, b1W - 12, 2.5);
+
+  // Ashlar Stone Blocks & Mortar Joints
+  ctx.strokeStyle = "#0f172a";
   ctx.lineWidth = 1;
-  for (let sx = b1X + 24; sx < b1X + b1W - 16; sx += 24) {
-    ctx.strokeRect(sx, b1Y + b1H - 14, 24, 12);
+  for (let sx = b1X + 22; sx < b1X + b1W - 14; sx += 22) {
+    ctx.beginPath();
+    ctx.moveTo(sx, b1Y + b1H - 14);
+    ctx.lineTo(sx, b1Y + b1H - 4);
+    ctx.stroke();
   }
+  // Moss on Foundation Stones
+  ctx.fillStyle = "#15803d";
+  ctx.fillRect(b1X + 8, b1Y + b1H - 8, 8, 3);
+  ctx.fillRect(b1X + b1W - 24, b1Y + b1H - 7, 7, 3);
 
-  // Main Stucco Walls (Cream/Parchment with 3D Shading)
+  // 3. Stucco Facade with 3D Depth & Peeking Brickwork
   ctx.fillStyle = "#fef3c7";
-  ctx.fillRect(b1X + 8, b1Y + 36, b1W - 16, b1H - 50);
-  ctx.fillStyle = "rgba(0, 0, 0, 0.08)"; // Right-side shadow for 3D depth
-  ctx.fillRect(b1X + b1W / 2, b1Y + 36, b1W / 2 - 8, b1H - 50);
+  ctx.fillRect(b1X + 8, b1Y + 34, b1W - 16, b1H - 50);
 
-  // Tudor Half-Timber Oak Framework (Dark Walnut Beams with Wood Grain)
-  ctx.fillStyle = "#451a03"; // Beam outline & shadow
-  ctx.fillRect(b1X + 8, b1Y + 36, b1W - 16, 5); // Upper horizontal belt
-  ctx.fillRect(b1X + 8, b1Y + 68, b1W - 16, 5); // Mid horizontal belt
-  ctx.fillRect(b1X + 8, b1Y + 36, 6, b1H - 50); // Left corner post
-  ctx.fillRect(b1X + b1W - 14, b1Y + 36, 6, b1H - 50); // Right corner post
-  ctx.fillRect(b1X + 44, b1Y + 36, 5, b1H - 50); // Left vertical stud
-  ctx.fillRect(b1X + b1W - 49, b1Y + 36, 5, b1H - 50); // Right vertical stud
+  // 3D Isometric Wall Shading (Sunlit left, ambient shadow right)
+  const b1Shade = ctx.createLinearGradient(b1X + 8, b1Y, b1X + b1W - 8, b1Y);
+  b1Shade.addColorStop(0, "rgba(255, 255, 255, 0.12)");
+  b1Shade.addColorStop(0.5, "rgba(0, 0, 0, 0)");
+  b1Shade.addColorStop(1, "rgba(15, 23, 42, 0.18)");
+  ctx.fillStyle = b1Shade;
+  ctx.fillRect(b1X + 8, b1Y + 34, b1W - 16, b1H - 50);
 
-  // Diagonal Half-Timber Cross Braces
-  ctx.strokeStyle = "#451a03";
-  ctx.lineWidth = 4;
+  // Peeking Weathered Brickwork Patches
+  ctx.fillStyle = "#991b1b";
+  ctx.fillRect(b1X + 16, b1Y + 48, 14, 8);
+  ctx.fillRect(b1X + b1W - 32, b1Y + 70, 16, 8);
+  ctx.fillStyle = "#b45309";
+  ctx.fillRect(b1X + 17, b1Y + 49, 6, 3);
+  ctx.fillRect(b1X + 24, b1Y + 49, 5, 3);
+  ctx.fillRect(b1X + 19, b1Y + 53, 9, 3);
+
+  // 4. Tudor Half-Timber Oak Framework (Dark Walnut Beams with Wood Grain)
+  ctx.fillStyle = "#270f03"; // Dark Beam Shadow Outline
+  ctx.fillRect(b1X + 7, b1Y + 34, b1W - 14, 6); // Upper horizontal belt
+  ctx.fillRect(b1X + 7, b1Y + 68, b1W - 14, 6); // Mid horizontal belt
+  ctx.fillRect(b1X + 7, b1Y + 34, 7, b1H - 50); // Left corner post
+  ctx.fillRect(b1X + b1W - 14, b1Y + 34, 7, b1H - 50); // Right corner post
+  ctx.fillRect(b1X + 44, b1Y + 34, 6, b1H - 50); // Left vertical stud
+  ctx.fillRect(b1X + b1W - 50, b1Y + 34, 6, b1H - 50); // Right vertical stud
+
+  ctx.fillStyle = "#78350f"; // Rich Honey Walnut Tone
+  ctx.fillRect(b1X + 8, b1Y + 35, b1W - 16, 4);
+  ctx.fillRect(b1X + 8, b1Y + 69, b1W - 16, 4);
+  ctx.fillRect(b1X + 8, b1Y + 35, 5, b1H - 52);
+  ctx.fillRect(b1X + b1W - 13, b1Y + 35, 5, b1H - 52);
+  ctx.fillRect(b1X + 45, b1Y + 35, 4, b1H - 52);
+  ctx.fillRect(b1X + b1W - 49, b1Y + 35, 4, b1H - 52);
+
+  // Beam Highlights (Gleam along top edge)
+  ctx.fillStyle = "#b45309";
+  ctx.fillRect(b1X + 8, b1Y + 35, b1W - 16, 1.5);
+  ctx.fillRect(b1X + 8, b1Y + 69, b1W - 16, 1.5);
+
+  // Diagonal Tudor Cross Braces (Stout X-Bracing)
+  ctx.strokeStyle = "#270f03";
+  ctx.lineWidth = 5;
   ctx.beginPath();
   ctx.moveTo(b1X + 14, b1Y + 41);
   ctx.lineTo(b1X + 44, b1Y + 68);
   ctx.moveTo(b1X + b1W - 14, b1Y + 41);
   ctx.lineTo(b1X + b1W - 44, b1Y + 68);
   ctx.stroke();
+  ctx.strokeStyle = "#78350f";
+  ctx.lineWidth = 3;
+  ctx.stroke();
 
-  ctx.fillStyle = "#78350f"; // Beam Wood Tone Highlights
-  ctx.fillRect(b1X + 9, b1Y + 37, b1W - 18, 3);
-  ctx.fillRect(b1X + 9, b1Y + 69, b1W - 18, 3);
+  // Iron Timber Pegs
+  ctx.fillStyle = "#0f172a";
+  ctx.fillRect(b1X + 10, b1Y + 37, 2, 2);
+  ctx.fillRect(b1X + b1W - 12, b1Y + 37, 2, 2);
+  ctx.fillRect(b1X + 46, b1Y + 70, 2, 2);
+  ctx.fillRect(b1X + b1W - 48, b1Y + 70, 2, 2);
 
-  // 3D Mansard Blue Slate Roof with Tile Shingle Texture
-  // Under-Roof Shadow Rafters
-  ctx.fillStyle = "#1e293b";
-  ctx.fillRect(b1X + 2, b1Y + 36, b1W - 4, 6);
+  // 5. 3D Mansard Blue Slate Roof with Tile Shingle Texture
+  // Under-Roof Deep Shadow Rafters
+  ctx.fillStyle = "#0f172a";
+  ctx.fillRect(b1X - 2, b1Y + 34, b1W + 4, 6);
 
-  // Mansard Roof Trapezoid
-  ctx.fillStyle = "#1e3a8a"; // Base Blue Slate
+  // Mansard Roof Trapezoid Body
+  ctx.fillStyle = "#1e3a8a";
   ctx.beginPath();
-  ctx.moveTo(b1X, b1Y + 38);
-  ctx.lineTo(b1X + 26, b1Y);
-  ctx.lineTo(b1X + b1W - 26, b1Y);
-  ctx.lineTo(b1X + b1W, b1Y + 38);
+  ctx.moveTo(b1X - 4, b1Y + 36);
+  ctx.lineTo(b1X + 24, b1Y - 2);
+  ctx.lineTo(b1X + b1W - 24, b1Y - 2);
+  ctx.lineTo(b1X + b1W + 4, b1Y + 36);
   ctx.closePath();
   ctx.fill();
 
-  // Roof 3D Ridge Cap & Edge Bevel
+  // 3D Roof Shadow (Right Flank Depth)
+  const roofGrad = ctx.createLinearGradient(b1X, b1Y, b1X + b1W, b1Y);
+  roofGrad.addColorStop(0, "rgba(255, 255, 255, 0.15)");
+  roofGrad.addColorStop(0.6, "rgba(0, 0, 0, 0)");
+  roofGrad.addColorStop(1, "rgba(15, 23, 42, 0.4)");
+  ctx.fillStyle = roofGrad;
+  ctx.beginPath();
+  ctx.moveTo(b1X - 4, b1Y + 36);
+  ctx.lineTo(b1X + 24, b1Y - 2);
+  ctx.lineTo(b1X + b1W - 24, b1Y - 2);
+  ctx.lineTo(b1X + b1W + 4, b1Y + 36);
+  ctx.closePath();
+  ctx.fill();
+
   ctx.strokeStyle = "#0f172a";
   ctx.lineWidth = 2.5;
   ctx.stroke();
 
-  // Slate Shingle Horizontal Rows with Scallop Texture
-  ctx.strokeStyle = "rgba(147, 197, 253, 0.35)";
-  ctx.lineWidth = 1;
-  for (let ry = b1Y + 8; ry < b1Y + 36; ry += 6) {
-    const inset = ((b1Y + 38 - ry) / 38) * 26;
+  // Slate Shingle Horizontal Courses & Specular Lines
+  ctx.strokeStyle = "rgba(147, 197, 253, 0.4)";
+  ctx.lineWidth = 1.5;
+  for (let ry = b1Y + 6; ry < b1Y + 36; ry += 5.5) {
+    const inset = ((b1Y + 36 - ry) / 38) * 28;
     ctx.beginPath();
-    ctx.moveTo(b1X + inset, ry);
-    ctx.lineTo(b1X + b1W - inset, ry);
+    ctx.moveTo(b1X - 2 + inset, ry);
+    ctx.lineTo(b1X + b1W + 2 - inset, ry);
     ctx.stroke();
+    // Individual Slate Vertical Joints
+    ctx.fillStyle = "#0f172a";
+    for (let jx = b1X + inset + 8; jx < b1X + b1W - inset - 8; jx += 10) {
+      ctx.fillRect(jx, ry - 3, 1, 4);
+    }
   }
 
-  // Roof Cresting & Top Gilded Finials
+  // Gilded Roof Cresting & Acroterion Finials
   ctx.fillStyle = "#fbbf24";
-  ctx.fillRect(b1X + 26, b1Y - 2, b1W - 52, 3);
-  ctx.fillRect(b1X + 24, b1Y - 5, 4, 6);
-  ctx.fillRect(b1X + b1W - 28, b1Y - 5, 4, 6);
+  ctx.fillRect(b1X + 24, b1Y - 4, b1W - 48, 3);
+  ctx.fillRect(b1X + 22, b1Y - 7, 4, 7);
+  ctx.fillRect(b1X + b1W - 26, b1Y - 7, 4, 7);
 
-  // Attic Dormer Gable Window (Center Roof)
+  // Center Attic Dormer Gable Window
   ctx.fillStyle = "#0f172a";
-  ctx.fillRect(b1X + b1W / 2 - 14, b1Y + 8, 28, 20);
+  ctx.fillRect(b1X + b1W / 2 - 15, b1Y + 6, 30, 22);
   ctx.fillStyle = "#1e3a8a";
   ctx.beginPath();
-  ctx.moveTo(b1X + b1W / 2 - 16, b1Y + 12);
-  ctx.lineTo(b1X + b1W / 2, b1Y + 2);
-  ctx.lineTo(b1X + b1W / 2 + 16, b1Y + 12);
+  ctx.moveTo(b1X + b1W / 2 - 17, b1Y + 10);
+  ctx.lineTo(b1X + b1W / 2, b1Y - 1);
+  ctx.lineTo(b1X + b1W / 2 + 17, b1Y + 10);
   ctx.closePath();
   ctx.fill();
   ctx.strokeStyle = "#fbbf24";
-  ctx.lineWidth = 1.5;
+  ctx.lineWidth = 2;
   ctx.stroke();
-  // Dormer Window Glow
+  // Dormer Glowing Stained Window
   ctx.fillStyle = "#fef08a";
-  ctx.fillRect(b1X + b1W / 2 - 8, b1Y + 14, 16, 12);
+  ctx.fillRect(b1X + b1W / 2 - 9, b1Y + 12, 18, 14);
   ctx.strokeStyle = "#451a03";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(b1X + b1W / 2 - 8, b1Y + 14, 16, 12);
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(b1X + b1W / 2 - 9, b1Y + 12, 18, 14);
 
   // Brick Chimney with Masonry Quoins & Rising Smoke
   ctx.fillStyle = "#450a0a";
-  ctx.fillRect(b1X + b1W - 34, b1Y - 16, 18, 26);
+  ctx.fillRect(b1X + b1W - 34, b1Y - 18, 18, 28);
   ctx.fillStyle = "#991b1b";
-  ctx.fillRect(b1X + b1W - 32, b1Y - 14, 14, 24);
+  ctx.fillRect(b1X + b1W - 32, b1Y - 16, 14, 26);
   ctx.fillStyle = "#78350f"; // Chimney Cap
-  ctx.fillRect(b1X + b1W - 36, b1Y - 18, 22, 4);
-  // Chimney Brick Rows
-  ctx.strokeStyle = "#450a0a";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(b1X + b1W - 32, b1Y - 10, 14, 5);
-  ctx.strokeRect(b1X + b1W - 32, b1Y - 4, 14, 5);
+  ctx.fillRect(b1X + b1W - 36, b1Y - 20, 22, 4);
 
   const smokeT = (time * 0.003) % 4;
   ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
   ctx.beginPath();
-  ctx.arc(b1X + b1W - 25, b1Y - 22 - smokeT * 8, 4 + smokeT * 1.5, 0, Math.PI * 2);
-  ctx.arc(b1X + b1W - 20 + Math.sin(time * 0.004) * 4, b1Y - 32 - smokeT * 8, 6 + smokeT, 0, Math.PI * 2);
+  ctx.arc(b1X + b1W - 25, b1Y - 24 - smokeT * 8, 4 + smokeT * 1.5, 0, Math.PI * 2);
+  ctx.arc(b1X + b1W - 20 + Math.sin(time * 0.004) * 4, b1Y - 34 - smokeT * 8, 6 + smokeT, 0, Math.PI * 2);
   ctx.fill();
 
   // Multi-Pane Stained-Glass Bay Windows (Warm Candlelit Interior)
-  const drawBayWindow = (wx: number, wy: number) => {
+  const drawGuildBayWindow = (wx: number, wy: number) => {
     // 3D Stone Sill & Ledge
     ctx.fillStyle = "#1e293b";
-    ctx.fillRect(wx - 2, wy + 26, 30, 4);
+    ctx.fillRect(wx - 2, wy + 26, 30, 5);
     ctx.fillStyle = "#475569";
     ctx.fillRect(wx - 1, wy + 26, 28, 2);
 
@@ -1823,8 +1883,8 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
     ctx.fillRect(wx + 19, wy + 18, 3, 3);
   };
 
-  drawBayWindow(b1X + 16, b1Y + 44);
-  drawBayWindow(b1X + b1W - 42, b1Y + 44);
+  drawGuildBayWindow(b1X + 16, b1Y + 44);
+  drawGuildBayWindow(b1X + b1W - 42, b1Y + 44);
 
   // Grand Portico & Carved Oak Double Entrance Doors
   const dX = b1X + b1W / 2 - 20;
@@ -1856,18 +1916,7 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
   ctx.fillRect(dX + 13, dY + 20, 3, 4);
   ctx.fillRect(dX + 24, dY + 20, 3, 4);
 
-  // Flickering Iron Wall Sconce Lanterns Flanking Door
-  const lanternFlicker = Math.sin(time * 0.009) * 2;
-  const drawLantern = (lx: number, ly: number) => {
-    ctx.fillStyle = "#1e293b";
-    ctx.fillRect(lx, ly, 4, 8);
-    ctx.fillStyle = `rgba(254, 240, 138, ${0.9 + lanternFlicker * 0.05})`;
-    ctx.fillRect(lx - 1, ly + 2, 6, 6);
-    ctx.fillStyle = "#f59e0b";
-    ctx.fillRect(lx, ly + 3, 4, 4);
-  };
-  drawLantern(dX - 8, dY + 14);
-  drawLantern(dX + 44, dY + 14);  // Hanging Wrought Iron Guild Signboard
+  // Hanging Wrought Iron Guild Signboard
   ctx.fillStyle = "#0f172a";
   ctx.fillRect(dX - 28, b1Y + 24, 96, 16);
   ctx.strokeStyle = "#fbbf24";
@@ -1886,39 +1935,39 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
   const b2W = 140;
   const b2H = 125;
 
-  // 1. 3D Drop Shadow on Grass
+  // 1. 3D Volumetric Drop Shadow
   ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
   ctx.beginPath();
-  ctx.ellipse(b2X + b2W / 2 + 4, b2Y + b2H + 2, b2W / 2 + 10, 16, 0, 0, Math.PI * 2);
+  ctx.ellipse(b2X + b2W / 2 + 6, b2Y + b2H + 2, b2W / 2 + 12, 18, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // 2. Stepped Obsidian & Titanium Cyber Platform (Multi-Tiered Foundation)
+  // 2. Stepped Obsidian & Titanium Cyber Platform (Multi-Tiered Ziggurat Foundation)
   ctx.fillStyle = "#020617";
-  ctx.fillRect(b2X + 2, b2Y + b2H - 18, b2W - 4, 18);
+  ctx.fillRect(b2X + 2, b2Y + b2H - 20, b2W - 4, 20);
   ctx.fillStyle = "#0f172a";
-  ctx.fillRect(b2X + 4, b2Y + b2H - 15, b2W - 8, 15);
+  ctx.fillRect(b2X + 4, b2Y + b2H - 17, b2W - 8, 17);
   ctx.fillStyle = "#1e293b";
-  ctx.fillRect(b2X + 6, b2Y + b2H - 12, b2W - 12, 12);
+  ctx.fillRect(b2X + 6, b2Y + b2H - 14, b2W - 12, 14);
   ctx.fillStyle = "#334155";
-  ctx.fillRect(b2X + 8, b2Y + b2H - 12, b2W - 16, 2);
+  ctx.fillRect(b2X + 8, b2Y + b2H - 14, b2W - 16, 2.5);
 
   // Laser-Etched Sapphire Fiber-Optic Circuit Traces
   ctx.strokeStyle = "#0ea5e9";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(b2X + 14, b2Y + b2H - 7);
-  ctx.lineTo(b2X + b2W / 2 - 24, b2Y + b2H - 7);
+  ctx.moveTo(b2X + 14, b2Y + b2H - 8);
+  ctx.lineTo(b2X + b2W / 2 - 24, b2Y + b2H - 8);
   ctx.lineTo(b2X + b2W / 2 - 12, b2Y + b2H - 2);
-  ctx.moveTo(b2X + b2W - 14, b2Y + b2H - 7);
-  ctx.lineTo(b2X + b2W / 2 + 24, b2Y + b2H - 7);
+  ctx.moveTo(b2X + b2W - 14, b2Y + b2H - 8);
+  ctx.lineTo(b2X + b2W / 2 + 24, b2Y + b2H - 8);
   ctx.lineTo(b2X + b2W / 2 + 12, b2Y + b2H - 2);
   ctx.stroke();
 
   // Corner Power Capacitor Nodes (Blinking Blue/Cyan)
   const capBlink = Math.sin(time * 0.008) > 0;
   ctx.fillStyle = capBlink ? "#38bdf8" : "#0284c7";
-  ctx.fillRect(b2X + 8, b2Y + b2H - 10, 4, 4);
-  ctx.fillRect(b2X + b2W - 12, b2Y + b2H - 10, 4, 4);
+  ctx.fillRect(b2X + 8, b2Y + b2H - 11, 4, 4);
+  ctx.fillRect(b2X + b2W - 12, b2Y + b2H - 11, 4, 4);
 
   // 3. Cyber Sanctum Hull (Brushed Dark Titanium with Hex Nano-Mesh)
   ctx.fillStyle = "#090d16";
@@ -1930,7 +1979,7 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
   ctx.strokeRect(b2X + 8, b2Y + 44, b2W - 16, b2H - 60);
 
   // Hexagonal Nano-Mesh Hull Texture
-  ctx.strokeStyle = "rgba(56, 189, 248, 0.15)";
+  ctx.strokeStyle = "rgba(56, 189, 248, 0.18)";
   ctx.lineWidth = 1;
   for (let hxY = b2Y + 50; hxY < b2Y + b2H - 20; hxY += 8) {
     ctx.beginPath();
@@ -1959,7 +2008,6 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
 
   // 5. 3D Geodesic Glass & Crystal Observatory Dome
   const domePulse = Math.sin(time * 0.005) * 4;
-  // Outer Dome Atmospheric Glow
   const domeGlow = ctx.createRadialGradient(
     b2X + b2W / 2,
     b2Y + 44,
@@ -1980,14 +2028,13 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
   ctx.lineWidth = 2.5;
   ctx.stroke();
 
-  // Geodesic Faceted Rib Network (Triangular Crystal Structural Web)
+  // Geodesic Faceted Rib Network (Triangular Crystal Web)
   ctx.strokeStyle = "rgba(186, 230, 253, 0.65)";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   ctx.arc(b2X + b2W / 2, b2Y + 46, b2W / 2 - 28, Math.PI, 0);
   ctx.stroke();
 
-  // Geodesic Diagonal Trusses
   ctx.beginPath();
   ctx.moveTo(b2X + b2W / 2, b2Y - 10);
   ctx.lineTo(b2X + b2W / 2, b2Y + 46);
@@ -1999,15 +2046,6 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
   ctx.moveTo(b2X + b2W / 2 - 34, b2Y + 28);
   ctx.lineTo(b2X + b2W / 2 + 34, b2Y + 28);
   ctx.stroke();
-
-  // Glass Specular Sheen Reflections
-  ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
-  ctx.beginPath();
-  ctx.moveTo(b2X + b2W / 2 - 30, b2Y + 10);
-  ctx.lineTo(b2X + b2W / 2 - 15, b2Y + 2);
-  ctx.lineTo(b2X + b2W / 2 - 20, b2Y + 24);
-  ctx.closePath();
-  ctx.fill();
 
   // 6. Floating Gemini AI Core Matrix (Central Radiant Orb & Gyroscopic Rings)
   const coreGrad = ctx.createRadialGradient(
@@ -2045,7 +2083,6 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(b2X + b2W / 2 + Math.cos(runeAngle) * 22 - 1, b2Y + 24 + domePulse + Math.sin(runeAngle) * 10 - 1, 3, 3);
   ctx.fillRect(b2X + b2W / 2 - Math.cos(runeAngle) * 22 - 1, b2Y + 24 + domePulse - Math.sin(runeAngle) * 10 - 1, 3, 3);
-  ctx.fillRect(b2X + b2W / 2 + Math.sin(runeAngle) * 12 - 1, b2Y + 24 + domePulse - Math.cos(runeAngle) * 16 - 1, 3, 3);
 
   // 7. Twin Flanking Crystal Spire Pylons (Floating Anti-Gravity Levitation)
   const drawPylon = (px: number) => {
@@ -2057,7 +2094,6 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
     ctx.lineWidth = 1.5;
     ctx.strokeRect(px, b2Y + 14, 14, 32);
 
-    // Floating Levitation Torus Ring
     const ringFloat = Math.sin(time * 0.006 + px) * 3;
     ctx.strokeStyle = "#67e8f9";
     ctx.lineWidth = 2;
@@ -2065,7 +2101,6 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
     ctx.ellipse(px + 7, b2Y + 10 + ringFloat, 10, 3.5, 0, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Floating Prismatic Crystal Spire
     ctx.fillStyle = "#38bdf8";
     ctx.beginPath();
     ctx.moveTo(px + 7, b2Y - 2 + ringFloat);
@@ -2088,7 +2123,6 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
   ctx.lineWidth = 2;
   ctx.strokeRect(hx - 24, hy - 22, 48, 44);
 
-  // Translucent Energy Barrier Matrix with Scrolling Glyphs
   ctx.fillStyle = "rgba(14, 165, 233, 0.4)";
   ctx.fillRect(hx - 20, hy - 18, 40, 40);
   ctx.strokeStyle = "rgba(255, 255, 255, 0.75)";
@@ -2127,13 +2161,15 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
   const b3W = 140;
   const b3H = 110;
 
-  // 3D Drop Shadow
-  ctx.fillStyle = "rgba(0, 0, 0, 0.38)";
+  // 1. 3D Volumetric Drop Shadow
+  ctx.fillStyle = "rgba(0, 0, 0, 0.42)";
   ctx.beginPath();
-  ctx.ellipse(b3X + b3W / 2 + 4, b3Y + b3H + 2, b3W / 2 + 8, 14, 0, 0, Math.PI * 2);
+  ctx.ellipse(b3X + b3W / 2 + 6, b3Y + b3H + 2, b3W / 2 + 10, 15, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Heavy Concrete Base with Hazard Safety Stripes
+  // 2. Heavy Concrete Base with Hazard Safety Stripes
+  ctx.fillStyle = "#0f172a";
+  ctx.fillRect(b3X + 2, b3Y + b3H - 18, b3W - 4, 18);
   ctx.fillStyle = "#1e293b";
   ctx.fillRect(b3X + 4, b3Y + b3H - 16, b3W - 8, 16);
   ctx.fillStyle = "#334155";
@@ -2150,15 +2186,24 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
     ctx.fill();
   }
 
-  // Corrugated Metal Siding (Emerald Industrial Steel)
+  // 3. Corrugated Metal Siding (Emerald Industrial Steel) with 3D Depth
   ctx.fillStyle = "#064e3b";
   ctx.fillRect(b3X + 8, b3Y + 36, b3W - 16, b3H - 50);
+
+  // 3D Siding Shadow (Right side depth gradient)
+  const b3Shade = ctx.createLinearGradient(b3X + 8, b3Y, b3X + b3W - 8, b3Y);
+  b3Shade.addColorStop(0, "rgba(255, 255, 255, 0.1)");
+  b3Shade.addColorStop(0.6, "rgba(0, 0, 0, 0)");
+  b3Shade.addColorStop(1, "rgba(2, 44, 34, 0.45)");
+  ctx.fillStyle = b3Shade;
+  ctx.fillRect(b3X + 8, b3Y + 36, b3W - 16, b3H - 50);
+
   ctx.strokeStyle = "#059669";
   ctx.lineWidth = 2;
   ctx.strokeRect(b3X + 8, b3Y + 36, b3W - 16, b3H - 50);
 
   // Vertical Corrugation Ribs & Rivets
-  ctx.strokeStyle = "rgba(52, 211, 153, 0.3)";
+  ctx.strokeStyle = "rgba(52, 211, 153, 0.35)";
   ctx.lineWidth = 1;
   for (let cxRib = b3X + 16; cxRib < b3X + b3W - 16; cxRib += 8) {
     ctx.beginPath();
@@ -2171,7 +2216,7 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
     ctx.fillRect(cxRib - 1, b3Y + b3H - 20, 2, 2);
   }
 
-  // Corrugated Roof & Upper Mechanical Deck
+  // 4. Corrugated Roof & Upper Mechanical Deck
   ctx.fillStyle = "#111827";
   ctx.fillRect(b3X, b3Y + 12, b3W, 26);
   ctx.fillStyle = "#10b981";
@@ -2214,7 +2259,6 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
   // Radio Telemetry Lattice Mast & Blinking Beacon
   ctx.fillStyle = "#94a3b8";
   ctx.fillRect(b3X + b3W / 2 - 2, b3Y - 20, 4, 34);
-  // Cross Bracing on Mast
   ctx.strokeStyle = "#64748b";
   ctx.lineWidth = 1;
   ctx.beginPath();
@@ -2240,7 +2284,6 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
     ctx.lineWidth = 1.5;
     ctx.strokeRect(wx, wy, 28, 26);
 
-    // Blinking Server Rack LEDs
     const ledTick = Math.floor(time * 0.005);
     ctx.fillStyle = (ledTick + wx) % 2 === 0 ? "#34d399" : "#065f46";
     ctx.fillRect(wx + 4, wy + 5, 20, 3);
@@ -2263,7 +2306,6 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
   ctx.lineWidth = 1.5;
   ctx.strokeRect(sdX, sdY, 40, 42);
 
-  // Pneumatic Pistons & Electronic Keypad
   ctx.fillStyle = "#64748b";
   ctx.fillRect(sdX + 4, sdY + 6, 32, 4);
   ctx.fillRect(sdX + 4, sdY + 30, 32, 4);
@@ -2288,21 +2330,21 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
   const b4W = 140;
   const b4H = 110;
 
-  // 1. 3D Drop Shadow on Lawn
+  // 1. 3D Volumetric Drop Shadow
   ctx.fillStyle = "rgba(0, 0, 0, 0.42)";
   ctx.beginPath();
-  ctx.ellipse(b4X + b4W / 2 + 4, b4Y + b4H + 2, b4W / 2 + 8, 14, 0, 0, Math.PI * 2);
+  ctx.ellipse(b4X + b4W / 2 + 6, b4Y + b4H + 2, b4W / 2 + 10, 15, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // 2. Stepped Ashlar Granite Plinth Foundation
   ctx.fillStyle = "#0f172a";
-  ctx.fillRect(b4X + 4, b4Y + b4H - 16, b4W - 8, 16);
+  ctx.fillRect(b4X + 2, b4Y + b4H - 18, b4W - 4, 18);
   ctx.fillStyle = "#1e293b";
-  ctx.fillRect(b4X + 6, b4Y + b4H - 14, b4W - 12, 14);
+  ctx.fillRect(b4X + 4, b4Y + b4H - 16, b4W - 8, 16);
   ctx.fillStyle = "#334155";
-  ctx.fillRect(b4X + 8, b4Y + b4H - 12, b4W - 16, 10);
+  ctx.fillRect(b4X + 6, b4Y + b4H - 13, b4W - 12, 11);
   ctx.fillStyle = "#64748b";
-  ctx.fillRect(b4X + 8, b4Y + b4H - 12, b4W - 16, 2);
+  ctx.fillRect(b4X + 6, b4Y + b4H - 13, b4W - 12, 2.5);
 
   // Carved Stone Relief Joints
   ctx.fillStyle = "#475569";
@@ -2310,14 +2352,22 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
     ctx.fillRect(sx, b4Y + b4H - 10, 1, 8);
   }
 
-  // 3. Lacquered Crimson Wood Walls with Structural Timber Studs
+  // 3. Lacquered Crimson Wood Walls with Structural Timber Studs & 3D Shading
   ctx.fillStyle = "#5c0e0e";
   ctx.fillRect(b4X + 10, b4Y + 36, b4W - 20, b4H - 50);
   ctx.fillStyle = "#7f1d1d";
   ctx.fillRect(b4X + 12, b4Y + 38, b4W - 24, b4H - 52);
 
+  // 3D Wall Shading (Right flank depth)
+  const b4Shade = ctx.createLinearGradient(b4X + 12, b4Y, b4X + b4W - 12, b4Y);
+  b4Shade.addColorStop(0, "rgba(255, 255, 255, 0.12)");
+  b4Shade.addColorStop(0.6, "rgba(0, 0, 0, 0)");
+  b4Shade.addColorStop(1, "rgba(38, 6, 6, 0.4)");
+  ctx.fillStyle = b4Shade;
+  ctx.fillRect(b4X + 12, b4Y + 38, b4W - 24, b4H - 52);
+
   // Wood Battens & Grain Texture
-  ctx.strokeStyle = "rgba(220, 38, 38, 0.25)";
+  ctx.strokeStyle = "rgba(220, 38, 38, 0.3)";
   ctx.lineWidth = 1;
   for (let bx = b4X + 18; bx < b4X + b4W - 18; bx += 8) {
     ctx.beginPath();
@@ -2349,8 +2399,8 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
   drawDojoPillar(b4X + b4W - 21);
 
   // 5. Traditional 3D Curved Pagoda Clay Tile Roof (Irimoya-zukuri Style)
-  ctx.fillStyle = "#260606"; // Under-eave shadow
-  ctx.fillRect(b4X - 2, b4Y + 36, b4W + 4, 4);
+  ctx.fillStyle = "#260606"; // Under-eave deep shadow
+  ctx.fillRect(b4X - 2, b4Y + 36, b4W + 4, 5);
 
   // Curved Pagoda Roof Slope
   ctx.fillStyle = "#7f1d1d";
@@ -2414,7 +2464,6 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
   ctx.fillStyle = "#450a0a";
   ctx.fillRect(shX - 2, shY - 2, 52, 46);
 
-  // Translucent Glowing Washi Paper
   ctx.fillStyle = "#fef3c7";
   ctx.fillRect(shX, shY, 23, 42);
   ctx.fillRect(shX + 25, shY, 23, 42);
@@ -2450,14 +2499,12 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
     ctx.fillStyle = "#475569";
     ctx.fillRect(lx - 2, b4Y + b4H - 28, 14, 4);
 
-    // Warm Flickering Candlelight Core
     const fireFlicker = Math.sin(time * 0.015 + lx) * 0.5;
     ctx.fillStyle = "#fef08a";
     ctx.fillRect(lx + 1, b4Y + b4H - 24, 8, 8);
     ctx.fillStyle = "#f59e0b";
     ctx.fillRect(lx + 3 + fireFlicker, b4Y + b4H - 22, 4, 5);
 
-    // Pagoda Stone Roof
     ctx.fillStyle = "#1e293b";
     ctx.beginPath();
     ctx.moveTo(lx - 4, b4Y + b4H - 28);
@@ -2490,21 +2537,21 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
   const b5W = 140;
   const b5H = 110;
 
-  // 1. 3D Drop Shadow on Lawn
+  // 1. 3D Volumetric Drop Shadow
   ctx.fillStyle = "rgba(0, 0, 0, 0.42)";
   ctx.beginPath();
-  ctx.ellipse(b5X + b5W / 2 + 4, b5Y + b5H + 2, b5W / 2 + 8, 14, 0, 0, Math.PI * 2);
+  ctx.ellipse(b5X + b5W / 2 + 6, b5Y + b5H + 2, b5W / 2 + 10, 15, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // 2. Stepped Fieldstone & Slate Foundation Plinth
   ctx.fillStyle = "#0f172a";
-  ctx.fillRect(b5X + 4, b5Y + b5H - 16, b5W - 8, 16);
+  ctx.fillRect(b5X + 2, b5Y + b5H - 18, b5W - 4, 18);
   ctx.fillStyle = "#1e293b";
-  ctx.fillRect(b5X + 6, b5Y + b5H - 14, b5W - 12, 14);
+  ctx.fillRect(b5X + 4, b5Y + b5H - 16, b5W - 8, 16);
   ctx.fillStyle = "#334155";
-  ctx.fillRect(b5X + 8, b5Y + b5H - 12, b5W - 16, 10);
+  ctx.fillRect(b5X + 6, b5Y + b5H - 13, b5W - 12, 11);
   ctx.fillStyle = "#475569";
-  ctx.fillRect(b5X + 8, b5Y + b5H - 12, b5W - 16, 2);
+  ctx.fillRect(b5X + 6, b5Y + b5H - 13, b5W - 12, 2.5);
 
   // Fieldstone Joint Notches
   ctx.fillStyle = "#64748b";
@@ -2513,10 +2560,18 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
     ctx.fillRect(fx + 8, b5Y + b5H - 6, 7, 4);
   }
 
-  // 3. Cedar Clapboard & Slate Timber Walls
+  // 3. Cedar Clapboard & Slate Timber Walls with 3D Depth
   ctx.fillStyle = "#1e293b";
   ctx.fillRect(b5X + 8, b5Y + 36, b5W - 16, b5H - 50);
   ctx.fillStyle = "#334155";
+  ctx.fillRect(b5X + 10, b5Y + 38, b5W - 20, b5H - 52);
+
+  // 3D Wall Shadow Gradient
+  const b5Shade = ctx.createLinearGradient(b5X + 10, b5Y, b5X + b5W - 10, b5Y);
+  b5Shade.addColorStop(0, "rgba(255, 255, 255, 0.1)");
+  b5Shade.addColorStop(0.6, "rgba(0, 0, 0, 0)");
+  b5Shade.addColorStop(1, "rgba(15, 23, 42, 0.35)");
+  ctx.fillStyle = b5Shade;
   ctx.fillRect(b5X + 10, b5Y + 38, b5W - 20, b5H - 52);
 
   // Horizontal Cedar Board Siding with Wood Grain Notches
@@ -2565,7 +2620,6 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
     ctx.lineTo(b5X + b5W - sInset, sry);
     ctx.stroke();
 
-    // Wood Shake Shingle Vertical Slits
     ctx.fillStyle = "#451a03";
     for (let shx = b5X + sInset + 6; shx < b5X + b5W - sInset - 6; shx += 7) {
       ctx.fillRect(shx, sry - 3, 1, 4);
@@ -2585,7 +2639,6 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
   ctx.strokeStyle = "#fbbf24";
   ctx.lineWidth = 1.5;
   ctx.stroke();
-  // Dormer Amber Window Glow
   ctx.fillStyle = "#fef08a";
   ctx.fillRect(b5X + b5W / 2 - 8, b5Y + 14, 16, 12);
   ctx.strokeStyle = "#451a03";
@@ -2597,7 +2650,6 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
   ctx.fillRect(b5X + b5W - 32, b5Y - 16, 18, 26);
   ctx.fillStyle = "#475569";
   ctx.fillRect(b5X + b5W - 30, b5Y - 14, 14, 24);
-  // Fieldstone Texture Notches
   ctx.fillStyle = "#334155";
   ctx.fillRect(b5X + b5W - 28, b5Y - 10, 5, 4);
   ctx.fillRect(b5X + b5W - 22, b5Y - 4, 4, 4);
@@ -2618,38 +2670,33 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
   ctx.lineWidth = 2;
   ctx.strokeRect(gx, gy, 52, 34);
 
-  // Ambient RGB Backlight Glow behind TV
   const rgbHue = (time * 0.05) % 360;
   ctx.fillStyle = `hsla(${rgbHue}, 85%, 60%, 0.25)`;
   ctx.fillRect(gx + 2, gy + 2, 48, 30);
 
-  // TV Screen Displaying Animated Retro Gameplay
   ctx.fillStyle = "#020617";
   ctx.fillRect(gx + 4, gy + 4, 28, 22);
   ctx.strokeStyle = "#38bdf8";
   ctx.lineWidth = 1;
   ctx.strokeRect(gx + 4, gy + 4, 28, 22);
 
-  // Animated Gameplay Graphics on Screen (Retro Player + Platform)
   const gamePlayerY = gy + 14 + Math.sin(time * 0.01) * 3;
-  ctx.fillStyle = "#22c55e"; // Ground Platform
+  ctx.fillStyle = "#22c55e";
   ctx.fillRect(gx + 6, gy + 20, 24, 4);
-  ctx.fillStyle = "#ef4444"; // Jumping Sprite
+  ctx.fillStyle = "#ef4444";
   ctx.fillRect(gx + 12, gamePlayerY, 5, 5);
-  ctx.fillStyle = "#facc15"; // Collectible Coin
+  ctx.fillStyle = "#facc15";
   ctx.fillRect(gx + 22, gy + 10, 3, 3);
-  ctx.fillStyle = "#ffffff"; // Health Bar HUD
+  ctx.fillStyle = "#ffffff";
   ctx.fillRect(gx + 6, gy + 6, 8, 2);
 
-  // Illuminated White PS5 Console Tower with Blue LED Glow
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(gx + 36, gy + 8, 6, 20);
-  ctx.fillStyle = "#0284c7"; // Blue LED Strip
+  ctx.fillStyle = "#0284c7";
   ctx.fillRect(gx + 38, gy + 9, 2, 18);
   ctx.fillStyle = "#38bdf8";
   ctx.fillRect(gx + 39, gy + 10, 1, 16);
 
-  // DualSense Controllers on Desk
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(gx + 44, gy + 20, 5, 4);
   ctx.fillStyle = "#0284c7";
@@ -2670,7 +2717,6 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
   const gdx = b5X + b5W - 54;
   const gdy = b5Y + b5H - 46;
 
-  // Porch Steps & Deck Planks
   ctx.fillStyle = "#1e293b";
   ctx.fillRect(gdx - 2, gdy + 34, 46, 12);
   ctx.fillStyle = "#78350f";
@@ -2678,15 +2724,13 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
   ctx.fillStyle = "#b45309";
   ctx.fillRect(gdx, gdy + 36, 42, 2);
 
-  // Front Door
   ctx.fillStyle = "#451a03";
   ctx.fillRect(gdx + 6, gdy, 30, 36);
   ctx.fillStyle = "#78350f";
   ctx.fillRect(gdx + 8, gdy + 2, 26, 32);
-  ctx.fillStyle = "#fbbf24"; // Brass Knob
+  ctx.fillStyle = "#fbbf24";
   ctx.fillRect(gdx + 28, gdy + 18, 3, 3);
 
-  // Porch Entry Warm Lantern Sconce
   ctx.fillStyle = "#1e293b";
   ctx.fillRect(gdx, gdy + 12, 4, 8);
   ctx.fillStyle = "#fef08a";
@@ -2700,85 +2744,81 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
   const b6W = 130;
   const b6H = 95;
 
-  // 1. 3D Drop Shadow on Grass
-  ctx.fillStyle = "rgba(0, 0, 0, 0.38)";
+  // 1. 3D Volumetric Drop Shadow
+  ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
   ctx.beginPath();
-  ctx.ellipse(b6X + b6W / 2 + 4, b6Y + b6H + 2, b6W / 2 + 6, 12, 0, 0, Math.PI * 2);
+  ctx.ellipse(b6X + b6W / 2 + 5, b6Y + b6H + 2, b6W / 2 + 8, 14, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // 2. Multi-Tone Cobblestone / Basalt Foundation Plinth
   ctx.fillStyle = "#0f172a";
-  ctx.fillRect(b6X + 4, b6Y + b6H - 16, b6W - 8, 16);
+  ctx.fillRect(b6X + 2, b6Y + b6H - 18, b6W - 4, 18);
   ctx.fillStyle = "#1e293b";
-  ctx.fillRect(b6X + 6, b6Y + b6H - 14, b6W - 12, 12);
+  ctx.fillRect(b6X + 4, b6Y + b6H - 16, b6W - 8, 14);
   ctx.fillStyle = "#334155";
-  ctx.fillRect(b6X + 8, b6Y + b6H - 14, b6W - 16, 3);
-  // Staggered Foundation Cobblestone Joints
+  ctx.fillRect(b6X + 6, b6Y + b6H - 14, b6W - 12, 10);
+  ctx.fillStyle = "#475569";
+  ctx.fillRect(b6X + 6, b6Y + b6H - 14, b6W - 12, 2.5);
+
   ctx.fillStyle = "#475569";
   for (let fx = b6X + 12; fx < b6X + b6W - 16; fx += 14) {
     ctx.fillRect(fx, b6Y + b6H - 11, 10, 4);
     ctx.fillRect(fx + 6, b6Y + b6H - 6, 8, 4);
   }
 
-  // 3. Tudor Stucco Plaster Walls (Warm Ivory / Sandstone)
+  // 3. Tudor Stucco Plaster Walls (Warm Ivory / Sandstone) with 3D Depth
   ctx.fillStyle = "#fef3c7";
   ctx.fillRect(b6X + 8, b6Y + 32, b6W - 16, b6H - 46);
-  // Plaster subtle texture & peeking brick courses
-  ctx.fillStyle = "#fde68a";
-  ctx.fillRect(b6X + 16, b6Y + 42, 22, 12);
-  ctx.fillRect(b6X + b6W - 40, b6Y + 60, 20, 10);
-  ctx.fillStyle = "#b45309"; // Peeking clay brick patch
+
+  const b6Shade = ctx.createLinearGradient(b6X + 8, b6Y, b6X + b6W - 8, b6Y);
+  b6Shade.addColorStop(0, "rgba(255, 255, 255, 0.12)");
+  b6Shade.addColorStop(0.6, "rgba(0, 0, 0, 0)");
+  b6Shade.addColorStop(1, "rgba(15, 23, 42, 0.2)");
+  ctx.fillStyle = b6Shade;
+  ctx.fillRect(b6X + 8, b6Y + 32, b6W - 16, b6H - 46);
+
+  // Peeking Brick Patch
+  ctx.fillStyle = "#b45309";
   ctx.fillRect(b6X + 18, b6Y + 44, 8, 3);
   ctx.fillRect(b6X + 28, b6Y + 44, 8, 3);
   ctx.fillRect(b6X + 22, b6Y + 48, 9, 3);
 
-  // 4. Heavy Dark Oak Half-Timbering Framing Beams (X-braces, studs & lintels)
+  // 4. Heavy Dark Oak Half-Timbering Framing Beams
   ctx.fillStyle = "#451a03";
-  // Outer Border Frame
-  ctx.fillRect(b6X + 8, b6Y + 32, b6W - 16, 4); // Top eave lintel
-  ctx.fillRect(b6X + 8, b6Y + b6H - 18, b6W - 16, 3); // Base sill
-  ctx.fillRect(b6X + 8, b6Y + 32, 6, b6H - 47); // Left corner post
-  ctx.fillRect(b6X + b6W - 14, b6Y + 32, 6, b6H - 47); // Right corner post
+  ctx.fillRect(b6X + 8, b6Y + 32, b6W - 16, 4);
+  ctx.fillRect(b6X + 8, b6Y + b6H - 18, b6W - 16, 3);
+  ctx.fillRect(b6X + 8, b6Y + 32, 6, b6H - 47);
+  ctx.fillRect(b6X + b6W - 14, b6Y + 32, 6, b6H - 47);
 
-  // Timber Highlights (Top edge bevels)
   ctx.fillStyle = "#78350f";
   ctx.fillRect(b6X + 9, b6Y + 33, b6W - 18, 2);
   ctx.fillRect(b6X + 9, b6Y + 33, 4, b6H - 49);
   ctx.fillRect(b6X + b6W - 13, b6Y + 33, 4, b6H - 49);
 
-  // Diagonal Tudor Cross-Braces (X-Bracing) on Left & Right Panels
   const drawTimberX = (tx: number, ty: number, tw: number, th: number) => {
     ctx.strokeStyle = "#451a03";
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 3.5;
     ctx.beginPath();
     ctx.moveTo(tx, ty);
     ctx.lineTo(tx + tw, ty + th);
     ctx.moveTo(tx + tw, ty);
     ctx.lineTo(tx, ty + th);
     ctx.stroke();
-    // Inner wood grain highlight
     ctx.strokeStyle = "#78350f";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(tx, ty);
-    ctx.lineTo(tx + tw, ty + th);
-    ctx.moveTo(tx + tw, ty);
-    ctx.lineTo(tx, ty + th);
+    ctx.lineWidth = 1.8;
     ctx.stroke();
   };
   drawTimberX(b6X + 16, b6Y + 36, 18, 24);
   drawTimberX(b6X + b6W - 36, b6Y + 36, 18, 24);
 
-  // Vertical Stud Posts
   ctx.fillStyle = "#451a03";
   ctx.fillRect(b6X + 38, b6Y + 32, 4, b6H - 47);
   ctx.fillRect(b6X + b6W - 42, b6Y + 32, 4, b6H - 47);
 
   // 5. Terracotta Scalloped Tile Hip Roof with 3D Overhang
-  ctx.fillStyle = "#260606"; // Under-eave shadow
+  ctx.fillStyle = "#260606";
   ctx.fillRect(b6X + 2, b6Y + 32, b6W - 4, 4);
 
-  // Main Terracotta Roof Slope
   ctx.fillStyle = "#7f1d1d";
   ctx.beginPath();
   ctx.moveTo(b6X - 2, b6Y + 34);
@@ -2792,7 +2832,6 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
   ctx.lineWidth = 2;
   ctx.stroke();
 
-  // Scalloped Tile Texture Courses
   for (let rsy = b6Y + 6; rsy < b6Y + 32; rsy += 5) {
     const sInset = ((b6Y + 34 - rsy) / 34) * 24;
     ctx.strokeStyle = rsy % 10 === 0 ? "#dc2626" : "#991b1b";
@@ -2802,7 +2841,6 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
     ctx.lineTo(b6X + b6W - sInset, rsy);
     ctx.stroke();
 
-    // Individual Shingle Ridge Notches
     ctx.fillStyle = "#d97706";
     for (let rx = b6X + sInset + 6; rx < b6X + b6W - sInset - 6; rx += 8) {
       ctx.fillRect(rx, rsy - 2, 2, 2);
@@ -2835,7 +2873,6 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  // Golden Post Horn Icon
   ctx.strokeStyle = "#fbbf24";
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -2851,21 +2888,20 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
   ctx.fillStyle = "#ca8a04";
   ctx.fillRect(b6X + 19, b6Y + 61, 14, 16);
   ctx.fillStyle = "#facc15";
-  ctx.fillRect(b6X + 20, b6Y + 62, 12, 3); // Mail drop slot
+  ctx.fillRect(b6X + 20, b6Y + 62, 12, 3);
   ctx.fillStyle = "#0f172a";
   ctx.fillRect(b6X + 22, b6Y + 63, 8, 1);
-  ctx.fillStyle = "#78350f"; // Wood Parcel Package beside mailbox
+  ctx.fillStyle = "#78350f";
   ctx.fillRect(b6X + 12, b6Y + 68, 6, 8);
   ctx.strokeStyle = "#fbbf24";
   ctx.lineWidth = 0.5;
   ctx.strokeRect(b6X + 12, b6Y + 68, 6, 8);
 
-  // 8. Leaded Diamond-Lattice Casement Post Window (Warm Interior Glow)
+  // 8. Leaded Diamond-Lattice Casement Post Window
   ctx.fillStyle = "#451a03";
   ctx.fillRect(b6X + b6W - 38, b6Y + 48, 22, 22);
   ctx.fillStyle = "#fef08a";
   ctx.fillRect(b6X + b6W - 36, b6Y + 50, 18, 18);
-  // Diamond Lattice Came Grids
   ctx.strokeStyle = "#78350f";
   ctx.lineWidth = 1;
   ctx.beginPath();
@@ -2891,18 +2927,17 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
   ctx.fillRect(b6X + b6W / 2 - 13, b6Y + b6H - 42, 26, 40);
   ctx.fillStyle = "#78350f";
   ctx.fillRect(b6X + b6W / 2 - 11, b6Y + b6H - 40, 22, 36);
-  // Door Coffered Wood Panels
+
   ctx.strokeStyle = "#451a03";
   ctx.lineWidth = 1;
   ctx.strokeRect(b6X + b6W / 2 - 9, b6Y + b6H - 37, 8, 14);
   ctx.strokeRect(b6X + b6W / 2 + 1, b6Y + b6H - 37, 8, 14);
   ctx.strokeRect(b6X + b6W / 2 - 9, b6Y + b6H - 19, 8, 12);
   ctx.strokeRect(b6X + b6W / 2 + 1, b6Y + b6H - 19, 8, 12);
-  // Brass Handle
+
   ctx.fillStyle = "#fbbf24";
   ctx.fillRect(b6X + b6W / 2 + 5, b6Y + b6H - 24, 2.5, 3);
 
-  // Entry Porch Lantern Sconce
   ctx.fillStyle = "#1e293b";
   ctx.fillRect(b6X + b6W / 2 - 18, b6Y + b6H - 32, 3, 6);
   ctx.fillStyle = "#fef08a";
@@ -2916,10 +2951,10 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
   const b7W = 140;
   const b7H = 105;
 
-  // 1. 3D Drop Shadow on Grass
-  ctx.fillStyle = "rgba(0, 0, 0, 0.38)";
+  // 1. 3D Volumetric Drop Shadow
+  ctx.fillStyle = "rgba(0, 0, 0, 0.42)";
   ctx.beginPath();
-  ctx.ellipse(b7X + b7W / 2 + 4, b7Y + b7H + 2, b7W / 2 + 8, 14, 0, 0, Math.PI * 2);
+  ctx.ellipse(b7X + b7W / 2 + 6, b7Y + b7H + 2, b7W / 2 + 10, 15, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // 2. 3-Tier Stepped Classical Marble Stylobate (Crepidoma Foundation)
@@ -2931,23 +2966,29 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
   ctx.fillRect(b7X + 6, b7Y + b7H - 12, b7W - 12, 12);
   ctx.fillStyle = "#64748b";
   ctx.fillRect(b7X + 8, b7Y + b7H - 9, b7W - 16, 9);
-  ctx.fillStyle = "#e2e8f0"; // Top marble step highlight
-  ctx.fillRect(b7X + 8, b7Y + b7H - 9, b7W - 16, 2);
+  ctx.fillStyle = "#e2e8f0";
+  ctx.fillRect(b7X + 8, b7Y + b7H - 9, b7W - 16, 2.5);
 
-  // Vertical Marble Step Joints
   ctx.fillStyle = "#94a3b8";
   for (let sx = b7X + 16; sx < b7X + b7W - 16; sx += 20) {
     ctx.fillRect(sx, b7Y + b7H - 7, 1, 6);
   }
 
-  // 3. Classical Ashlar Stone Walls (Honed Granite & Marble)
+  // 3. Classical Ashlar Stone Walls (Honed Granite & Marble) with 3D Depth
   ctx.fillStyle = "#1e293b";
   ctx.fillRect(b7X + 10, b7Y + 36, b7W - 20, b7H - 46);
   ctx.fillStyle = "#334155";
   ctx.fillRect(b7X + 12, b7Y + 38, b7W - 24, b7H - 48);
 
+  const b7Shade = ctx.createLinearGradient(b7X + 12, b7Y, b7X + b7W - 12, b7Y);
+  b7Shade.addColorStop(0, "rgba(255, 255, 255, 0.1)");
+  b7Shade.addColorStop(0.6, "rgba(0, 0, 0, 0)");
+  b7Shade.addColorStop(1, "rgba(15, 23, 42, 0.35)");
+  ctx.fillStyle = b7Shade;
+  ctx.fillRect(b7X + 12, b7Y + 38, b7W - 24, b7H - 48);
+
   // Staggered Ashlar Block Courses
-  ctx.strokeStyle = "rgba(148, 163, 184, 0.25)";
+  ctx.strokeStyle = "rgba(148, 163, 184, 0.3)";
   ctx.lineWidth = 1;
   for (let ay = b7Y + 44; ay < b7Y + b7H - 12; ay += 10) {
     ctx.beginPath();
@@ -2967,30 +3008,26 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
 
   // 4. 4 Fluted Ionic / Corinthian White Marble Columns with Volute Capitals
   const drawFlutedColumn = (cxPos: number) => {
-    // Column Plinth Base
     ctx.fillStyle = "#64748b";
     ctx.fillRect(cxPos - 2, b7Y + b7H - 14, 14, 5);
     ctx.fillStyle = "#cbd5e1";
     ctx.fillRect(cxPos - 1, b7Y + b7H - 13, 12, 3);
 
-    // Fluted Column Shaft
     ctx.fillStyle = "#e2e8f0";
     ctx.fillRect(cxPos, b7Y + 36, 10, b7H - 49);
     ctx.strokeStyle = "#94a3b8";
     ctx.lineWidth = 1;
     ctx.strokeRect(cxPos, b7Y + 36, 10, b7H - 49);
 
-    // Vertical Flute Ridges
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(cxPos + 2, b7Y + 38, 1.5, b7H - 53);
     ctx.fillRect(cxPos + 6, b7Y + 38, 1.5, b7H - 53);
     ctx.fillStyle = "#94a3b8";
     ctx.fillRect(cxPos + 4, b7Y + 38, 1, b7H - 53);
 
-    // Ionic Scroll Volute Capital
     ctx.fillStyle = "#f8fafc";
     ctx.fillRect(cxPos - 3, b7Y + 34, 16, 5);
-    ctx.fillStyle = "#fbbf24"; // Gold capital ring
+    ctx.fillStyle = "#fbbf24";
     ctx.fillRect(cxPos - 1, b7Y + 38, 12, 2);
   };
   drawFlutedColumn(b7X + 14);
@@ -3000,11 +3037,10 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
 
   // 5. Classical Triangular Pediment Roof & Dentil Molding Frieze
   ctx.fillStyle = "#0f172a";
-  ctx.fillRect(b7X + 4, b7Y + 30, b7W - 8, 8); // Architrave beam
+  ctx.fillRect(b7X + 4, b7Y + 30, b7W - 8, 8);
   ctx.fillStyle = "#334155";
   ctx.fillRect(b7X + 6, b7Y + 32, b7W - 12, 4);
 
-  // Dentil Molding (Small square stone teeth)
   ctx.fillStyle = "#f8fafc";
   for (let dx = b7X + 8; dx < b7X + b7W - 8; dx += 6) {
     ctx.fillRect(dx, b7Y + 34, 3, 2);
@@ -3039,14 +3075,13 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  // Golden Laurel Wreath & Scroll
   ctx.fillStyle = "#fbbf24";
   ctx.beginPath();
   ctx.arc(b7X + b7W / 2, b7Y + 16, 7, 0, Math.PI * 1.8);
   ctx.stroke();
   ctx.fillRect(b7X + b7W / 2 - 5, b7Y + 13, 10, 6);
   ctx.fillStyle = "#0f172a";
-  ctx.fillRect(b7X + b7W / 2 - 1, b7Y + 13, 2, 6); // Book Spine
+  ctx.fillRect(b7X + b7W / 2 - 1, b7Y + 13, 2, 6);
 
   // 6. Arched Stained Glass Cathedral Windows
   const drawArchiveStainedGlass = (wx: number, wy: number) => {
@@ -3056,15 +3091,13 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
     ctx.rect(wx, wy + 6, 14, 18);
     ctx.fill();
 
-    // Vibrant Stained Glass Mosaic
-    ctx.fillStyle = "#0284c7"; // Cyan
+    ctx.fillStyle = "#0284c7";
     ctx.fillRect(wx + 2, wy + 6, 5, 8);
-    ctx.fillStyle = "#38bdf8"; // Light Blue
+    ctx.fillStyle = "#38bdf8";
     ctx.fillRect(wx + 7, wy + 6, 5, 8);
-    ctx.fillStyle = "#f59e0b"; // Gold Center
+    ctx.fillStyle = "#f59e0b";
     ctx.fillRect(wx + 3, wy + 14, 8, 8);
 
-    // Stone Arch Keystone
     ctx.fillStyle = "#94a3b8";
     ctx.fillRect(wx + 5, wy - 2, 4, 4);
   };
@@ -3090,12 +3123,10 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
   ctx.fillStyle = "#451a03";
   ctx.fillRect(adX, adY, 36, 42);
 
-  // Left & Right Paneled Doors
   ctx.fillStyle = "#78350f";
   ctx.fillRect(adX + 2, adY + 2, 15, 38);
   ctx.fillRect(adX + 19, adY + 2, 15, 38);
 
-  // Coffered Door Panels
   ctx.strokeStyle = "#451a03";
   ctx.lineWidth = 1;
   ctx.strokeRect(adX + 4, adY + 5, 11, 14);
@@ -3103,7 +3134,6 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
   ctx.strokeRect(adX + 4, adY + 22, 11, 15);
   ctx.strokeRect(adX + 21, adY + 22, 11, 15);
 
-  // Brass Lion Knocker Studs
   ctx.fillStyle = "#fbbf24";
   ctx.fillRect(adX + 8, adY + 11, 3, 3);
   ctx.fillRect(adX + 25, adY + 11, 3, 3);
@@ -3116,7 +3146,7 @@ function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
     ctx.fillRect(ux, b7Y + b7H - 16, 8, 8);
     ctx.fillStyle = "#94a3b8";
     ctx.fillRect(ux - 1, b7Y + b7H - 18, 10, 3);
-    ctx.fillStyle = "#15803d"; // Trimmed Laurel
+    ctx.fillStyle = "#15803d";
     ctx.beginPath();
     ctx.arc(ux + 4, b7Y + b7H - 20, 5, 0, Math.PI * 2);
     ctx.fill();
@@ -4127,6 +4157,23 @@ export default function GameCanvas() {
     y: number;
   } | null>(null);
 
+  // Character Skin Customization
+  const [selectedSkinId, setSelectedSkinId] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("franze_game_hero_skin");
+      if (saved && CHARACTER_SKINS.some((s) => s.id === saved)) {
+        return saved;
+      }
+    }
+    return "franze";
+  });
+  const [isCharacterSelectOpen, setIsCharacterSelectOpen] = useState<boolean>(false);
+
+  const selectedSkinRef = useRef<string>(selectedSkinId);
+  useEffect(() => {
+    selectedSkinRef.current = selectedSkinId;
+  }, [selectedSkinId]);
+
   const charactersImageRef = useRef<HTMLImageElement | null>(null);
 
   // Player state
@@ -4450,15 +4497,28 @@ export default function GameCanvas() {
       }
 
       if (e.key === "Escape") {
+        if (isCharacterSelectOpen) {
+          setIsCharacterSelectOpen(false);
+          return;
+        }
         if (activeModalType) setActiveModalType(null);
         if (activeNpc) setActiveNpc(null);
         if (activeWorldObject) setActiveWorldObject(null);
         return;
       }
 
+      if (e.key === "c" || e.key === "C") {
+        if (!activeNpc && !activeWorldObject && !activeModalType) {
+          e.preventDefault();
+          retroAudio.playInteract();
+          setIsCharacterSelectOpen((prev) => !prev);
+          return;
+        }
+      }
+
       if (e.key === " " || e.key === "Enter" || e.key === "e" || e.key === "E") {
         e.preventDefault();
-        if (!activeNpc && !activeWorldObject && !activeModalType) {
+        if (!activeNpc && !activeWorldObject && !activeModalType && !isCharacterSelectOpen) {
           triggerInteraction();
         }
         return;
@@ -4486,7 +4546,7 @@ export default function GameCanvas() {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, [activeNpc, activeWorldObject, activeModalType, triggerInteraction]);
+  }, [activeNpc, activeWorldObject, activeModalType, isCharacterSelectOpen, triggerInteraction]);
 
   // Main Render Loop
   useEffect(() => {
@@ -4759,18 +4819,34 @@ export default function GameCanvas() {
         ctx.fillText(npc.nameTag, nx + 16, ny - 1);
       });
 
-      // 12. Player Character (Franze Trainer)
-      drawSpritesheetCharacter(
-        ctx,
-        charactersImageRef.current,
-        2,
-        p.x,
-        p.y,
-        p.direction,
-        p.isMoving,
-        p.frame,
-        "none"
-      );
+      // 12. Player Character (Selected Custom Skin)
+      const currentSkin =
+        CHARACTER_SKINS.find((s) => s.id === selectedSkinRef.current) ||
+        CHARACTER_SKINS[0];
+
+      if (currentSkin.spriteType === "dog") {
+        drawKissesTheDog(
+          ctx,
+          p.x,
+          p.y,
+          p.direction,
+          p.isMoving,
+          p.frame,
+          time
+        );
+      } else {
+        drawSpritesheetCharacter(
+          ctx,
+          charactersImageRef.current,
+          currentSkin.spriteRow,
+          p.x,
+          p.y,
+          p.direction,
+          p.isMoving,
+          p.frame,
+          currentSkin.customEffect || "none"
+        );
+      }
 
       // 13. Ambient Floating Particles
       drawParticles(ctx, particlesRef.current);
@@ -4782,7 +4858,7 @@ export default function GameCanvas() {
 
     animationFrameId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(animationFrameId);
-  }, [isColliding, getNearbyInteractable, activeNpc, activeWorldObject, activeModalType]);
+  }, [isColliding, getNearbyInteractable, activeNpc, activeWorldObject, activeModalType, selectedSkinId]);
 
   // Responsive Canvas Sizing
   useEffect(() => {
@@ -4797,6 +4873,8 @@ export default function GameCanvas() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  const activeSkin = CHARACTER_SKINS.find((s) => s.id === selectedSkinId) || CHARACTER_SKINS[0];
 
   return (
     <div className="relative mx-auto flex w-full max-w-5xl flex-col items-center select-none">
@@ -4814,8 +4892,8 @@ export default function GameCanvas() {
             <span className="tracking-wider uppercase">FRANZE TOWN // DEV OVERWORLD</span>
           </div>
 
-          <div className="flex items-center gap-4 text-[11px]">
-            <div className="hidden sm:flex items-center gap-1.5 text-amber-300">
+          <div className="flex items-center gap-3 sm:gap-4 text-[11px]">
+            <div className="hidden lg:flex items-center gap-1.5 text-amber-300">
               <MapPin className="h-3.5 w-3.5" />
               <span>
                 DISCOVERED: {discoveredLocations.size} / {WORLD_OBJECTS.length + NPCS.length}
@@ -4827,9 +4905,23 @@ export default function GameCanvas() {
               <span>CLICK TO WALK</span>
             </div>
 
+            {/* Change Character Appearance Button */}
+            <button
+              onClick={() => {
+                retroAudio.playInteract();
+                setIsCharacterSelectOpen(true);
+              }}
+              className="flex items-center gap-1.5 rounded border border-amber-400/50 bg-amber-500/20 px-2 py-0.5 text-amber-300 hover:bg-amber-500/35 hover:border-amber-400 active:scale-95 transition-all cursor-pointer shadow-sm"
+              title="Change Character Appearance (Press C)"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-amber-400 animate-pulse" />
+              <span className="hidden sm:inline">SKIN: {activeSkin.name.toUpperCase()}</span>
+              <span className="sm:hidden">{activeSkin.iconEmoji}</span>
+            </button>
+
             <button
               onClick={handleToggleMute}
-              className="flex items-center gap-1.5 rounded border border-background/20 bg-background/10 px-2 py-0.5 hover:bg-background/25 active:scale-95 transition-all"
+              className="flex items-center gap-1.5 rounded border border-background/20 bg-background/10 px-2 py-0.5 hover:bg-background/25 active:scale-95 transition-all cursor-pointer"
               title="Toggle Background Music & Sound Effects"
             >
               {isMuted ? <VolumeX className="h-3.5 w-3.5 text-red-400" /> : <Volume2 className="h-3.5 w-3.5 text-emerald-400 animate-pulse" />}
@@ -4838,7 +4930,7 @@ export default function GameCanvas() {
 
             <button
               onClick={handleToggleFullscreen}
-              className="hidden sm:flex items-center gap-1 rounded px-2 py-0.5 hover:bg-background/20"
+              className="hidden sm:flex items-center gap-1 rounded px-2 py-0.5 hover:bg-background/20 cursor-pointer"
               title="Toggle Fullscreen"
             >
               <Maximize2 className="h-3.5 w-3.5" />
@@ -4855,14 +4947,14 @@ export default function GameCanvas() {
         />
 
         {/* Floating Interaction Prompt */}
-        {interactPrompt && !activeNpc && !activeWorldObject && !activeModalType && (
+        {interactPrompt && !activeNpc && !activeWorldObject && !activeModalType && !isCharacterSelectOpen && (
           <div className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 rounded border-2 border-foreground bg-foreground/95 px-3 py-1 font-mono text-xs font-bold text-background shadow-lg animate-bounce">
             {interactPrompt.text}
           </div>
         )}
 
         {/* Active Dialogue Box */}
-        {(activeNpc || activeWorldObject) && (
+        {(activeNpc || activeWorldObject) && !isCharacterSelectOpen && (
           <GameDialogue
             npc={activeNpc}
             worldObject={activeWorldObject}
@@ -4875,10 +4967,25 @@ export default function GameCanvas() {
         )}
 
         {/* Active Full Inspect Modal */}
-        {activeModalType && (
+        {activeModalType && !isCharacterSelectOpen && (
           <GameModal
             type={activeModalType}
             onClose={() => setActiveModalType(null)}
+          />
+        )}
+
+        {/* Character Skin Select Modal */}
+        {isCharacterSelectOpen && (
+          <GameCharacterSelect
+            currentSkinId={selectedSkinId}
+            onSelectSkin={(skinId) => {
+              setSelectedSkinId(skinId);
+              if (typeof window !== "undefined") {
+                localStorage.setItem("franze_game_hero_skin", skinId);
+              }
+              setIsCharacterSelectOpen(false);
+            }}
+            onClose={() => setIsCharacterSelectOpen(false)}
           />
         )}
       </div>
@@ -4893,7 +5000,8 @@ export default function GameCanvas() {
         onRunToggle={(running) => {
           isRunningRef.current = running;
         }}
-        isInteractingDisabled={Boolean(activeNpc || activeWorldObject || activeModalType)}
+        onChangeSkin={() => setIsCharacterSelectOpen(true)}
+        isInteractingDisabled={Boolean(activeNpc || activeWorldObject || activeModalType || isCharacterSelectOpen)}
       />
     </div>
   );

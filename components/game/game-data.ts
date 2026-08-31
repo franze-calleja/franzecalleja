@@ -35,6 +35,41 @@ export interface NPC {
 export const MAP_TOTAL_WIDTH = 960;
 export const MAP_TOTAL_HEIGHT = 760;
 
+export interface Rect { x: number; y: number; w: number; h: number }
+
+/** Pathway bounding boxes. Moved from game-canvas.tsx so terrain data lives
+ *  with the rest of the map data. Values are unchanged. */
+export const PATH_AREAS: Rect[] = [
+  { x: 340, y: 300, w: 160, h: 160 }, // Central Plaza
+  { x: 370, y: 440, w: 90, h: 280 },  // South Entrance
+  { x: 375, y: 140, w: 80, h: 170 },  // North Trail to Village Post
+  { x: 110, y: 150, w: 80, h: 120 },  // NW Trail
+  { x: 110, y: 240, w: 260, h: 80 },  // West Trail
+  { x: 470, y: 150, w: 100, h: 160 }, // NE Trail
+  { x: 550, y: 150, w: 150, h: 80 },  // East Trail to Sanctuary
+  { x: 690, y: 160, w: 90, h: 70 },   // East Trail to Career Archives
+  { x: 120, y: 480, w: 270, h: 70 },  // SW Trail
+  { x: 120, y: 530, w: 80, h: 120 },  // SW Trail to Dojo
+  { x: 440, y: 470, w: 260, h: 70 },  // SE Trail
+  { x: 560, y: 520, w: 120, h: 140 }, // SE Trail to Cottage
+  { x: 660, y: 470, w: 160, h: 60 },  // Trail to Court
+  { x: 730, y: 535, w: 90, h: 100 },  // Basketball Court
+];
+
+/**
+ * Hand-placed tall-grass patches, sited in the open field pockets between
+ * buildings and trails. Deliberately placed rather than scattered so nothing
+ * important gets covered and NPC walk routes stay clear.
+ */
+export const TALL_GRASS_AREAS: Rect[] = [
+  { x: 286, y: 48,  w: 58,  h: 88 },  // between Guild and Village Post
+  { x: 236, y: 326, w: 98,  h: 146 }, // west of the plaza
+  { x: 216, y: 570, w: 136, h: 130 }, // south-west field
+  { x: 470, y: 566, w: 82,  h: 150 }, // south of the plaza approach
+  { x: 704, y: 292, w: 86,  h: 80 },  // east, below the Archives
+  { x: 832, y: 560, w: 92,  h: 156 }, // south-east corner
+];
+
 // Player spawn in the open central fountain plaza
 export const PLAYER_SPAWN_X = 408;
 export const PLAYER_SPAWN_Y = 448;

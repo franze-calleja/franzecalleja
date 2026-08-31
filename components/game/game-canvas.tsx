@@ -16,6 +16,7 @@ import {
   GUILD_INTERIOR_HEIGHT,
   GUILD_PROJECT_STATIONS,
   ProjectStation,
+  PATH_AREAS,
 } from "./game-data";
 import { retroAudio } from "./game-audio";
 import GameDialogue from "./game-dialogue";
@@ -165,24 +166,6 @@ const PATHWAY_FENCES = [
   // 6. Enclosed Garden Pens
   { x: 800, y: 275, w: 68, h: 68 },
   { x: 58, y: 46, w: 58, h: 62 },
-];
-
-// Pathway bounding boxes to ensure flowers only grow on genuine grass
-const PATH_AREAS = [
-  { x: 340, y: 300, w: 160, h: 160 }, // Central Plaza
-  { x: 370, y: 440, w: 90, h: 280 },  // South Entrance
-  { x: 375, y: 140, w: 80, h: 170 },  // North Trail to Village Post
-  { x: 110, y: 150, w: 80, h: 120 },  // NW Trail
-  { x: 110, y: 240, w: 260, h: 80 },  // West Trail
-  { x: 470, y: 150, w: 100, h: 160 }, // NE Trail
-  { x: 550, y: 150, w: 150, h: 80 },  // East Trail to Sanctuary
-  { x: 690, y: 160, w: 90, h: 70 },   // East Trail to Career Archives
-  { x: 120, y: 480, w: 270, h: 70 },  // SW Trail
-  { x: 120, y: 530, w: 80, h: 120 },  // SW Trail to Dojo
-  { x: 440, y: 470, w: 260, h: 70 },  // SE Trail
-  { x: 560, y: 520, w: 120, h: 140 }, // SE Trail to Cottage
-  { x: 660, y: 470, w: 160, h: 60 },  // Trail to Court
-  { x: 730, y: 535, w: 90, h: 100 },  // Basketball Court
 ];
 
 function isInsidePathOrBuilding(x: number, y: number): boolean {

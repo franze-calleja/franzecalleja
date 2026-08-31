@@ -14,6 +14,7 @@ function fakeCtx() {
   const rects: { x: number; y: number; w: number; h: number; color: string }[] = [];
   let fill = "";
   let tx = 0, ty = 0, sx = 1, sy = 1;
+  const stack: Array<{ tx: number; ty: number; sx: number; sy: number }> = [];
 
   const ctx = {
     get fillStyle() { return fill; },
@@ -22,8 +23,8 @@ function fakeCtx() {
       calls.push({ op: "fillRect", args: [x, y, w, h] });
       rects.push({ x: tx + x * sx, y: ty + y * sy, w: w * sx, h: h * sy, color: fill });
     },
-    save() { calls.push({ op: "save", args: [] }); },
-    restore() { calls.push({ op: "restore", args: [] }); tx = 0; ty = 0; sx = 1; sy = 1; },
+    save() { calls.push({ op: "save", args: [] }); stack.push({ tx, ty, sx, sy }); },
+    restore() { calls.push({ op: "restore", args: [] }); const state = stack.pop(); if (state) { tx = state.tx; ty = state.ty; sx = state.sx; sy = state.sy; } },
     translate(x: number, y: number) { tx += x; ty += y; calls.push({ op: "translate", args: [x, y] }); },
     scale(x: number, y: number) { sx *= x; sy *= y; calls.push({ op: "scale", args: [x, y] }); },
     createLinearGradient() { calls.push({ op: "createLinearGradient", args: [] }); return {}; },
@@ -85,6 +86,12 @@ describe("withSprite", () => {
     withSprite(ctx, 0, 0, () => px(ctx, 0, 0, 1, 1, PAL.out));
     expect(ctx.imageSmoothingEnabled).toBe(false);
     expect(calls[0].op).toBe("save");
+    expect(calls[calls.length - 1].op).toBe("restore");
+  });
+
+  it("restores the context even when draw throws", () => {
+    const { ctx, calls } = fakeCtx();
+    expect(() => withSprite(ctx, 10, 10, () => { throw new Error("boom"); })).toThrow("boom");
     expect(calls[calls.length - 1].op).toBe("restore");
   });
 });

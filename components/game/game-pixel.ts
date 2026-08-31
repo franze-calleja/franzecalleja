@@ -29,11 +29,14 @@ export function withSprite(
   draw: () => void
 ): void {
   ctx.save();
-  ctx.imageSmoothingEnabled = false;
-  ctx.translate(worldX, worldY);
-  ctx.scale(UNIT, UNIT);
-  draw();
-  ctx.restore();
+  try {
+    ctx.imageSmoothingEnabled = false;
+    ctx.translate(worldX, worldY);
+    ctx.scale(UNIT, UNIT);
+    draw();
+  } finally {
+    ctx.restore();
+  }
 }
 
 /** The only place fillRect is called. */

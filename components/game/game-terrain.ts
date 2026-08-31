@@ -1,6 +1,6 @@
 import { PAL } from "./game-palette";
 import { px, dith, hash, withSprite, type PixelCtx } from "./game-pixel";
-import { MAP_TOTAL_WIDTH, MAP_TOTAL_HEIGHT, PATH_AREAS } from "./game-data";
+import { MAP_TOTAL_WIDTH, MAP_TOTAL_HEIGHT, PATH_AREAS, TALL_GRASS_AREAS } from "./game-data";
 import { buildExclusionMask, isExcluded } from "./game-mask";
 
 const TILE_WORLD = 32;
@@ -121,4 +121,67 @@ export function drawTerrain(
   ctx: CanvasRenderingContext2D, cache: HTMLCanvasElement
 ): void {
   ctx.drawImage(cache, 0, 0);
+}
+
+// --- Tall grass ------------------------------------------------------------
+
+export interface Leaf {
+  x: number; y: number; vx: number; vy: number;
+  life: number; maxLife: number; color: string;
+}
+
+export function isInTallGrass(x: number, y: number): boolean {
+  return TALL_GRASS_AREAS.some(
+    (g) => x >= g.x && x <= g.x + g.w && y >= g.y && y <= g.y + g.h
+  );
+}
+
+export function spawnLeaves(x: number, y: number): Leaf[] {
+  const out: Leaf[] = [];
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2;
+    out.push({
+      x, y,
+      vx: Math.cos(a) * 0.6,
+      vy: Math.sin(a) * 0.4 - 0.5,
+      life: 26, maxLife: 26,
+      color: i % 2 ? PAL.tallL : PAL.leaf,
+    });
+  }
+  return out;
+}
+
+/** Clump bases — drawn BEFORE the player so they sit behind it.
+ *  Takes no time argument: bases do not sway, only the tips do. */
+export function drawTallGrassBases(ctx: PixelCtx): void {
+  withSprite(ctx, 0, 0, () => {
+    for (const g of TALL_GRASS_AREAS) {
+      for (let wy = g.y; wy < g.y + g.h; wy += 16) {
+        for (let wx = g.x; wx < g.x + g.w; wx += 16) {
+          if (hash(wx, wy) % 4 === 0) continue; // gaps keep it organic
+          const x = wx / 2, y = wy / 2;
+          px(ctx, x, y + 4, 8, 4, PAL.tallD);
+          px(ctx, x + 1, y + 4, 6, 2, PAL.tall);
+        }
+      }
+    }
+  });
+}
+
+/** Blade tips — drawn AFTER the player so it stands waist-deep in the grass. */
+export function drawTallGrassTips(ctx: PixelCtx, t: number): void {
+  withSprite(ctx, 0, 0, () => {
+    for (const g of TALL_GRASS_AREAS) {
+      for (let wy = g.y; wy < g.y + g.h; wy += 16) {
+        for (let wx = g.x; wx < g.x + g.w; wx += 16) {
+          if (hash(wx, wy) % 4 === 0) continue;
+          const x = wx / 2, y = wy / 2;
+          const sway = Math.round(Math.sin(t * 0.002 + hash(wx, wy) * 0.1) * 1);
+          px(ctx, x + 1 + sway, y, 1, 5, PAL.tall);
+          px(ctx, x + 4 + sway, y - 1, 1, 6, PAL.tallL);
+          px(ctx, x + 6 + sway, y + 1, 1, 4, PAL.tall);
+        }
+      }
+    }
+  });
 }

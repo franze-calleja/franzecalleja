@@ -18,7 +18,15 @@ import {
   ProjectStation,
 } from "./game-data";
 import { retroAudio } from "./game-audio";
-import { renderTerrainToCache, drawTerrain } from "./game-terrain";
+import {
+  renderTerrainToCache,
+  drawTerrain,
+  drawTallGrassBases,
+  drawTallGrassTips,
+  isInTallGrass,
+  spawnLeaves,
+  type Leaf,
+} from "./game-terrain";
 import GameDialogue from "./game-dialogue";
 import GameModal from "./game-modals";
 import GameControls from "./game-controls";
@@ -4526,6 +4534,8 @@ export default function GameCanvas() {
   const mobileDirRef = useRef<"up" | "down" | "left" | "right" | null>(null);
   const isRunningRef = useRef<boolean>(false);
   const particlesRef = useRef<Particle[]>([]);
+  const leavesRef = useRef<Leaf[]>([]);
+  const wasInGrassRef = useRef(false);
 
   // Initialize live NPC positions & wander anchors
   useEffect(() => {
@@ -5131,6 +5141,26 @@ export default function GameCanvas() {
         p.frame = 0;
       }
 
+      // --- 1b. TALL GRASS ENTRY DETECTION & RUSTLE FEEDBACK ---
+      if (!isInterior) {
+        const inGrass = isInTallGrass(p.x + 12, p.y + 20);
+        if (inGrass && !wasInGrassRef.current) {
+          retroAudio.playRustle();
+          leavesRef.current.push(...spawnLeaves(p.x + 12, p.y + 24));
+        }
+        wasInGrassRef.current = inGrass;
+      }
+
+      // Age leaf-burst particles and drop expired ones (own short-lived
+      // array — the 24-particle ambient pool below wraps forever).
+      leavesRef.current = leavesRef.current.filter((l) => {
+        l.life -= 1;
+        l.x += l.vx;
+        l.y += l.vy;
+        l.vy += 0.03;
+        return l.life > 0;
+      });
+
       // --- 2. AUTONOMOUS NPC WANDERING AI (Overworld only) ---
       if (!isInterior) {
         NPCS.forEach((npc) => {
@@ -5255,6 +5285,10 @@ export default function GameCanvas() {
           drawTerrain(ctx, terrainCacheRef.current);
         }
 
+        // 1b. Tall grass clump bases — drawn before the player so it can
+        // stand behind them; the swaying tips are drawn after the player.
+        drawTallGrassBases(ctx);
+
         // 2. Fenced Pathway Borders with Dedicated Entrances
         drawTexturedFences(ctx);
 
@@ -5360,6 +5394,20 @@ export default function GameCanvas() {
           currentSkin.customEffect || "none"
         );
       }
+
+      // 12b. Tall grass blade tips — drawn after the player so it stands
+      // waist-deep in the grass instead of on top of it. Overworld only.
+      if (!isInterior) {
+        drawTallGrassTips(ctx, time);
+      }
+
+      // 12c. Leaf burst on grass entry — own short-lived array, culled above.
+      for (const leaf of leavesRef.current) {
+        ctx.fillStyle = leaf.color;
+        ctx.globalAlpha = Math.max(0, leaf.life / leaf.maxLife);
+        ctx.fillRect(leaf.x, leaf.y, 3, 3);
+      }
+      ctx.globalAlpha = 1.0;
 
       // 13. Ambient Floating Particles
       drawParticles(ctx, particlesRef.current);

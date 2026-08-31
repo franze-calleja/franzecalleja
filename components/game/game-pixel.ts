@@ -177,3 +177,69 @@ export function timberFrame(
   px(ctx, x, y + h - 2, 3, 2, PAL.woodD);
   px(ctx, x + w - 3, y + h - 2, 3, 2, PAL.woodD);
 }
+
+// --- Animated props -------------------------------------------------------
+// These are the ONLY functions permitted to set globalAlpha, and only for
+// luminous elements. Each restores it to 1 before returning.
+
+export function chimney(
+  ctx: PixelCtx, x: number, y: number, w: number, h: number
+): void {
+  px(ctx, x, y, w, h, PAL.out);
+  px(ctx, x + 1, y + 1, w - 2, h - 1, PAL.stone);
+  dith(ctx, x + 1, y + 1, w - 2, h - 3, PAL.stone, PAL.stoneD);
+  px(ctx, x - 1, y, w + 2, 3, PAL.out);
+  px(ctx, x, y + 1, w, 1, PAL.stoneL);
+}
+
+export function chimneySmoke(ctx: PixelCtx, x: number, y: number, t: number): void {
+  for (let i = 0; i < 4; i++) {
+    const phase = ((t * 0.0009 + i * 0.25) % 1 + 1) % 1;
+    const sy = Math.round(y + 12 - phase * 14);
+    const sx = Math.round(x + Math.sin(phase * 5 + i) * 4);
+    const size = Math.max(1, Math.round(3 - phase * 2));
+    ctx.globalAlpha = 0.55 * (1 - phase);
+    px(ctx, sx, sy, size, size, PAL.smoke);
+  }
+  ctx.globalAlpha = 1;
+}
+
+export function lantern(ctx: PixelCtx, x: number, y: number, t: number): void {
+  const flicker = 0.72 + 0.28 * Math.sin(t * 0.006);
+  px(ctx, x + 2, y - 3, 1, 3, PAL.wood);
+  box(ctx, x, y, 5, 6, PAL.goldD);
+  ctx.globalAlpha = flicker;
+  px(ctx, x + 1, y + 1, 3, 4, PAL.gold);
+  ctx.globalAlpha = 0.16 * flicker;
+  px(ctx, x - 3, y - 2, 11, 11, PAL.gold);
+  ctx.globalAlpha = 1;
+}
+
+export function flowerBox(ctx: PixelCtx, x: number, y: number): void {
+  px(ctx, x - 2, y + 1, 15, 4, PAL.out);
+  px(ctx, x - 1, y + 2, 13, 2, PAL.wood);
+  for (let i = x - 1; i < x + 12; i += 3) {
+    px(ctx, i, y, 2, 2, PAL.leaf);
+    px(ctx, i + 1, y + 1, 1, 1, PAL.leafD);
+    px(ctx, i, y - 1, 1, 1, i % 2 ? PAL.bloom : PAL.bloom2);
+  }
+}
+
+export function ivy(ctx: PixelCtx, x: number, yTop: number, yBottom: number): void {
+  for (let j = yTop; j < yBottom; j += 3) {
+    px(ctx, x, j, 2, 2, PAL.leafD);
+    px(ctx, x + 1, j + 1, 1, 1, PAL.leaf);
+    if (j % 6 === 0) px(ctx, x - 2, j + 1, 2, 2, PAL.leaf);
+  }
+}
+
+export function hangingSign(ctx: PixelCtx, x: number, y: number): void {
+  px(ctx, x + 3, y, 8, 1, PAL.wood);
+  px(ctx, x + 3, y, 1, 4, PAL.wood);
+  px(ctx, x + 1, y + 3, 12, 2, PAL.out);
+  box(ctx, x, y + 4, 14, 10, PAL.wood);
+  px(ctx, x + 1, y + 5, 12, 8, PAL.doorD);
+  px(ctx, x + 3, y + 7, 8, 1, PAL.gold);
+  px(ctx, x + 3, y + 9, 5, 1, PAL.gold);
+  px(ctx, x + 3, y + 11, 7, 1, PAL.goldD);
+}

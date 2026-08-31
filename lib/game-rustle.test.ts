@@ -69,16 +69,23 @@ describe("spawnLeaves", () => {
 });
 
 describe("drawTallGrassTips depth-sort band", () => {
-  // TALL_GRASS_AREAS[0] (y: 48..136) is the only patch below y=290 — the
-  // next-lowest patch (index 4, "east, below the Archives") starts at
-  // y=292 — so band(0, 290) isolates patch 0 with no straddling row, and
-  // everything patch 0 draws lands at logical y < 100 (world y <= 128,
-  // /2 = 64, plus a few px of outline/blade overhang).
+  // The band partitions on each cell's *bottom edge* (wy + 16): a cell is
+  // drawn by band (fromY, toY) iff fromY < wy + 16 <= toY. That makes any
+  // two adjacent bands (0, S) and (S, MAX) — for *any* S, grid-aligned or
+  // not — strictly complementary: every cell's bottom edge is either <= S
+  // or > S, never both, so the bands can't double-draw or drop a cell.
   const FAR = 100000;
+
+  // TALL_GRASS_AREAS[0] (y: 48..136, bottom edges up to 144) is the only
+  // patch with any row below y=290 — the next-lowest patch (index 4,
+  // "east, below the Archives") starts at y=292 (bottom edge 308) — so
+  // band(0, 290) isolates patch 0 exactly, and everything it draws lands
+  // at logical y < 100 (world y <= 128, /2 = 64, plus a few px of blade
+  // overhang).
   const PATCH0_ONLY_BOUNDARY = 290;
   const PATCH0_Y_CEILING = 100;
 
-  it("emits calls only for cells whose row overlaps the given band", () => {
+  it("emits calls only for cells whose bottom edge falls in the given band", () => {
     const full = new Set(collectFillRects((ctx) => drawTallGrassTips(ctx, 0, 0, FAR)));
     const patch0Only = [...full].filter((c) => Number(c.split(",")[1]) < PATCH0_Y_CEILING);
     const band = collectFillRects(
@@ -93,27 +100,23 @@ describe("drawTallGrassTips depth-sort band", () => {
     expect(empty).toHaveLength(0);
   });
 
-  it("splits cleanly at a patch boundary — the two bands don't overlap", () => {
+  it.each([
+    ["a patch boundary", PATCH0_ONLY_BOUNDARY],
+    ["an arbitrary, non-grid-aligned split matching the real call sites", 301],
+    ["another arbitrary split, mid-patch", 400],
+  ])("splits strictly at %s: before/after are disjoint and their union is exactly the unbounded call", (_label, split) => {
     const full = new Set(collectFillRects((ctx) => drawTallGrassTips(ctx, 0, 0, FAR)));
-    const low = new Set(
-      collectFillRects((ctx) => drawTallGrassTips(ctx, 0, 0, PATCH0_ONLY_BOUNDARY))
-    );
-    const high = new Set(
-      collectFillRects((ctx) => drawTallGrassTips(ctx, 0, PATCH0_ONLY_BOUNDARY, FAR))
-    );
+    const before = new Set(collectFillRects((ctx) => drawTallGrassTips(ctx, 0, 0, split)));
+    const after = new Set(collectFillRects((ctx) => drawTallGrassTips(ctx, 0, split, FAR)));
 
-    for (const rect of low) expect(high.has(rect)).toBe(false);
-    expect(low.size + high.size).toBe(full.size);
-  });
+    // (1) union equals exactly the unbounded call — no tuft lost.
+    const union = new Set([...before, ...after]);
+    expect(union).toEqual(full);
 
-  it("covers every rect from a single unbounded call, even with an " +
-    "arbitrary (non-grid-aligned) split like the real call sites use", () => {
-    const full = new Set(collectFillRects((ctx) => drawTallGrassTips(ctx, 0, 0, FAR)));
-    const low = collectFillRects((ctx) => drawTallGrassTips(ctx, 0, 0, 301));
-    const high = collectFillRects((ctx) => drawTallGrassTips(ctx, 0, 301, FAR));
-
-    const union = new Set([...low, ...high]);
-    expect(union).toEqual(full); // no tuft lost — every rect is somewhere in the union
-    for (const rect of full) expect(union.has(rect)).toBe(true);
+    // (2) disjoint — no tuft drawn twice (this is what the earlier,
+    // overlap-tolerant filter got wrong: a row straddling the boundary
+    // would land in both sets).
+    for (const rect of before) expect(after.has(rect)).toBe(false);
+    expect(before.size + after.size).toBe(full.size);
   });
 });

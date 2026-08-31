@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-31
 **Branch:** `sprite-art-redesign`
-**Status:** Draft — awaiting review
+**Status:** Approved
 
 ## Context
 

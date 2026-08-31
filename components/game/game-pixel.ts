@@ -86,15 +86,15 @@ export interface RoofTone { l: string; m: string; d: string; x: string }
  * Generates the stepped courses of a gable roof seen head-on with the roof
  * plane receding upward — the Gen 5 projection. Each course is 2 logical px
  * tall and widens evenly from ridge to eave, centred on `centreX` (defaults
- * to the eave's own midpoint, which assumes the building starts at x=0 —
- * pass an explicit centreX when it doesn't).
+ * to the eave's own midpoint, rounded to an integer, which assumes the
+ * building starts at x=0 — pass an explicit centreX when it doesn't).
  *
  * Course widths are snapped to even numbers so `centreX - w / 2` is always
  * an integer: an odd width would force a rounding step that nudges the
  * course off-axis and makes the staircase lean.
  */
 export function gableRoof(
-  ridgeW: number, eaveW: number, topY: number, rows: number, centreX: number = eaveW / 2
+  ridgeW: number, eaveW: number, topY: number, rows: number, centreX: number = Math.round(eaveW / 2)
 ): RoofRow[] {
   const step = (eaveW - ridgeW) / (rows - 1);
   const out: RoofRow[] = [];

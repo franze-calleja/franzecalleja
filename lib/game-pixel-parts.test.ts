@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { PAL } from "../components/game/game-palette";
-import { gableRoof, steppedRoof, window2, plankDoor, stoneCourse } from "../components/game/game-pixel";
+import { gableRoof, steppedRoof, window2, plankDoor, stoneCourse, timberFrame } from "../components/game/game-pixel";
 
 function recorder() {
   const rects: { x: number; y: number; w: number; h: number; color: string }[] = [];
@@ -44,16 +44,27 @@ describe("gableRoof geometry", () => {
     });
   });
 
-  it("stays monotonic and centred for non-integer step sizes", () => {
-    const rows = gableRoof(22, 52, 4, 8); // step = 30/7, not a whole number
+  it("keeps every course on an integer x for non-integer step sizes", () => {
+    // step = 30/7 here. Before the even-width snap, row 2 had w=31, so
+    // centreX - w/2 landed on a half-pixel and the staircase leaned.
+    const rows = gableRoof(22, 52, 4, 8);
+    rows.forEach(([x, , w]) => {
+      expect(Number.isInteger(x), `x=${x} is not an integer`).toBe(true);
+      expect(w % 2).toBe(0);
+    });
     for (let i = 1; i < rows.length; i++) expect(rows[i][2]).toBeGreaterThan(rows[i - 1][2]);
-    const centres = rows.map((r) => r[0] * 2 + r[2]);
-    centres.forEach((c) => expect(c).toBe(centres[0]));
   });
 
   it("centres courses on an explicit centreX when given", () => {
     const rows = gableRoof(24, 56, 4, 9, 35);
     rows.forEach(([x, , w]) => expect(x + w / 2).toBe(35));
+  });
+
+  it("keeps every course x an integer with an odd eaveW and no explicit centreX", () => {
+    // eaveW=53 makes the naive default centreX (26.5) fractional; the default
+    // must round it so centreX - w/2 stays an integer for every course.
+    const rows = gableRoof(21, 53, 0, 5);
+    rows.forEach(([x]) => expect(Number.isInteger(x), `x=${x} is not an integer`).toBe(true));
   });
 });
 
@@ -110,5 +121,28 @@ describe("building parts stay inside their declared bounds", () => {
     stoneCourse(ctx, 0, 0, 60, 4);
     const joints = rects.filter((r) => r.color === PAL.stoneD && r.w === 1);
     expect(joints.length).toBeGreaterThanOrEqual(7);
+  });
+
+  it("timberFrame stays within its rect, places posts at the given offsets, and uses only wood-ramp colours", () => {
+    const { ctx, rects } = recorder();
+    const x = 10, y = 20, w = 40, h = 30;
+    const posts = [10, 22];
+    timberFrame(ctx, x, y, w, h, posts);
+
+    const minX = Math.min(...rects.map((r) => r.x));
+    const maxX = Math.max(...rects.map((r) => r.x + r.w));
+    const minY = Math.min(...rects.map((r) => r.y));
+    const maxY = Math.max(...rects.map((r) => r.y + r.h));
+    expect(minX).toBeGreaterThanOrEqual(x);
+    expect(maxX).toBeLessThanOrEqual(x + w);
+    expect(minY).toBeGreaterThanOrEqual(y);
+    expect(maxY).toBeLessThanOrEqual(y + h);
+
+    posts.forEach((p) => {
+      expect(rects.some((r) => r.x === x + p && r.w === 2 && r.h === h)).toBe(true);
+    });
+
+    const allowed = new Set<string>([PAL.wood, PAL.woodL, PAL.woodD]);
+    rects.forEach((r) => expect(allowed.has(r.color)).toBe(true));
   });
 });

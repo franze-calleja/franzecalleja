@@ -76,3 +76,104 @@ export function hash(a: number, b: number): number {
   h = Math.imul(h ^ (h >>> 13), 1274126177) | 0;
   return (h ^ (h >>> 16)) >>> 24;
 }
+
+// --- Building parts -------------------------------------------------------
+
+export type RoofRow = readonly [x: number, y: number, w: number];
+export interface RoofTone { l: string; m: string; d: string; x: string }
+
+/**
+ * Generates the stepped courses of a gable roof seen head-on with the roof
+ * plane receding upward — the Gen 5 projection. Each course is 2 logical px
+ * tall and widens evenly from ridge to eave, centred on `centreX` (defaults
+ * to the eave's own midpoint, which assumes the building starts at x=0 —
+ * pass an explicit centreX when it doesn't).
+ *
+ * Course widths are snapped to even numbers so `centreX - w / 2` is always
+ * an integer: an odd width would force a rounding step that nudges the
+ * course off-axis and makes the staircase lean.
+ */
+export function gableRoof(
+  ridgeW: number, eaveW: number, topY: number, rows: number, centreX: number = eaveW / 2
+): RoofRow[] {
+  const step = (eaveW - ridgeW) / (rows - 1);
+  const out: RoofRow[] = [];
+  for (let i = 0; i < rows; i++) {
+    const w = Math.round((ridgeW + step * i) / 2) * 2;
+    out.push([centreX - w / 2, topY + i * 2, w] as const);
+  }
+  return out;
+}
+
+/**
+ * Outline pass first, then fill pass. Drawing all outlines up front means each
+ * course's fill covers the next course's top outline, so the staircase shows a
+ * clean 1px edge on its sides but no seams across its face.
+ */
+export function steppedRoof(ctx: PixelCtx, rows: RoofRow[], tone: RoofTone): void {
+  for (const [x, y, w] of rows) px(ctx, x - 1, y - 1, w + 2, 3, PAL.out);
+
+  rows.forEach(([x, y, w], i) => {
+    const top = i < 2 ? tone.l : i < rows.length - 3 ? tone.m : tone.d;
+    const bot = i < 2 ? tone.m : i < rows.length - 3 ? tone.d : tone.x;
+    px(ctx, x, y, w, 1, top);
+    px(ctx, x, y + 1, w, 1, bot);
+    // Shingle tabs, offset every other course so they read as overlapping.
+    for (let sx = x + (i & 1 ? 2 : 0); sx < x + w - 1; sx += 4) {
+      px(ctx, sx, y + 1, 1, 1, tone.x);
+    }
+    if (i === 1 || i === rows.length - 4) dith(ctx, x, y, w, 1, top, bot);
+  });
+}
+
+/** 11x11 glass with timber frame, mullion cross, specular highlight and sill. */
+export function window2(ctx: PixelCtx, x: number, y: number): void {
+  box(ctx, x - 1, y - 1, 13, 13, PAL.wood);
+  px(ctx, x, y, 11, 11, PAL.glassD);
+  px(ctx, x, y, 11, 5, PAL.glass);
+  px(ctx, x + 1, y + 1, 4, 3, PAL.glassL);
+  px(ctx, x + 5, y, 1, 11, PAL.wood);
+  px(ctx, x, y + 5, 11, 1, PAL.wood);
+  px(ctx, x - 2, y + 11, 15, 2, PAL.out);
+  px(ctx, x - 1, y + 11, 13, 1, PAL.woodL);
+}
+
+/** Vertical-plank door with hinges, brass handle and a stone step. */
+export function plankDoor(
+  ctx: PixelCtx, x: number, y: number, w: number, h: number
+): void {
+  box(ctx, x, y, w, h, PAL.door);
+  for (let i = x + 3; i < x + w - 1; i += 4) px(ctx, i, y + 1, 1, h - 2, PAL.doorD);
+  px(ctx, x + 1, y + 1, 2, h - 2, PAL.doorL);
+  px(ctx, x + 1, y + 1, w - 2, 1, PAL.doorL);
+  px(ctx, x + 2, y + 3, 3, 1, PAL.stoneD);
+  px(ctx, x + 2, y + h - 5, 3, 1, PAL.stoneD);
+  px(ctx, x + w - 4, y + 7, 2, 2, PAL.gold);
+  px(ctx, x - 1, y + h, w + 2, 1, PAL.stoneL);
+}
+
+/** Dressed-stone foundation course with lit top edges and shadowed joints. */
+export function stoneCourse(
+  ctx: PixelCtx, x: number, y: number, w: number, h: number
+): void {
+  px(ctx, x, y, w, h, PAL.out);
+  px(ctx, x + 1, y + 1, w - 2, h - 2, PAL.stone);
+  for (let i = x + 1; i < x + w - 2; i += 7) {
+    px(ctx, i, y + 1, 1, h - 2, PAL.stoneD);
+    px(ctx, i + 1, y + 1, 4, 1, PAL.stoneL);
+  }
+  px(ctx, x + 1, y + h - 2, w - 2, 1, PAL.stoneD);
+}
+
+/** Tudor half-timber: top plate, corner posts, and studs at the given offsets. */
+export function timberFrame(
+  ctx: PixelCtx, x: number, y: number, w: number, h: number, posts: number[]
+): void {
+  px(ctx, x, y, w, 3, PAL.wood);
+  px(ctx, x, y, w, 1, PAL.woodL);
+  px(ctx, x, y, 3, h, PAL.wood);
+  px(ctx, x + w - 3, y, 3, h, PAL.wood);
+  for (const p of posts) px(ctx, x + p, y, 2, h, PAL.wood);
+  px(ctx, x, y + h - 2, 3, 2, PAL.woodD);
+  px(ctx, x + w - 3, y + h - 2, 3, 2, PAL.woodD);
+}

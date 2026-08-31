@@ -16,9 +16,9 @@ import {
   GUILD_INTERIOR_HEIGHT,
   GUILD_PROJECT_STATIONS,
   ProjectStation,
-  PATH_AREAS,
 } from "./game-data";
 import { retroAudio } from "./game-audio";
+import { renderTerrainToCache, drawTerrain } from "./game-terrain";
 import GameDialogue from "./game-dialogue";
 import GameModal from "./game-modals";
 import GameControls from "./game-controls";
@@ -167,20 +167,6 @@ const PATHWAY_FENCES = [
   { x: 800, y: 275, w: 68, h: 68 },
   { x: 58, y: 46, w: 58, h: 62 },
 ];
-
-function isInsidePathOrBuilding(x: number, y: number): boolean {
-  for (const pa of PATH_AREAS) {
-    if (x + 28 >= pa.x && x <= pa.x + pa.w + 4 && y + 28 >= pa.y && y <= pa.y + pa.h + 4) {
-      return true;
-    }
-  }
-  for (const obj of WORLD_OBJECTS) {
-    if (x + 32 >= obj.x && x <= obj.x + obj.width + 8 && y + 32 >= obj.y && y <= obj.y + obj.height + 8) {
-      return true;
-    }
-  }
-  return false;
-}
 
 // --- SPRITESHEET CHARACTER RENDERER ---
 
@@ -467,218 +453,6 @@ function drawKissesTheDog(
   ctx.fillRect(7, -12 + heartFloat, 2, 2);
 
   ctx.restore();
-}
-
-// --- RICH POKÉMON STRIPED TERRAIN & REALISTIC 3D COBBLESTONE PATHWAYS ---
-
-function drawOrganicGround(ctx: CanvasRenderingContext2D) {
-  const tileSize = 32;
-  const cols = Math.ceil(MAP_TOTAL_WIDTH / tileSize);
-  const rows = Math.ceil(MAP_TOTAL_HEIGHT / tileSize);
-
-  // 1. POKÉMON STRIPED LAWN WITH RICH MULTI-TONE PIXEL BLADES
-  for (let c = 0; c < cols; c++) {
-    const isStripeLight = c % 2 === 0;
-    const baseGreen = isStripeLight ? "#6ec957" : "#54b23f";
-    const darkAccent = isStripeLight ? "#5ab545" : "#449c32";
-    const lightHighlight = isStripeLight ? "#8cee73" : "#68be51";
-    const sunlitGlint = isStripeLight ? "#bef264" : "#78cf42";
-    const deepShadow = isStripeLight ? "#368026" : "#22541d";
-
-    for (let r = 0; r < rows; r++) {
-      const x = c * tileSize;
-      const y = r * tileSize;
-      const isPerimeter = c === 0 || r === 0 || c === cols - 1 || r === rows - 1;
-
-      if (isPerimeter) {
-        ctx.fillStyle = "#14491e";
-        ctx.fillRect(x, y, tileSize, tileSize);
-        ctx.fillStyle = "#1e6b30";
-        ctx.fillRect(x + 3, y + 3, tileSize - 6, tileSize - 6);
-        ctx.fillStyle = "#28873d";
-        ctx.fillRect(x + 7, y + 7, tileSize - 14, tileSize - 14);
-      } else {
-        // Base grass lawn fill
-        ctx.fillStyle = baseGreen;
-        ctx.fillRect(x, y, tileSize, tileSize);
-
-        // Horizontal mowing stripe
-        ctx.fillStyle = darkAccent;
-        ctx.fillRect(x, y + 14, tileSize, 3);
-        ctx.fillRect(x, y + 28, tileSize, 2);
-
-        // Multi-tone 3D pixel grass blade clusters
-        // Clump 1 (Top-Left)
-        ctx.fillStyle = deepShadow;
-        ctx.fillRect(x + 5, y + 9, 4, 2);
-        ctx.fillStyle = lightHighlight;
-        ctx.fillRect(x + 4, y + 4, 2, 5);
-        ctx.fillRect(x + 7, y + 2, 2, 7);
-        ctx.fillStyle = sunlitGlint;
-        ctx.fillRect(x + 5, y + 3, 1, 2);
-        ctx.fillRect(x + 8, y + 1, 1, 2);
-
-        // Clump 2 (Bottom-Right)
-        ctx.fillStyle = deepShadow;
-        ctx.fillRect(x + 19, y + 24, 4, 2);
-        ctx.fillStyle = lightHighlight;
-        ctx.fillRect(x + 18, y + 18, 2, 6);
-        ctx.fillRect(x + 21, y + 16, 2, 8);
-        ctx.fillStyle = sunlitGlint;
-        ctx.fillRect(x + 19, y + 17, 1, 2);
-        ctx.fillRect(x + 22, y + 15, 1, 2);
-
-        // Clump 3 (Mid Accent)
-        if ((c + r) % 3 === 0) {
-          ctx.fillStyle = lightHighlight;
-          ctx.fillRect(x + 13, y + 10, 2, 4);
-          ctx.fillStyle = sunlitGlint;
-          ctx.fillRect(x + 14, y + 9, 1, 2);
-        }
-
-        // Flowers, Clovers & Dandelions ONLY inside actual grass fields
-        if (!isInsidePathOrBuilding(x, y)) {
-          const hash = (c * 59 + r * 83) % 31;
-          if (hash === 1) {
-            // Yellow Buttercups with calyx stem
-            ctx.fillStyle = "#15803d";
-            ctx.fillRect(x + 10, y + 13, 2, 3);
-            ctx.fillStyle = "#fde047";
-            ctx.fillRect(x + 8, y + 8, 6, 6);
-            ctx.fillStyle = "#ffffff";
-            ctx.fillRect(x + 10, y + 10, 2, 2);
-            ctx.fillStyle = "#eab308";
-            ctx.fillRect(x + 9, y + 9, 1, 1);
-          } else if (hash === 2) {
-            // Red Rosebuds with stem
-            ctx.fillStyle = "#15803d";
-            ctx.fillRect(x + 22, y + 17, 2, 3);
-            ctx.fillStyle = "#ef4444";
-            ctx.fillRect(x + 20, y + 12, 6, 6);
-            ctx.fillStyle = "#fca5a5";
-            ctx.fillRect(x + 21, y + 13, 2, 2);
-            ctx.fillStyle = "#991b1b";
-            ctx.fillRect(x + 23, y + 15, 2, 2);
-          } else if (hash === 3) {
-            // Blue Oran Flowers
-            ctx.fillStyle = "#15803d";
-            ctx.fillRect(x + 14, y + 25, 2, 3);
-            ctx.fillStyle = "#38bdf8";
-            ctx.fillRect(x + 12, y + 20, 6, 6);
-            ctx.fillStyle = "#ffffff";
-            ctx.fillRect(x + 14, y + 22, 2, 2);
-          } else if (hash === 4) {
-            // 4-leaf lucky clover
-            ctx.fillStyle = "#16a34a";
-            ctx.fillRect(x + 16, y + 8, 7, 7);
-            ctx.fillStyle = "#4ade80";
-            ctx.fillRect(x + 17, y + 9, 2, 2);
-            ctx.fillRect(x + 20, y + 9, 2, 2);
-            ctx.fillRect(x + 17, y + 12, 2, 2);
-            ctx.fillRect(x + 20, y + 12, 2, 2);
-            ctx.fillStyle = "#15803d";
-            ctx.fillRect(x + 19, y + 11, 1, 1);
-          } else if (hash === 5) {
-            // White Clover Blossom Puff
-            ctx.fillStyle = "#15803d";
-            ctx.fillRect(x + 8, y + 26, 2, 3);
-            ctx.fillStyle = "#ffffff";
-            ctx.fillRect(x + 6, y + 21, 6, 6);
-            ctx.fillStyle = "#fef08a";
-            ctx.fillRect(x + 8, y + 23, 2, 2);
-          } else if (hash === 6) {
-            // Wild Purple Violet
-            ctx.fillStyle = "#c084fc";
-            ctx.fillRect(x + 24, y + 6, 5, 5);
-            ctx.fillStyle = "#fef08a";
-            ctx.fillRect(x + 26, y + 8, 2, 2);
-          }
-        }
-      }
-    }
-  }
-
-  // 2. ORGANIC WINDING COBBLESTONE & SAND PATHWAYS
-  ctx.fillStyle = "#f5eed4";
-
-  // Branch 1: South-to-Center Main Plaza Avenue
-  ctx.fillRect(340, 300, 160, 160);
-  ctx.fillRect(370, 440, 90, 280);
-  ctx.fillRect(375, 140, 80, 170); // North Trail to Village Post
-
-  // Branch 2: North-West Trail to Projects Showcase Guild
-  ctx.fillRect(110, 150, 80, 120);
-  ctx.fillRect(110, 240, 260, 80);
-
-  // Branch 3: North-East Trail meandering to AZRA's AI Sanctuary & Career Archives
-  ctx.fillRect(470, 150, 100, 160);
-  ctx.fillRect(550, 150, 150, 80);
-  ctx.fillRect(690, 160, 90, 70); // East Trail to Career Archives
-
-  // Branch 4: South-West Trail to Academy of Enverga Dojo
-  ctx.fillRect(120, 480, 270, 70);
-  ctx.fillRect(120, 530, 80, 120);
-
-  // Branch 5: South-East Trail to Franze's Gamer Cottage & Basketball Court
-  ctx.fillRect(440, 470, 260, 70);
-  ctx.fillRect(560, 520, 120, 140);
-  ctx.fillRect(660, 470, 160, 60);
-
-  // 3. REALISTIC 3D BEVELED COBBLESTONE PAVERS & OVERHANGING GRASS FRINGES
-  const renderPavers = (startX: number, startY: number, w: number, h: number) => {
-    // Outer Curb Edging Line
-    ctx.strokeStyle = "#c5b382";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(startX + 1, startY + 1, w - 2, h - 2);
-
-    for (let px = startX + 2; px < startX + w - 12; px += 16) {
-      for (let py = startY + 2; py < startY + h - 12; py += 16) {
-        // Paver Mortar Shadow Bottom-Right
-        ctx.fillStyle = "#c5b382";
-        ctx.fillRect(px, py, 16, 16);
-
-        // Paver Top-Left Bevel Highlight
-        ctx.fillStyle = "#fefbf0";
-        ctx.fillRect(px, py, 15, 15);
-
-        // Paver Main Stone Body
-        const isAlt = (px + py) % 32 === 0;
-        ctx.fillStyle = isAlt ? "#ede3c2" : "#fbf7ea";
-        ctx.fillRect(px + 1, py + 1, 13, 13);
-
-        // Speckled Pebble Grain on Random Pavers
-        if ((px * 37 + py * 71) % 11 === 0) {
-          ctx.fillStyle = "#d8c79c";
-          ctx.fillRect(px + 4, py + 4, 2, 2);
-          ctx.fillRect(px + 9, py + 8, 2, 1);
-        }
-      }
-    }
-
-    // Natural Grass Overhang Fringe Tuft along Path Borders
-    ctx.fillStyle = "#54b23f";
-    for (let gx = startX + 4; gx < startX + w - 8; gx += 12) {
-      // Top border fringe
-      ctx.fillRect(gx, startY - 2, 3, 4);
-      ctx.fillRect(gx + 1, startY + 2, 2, 2);
-      // Bottom border fringe
-      ctx.fillRect(gx + 4, startY + h - 2, 3, 4);
-    }
-  };
-
-  renderPavers(340, 300, 160, 160);
-  renderPavers(370, 440, 90, 280);
-  renderPavers(375, 140, 80, 170);
-  renderPavers(110, 150, 80, 120);
-  renderPavers(110, 240, 260, 80);
-  renderPavers(470, 150, 100, 160);
-  renderPavers(550, 150, 150, 80);
-  renderPavers(690, 160, 90, 70);
-  renderPavers(120, 480, 270, 70);
-  renderPavers(120, 530, 80, 120);
-  renderPavers(440, 470, 260, 70);
-  renderPavers(560, 520, 120, 140);
-  renderPavers(660, 470, 160, 60);
 }
 
 // --- 3D TURNED TIMBER FENCES WITH BRASS PINS, CROSS-BRACES & ENTRANCE GAPS ---
@@ -4729,6 +4503,7 @@ export default function GameCanvas() {
   }, [selectedSkinId]);
 
   const charactersImageRef = useRef<HTMLImageElement | null>(null);
+  const terrainCacheRef = useRef<HTMLCanvasElement | null>(null);
 
   // Player state
   const playerRef = useRef<Player>({
@@ -4777,6 +4552,13 @@ export default function GameCanvas() {
     cImg.onload = () => {
       charactersImageRef.current = cImg;
     };
+  }, []);
+
+  // Build the static sprite-art terrain once on mount. document.createElement
+  // requires a browser environment, so this must run inside an effect, never
+  // at module scope where Next.js would also execute it during SSR.
+  useEffect(() => {
+    terrainCacheRef.current = renderTerrainToCache();
   }, []);
 
   const handleToggleMute = () => {
@@ -5468,8 +5250,10 @@ export default function GameCanvas() {
         drawProjectsGuildInterior(ctx, time, charactersImageRef.current);
       } else {
         // Render Overworld Scene
-        // 1. Organic Winding Ground & Striped Grass
-        drawOrganicGround(ctx);
+        // 1. Cached sprite-art ground, built once on mount
+        if (terrainCacheRef.current) {
+          drawTerrain(ctx, terrainCacheRef.current);
+        }
 
         // 2. Fenced Pathway Borders with Dedicated Entrances
         drawTexturedFences(ctx);

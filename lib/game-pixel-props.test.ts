@@ -40,8 +40,14 @@ describe("animated props", () => {
 
   it("lantern restores globalAlpha even if a draw throws", () => {
     const { ctx } = recorder();
-    const boom = { ...ctx, fillRect() { throw new Error("boom"); } };
-    expect(() => lantern(boom as never, 10, 40, 100)).toThrow("boom");
+    // Throw only once alpha has been written, so the exception escapes from
+    // inside the try block rather than before it. Throwing on the first
+    // fillRect would pass whether or not the finally exists.
+    const boom = Object.create(ctx) as typeof ctx;
+    Object.defineProperty(boom, "fillRect", {
+      value() { if (boom.globalAlpha !== 1) throw new Error("boom"); },
+    });
+    expect(() => lantern(boom, 10, 40, 100)).toThrow("boom");
     expect(boom.globalAlpha).toBe(1);
   });
 

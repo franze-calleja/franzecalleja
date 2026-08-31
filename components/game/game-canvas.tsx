@@ -12,6 +12,10 @@ import {
   NPC,
   CHARACTER_SKINS,
   CharacterSkin,
+  GUILD_INTERIOR_WIDTH,
+  GUILD_INTERIOR_HEIGHT,
+  GUILD_PROJECT_STATIONS,
+  ProjectStation,
 } from "./game-data";
 import { retroAudio } from "./game-audio";
 import GameDialogue from "./game-dialogue";
@@ -4141,6 +4145,566 @@ function drawParticles(ctx: CanvasRenderingContext2D, particles: Particle[]) {
   ctx.globalAlpha = 1.0;
 }
 
+// =========================================================================
+// --- PROJECTS SHOWCASE GUILD INTERIOR RENDERER (700 x 540) ---
+// =========================================================================
+function drawProjectStationPedestal(
+  ctx: CanvasRenderingContext2D,
+  station: ProjectStation,
+  time: number
+) {
+  const sx = station.x;
+  const sy = station.y;
+  const sw = station.width;
+  const sh = station.height;
+
+  // 1. Radial Floor Glow Halo
+  const halo = ctx.createRadialGradient(
+    sx + sw / 2,
+    sy + sh / 2 + 10,
+    4,
+    sx + sw / 2,
+    sy + sh / 2 + 10,
+    44
+  );
+  halo.addColorStop(0, `${station.color}40`);
+  halo.addColorStop(0.6, `${station.color}15`);
+  halo.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = halo;
+  ctx.beginPath();
+  ctx.arc(sx + sw / 2, sy + sh / 2 + 10, 44, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 2. 3D Volumetric Drop Shadow
+  ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
+  ctx.beginPath();
+  ctx.ellipse(sx + sw / 2, sy + sh + 2, sw / 2 + 4, 8, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 3. Stepped Marble & Polished Walnut Pedestal Plinth
+  // Tier 1 Base Plinth
+  ctx.fillStyle = "#0f172a";
+  ctx.fillRect(sx - 4, sy + sh - 10, sw + 8, 12);
+  ctx.fillStyle = "#1e293b";
+  ctx.fillRect(sx - 2, sy + sh - 8, sw + 4, 8);
+
+  // Tier 2 Column Body
+  ctx.fillStyle = "#334155";
+  ctx.fillRect(sx, sy + 14, sw, sh - 22);
+  ctx.fillStyle = "#475569";
+  ctx.fillRect(sx + 2, sy + 14, sw - 4, sh - 22);
+
+  // Gold Trim Rings
+  ctx.fillStyle = "#fbbf24";
+  ctx.fillRect(sx - 2, sy + 14, sw + 4, 3);
+  ctx.fillRect(sx - 2, sy + sh - 13, sw + 4, 3);
+
+  // 4. Glowing Holographic Terminal Vitrine (Floating Screen)
+  const hoverFloat = Math.sin(time * 0.005 + sx) * 3;
+
+  // Glass Case Backing
+  ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+  ctx.fillRect(sx + 6, sy - 12 + hoverFloat, sw - 12, 24);
+  ctx.strokeStyle = station.color;
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(sx + 6, sy - 12 + hoverFloat, sw - 12, 24);
+
+  // Live Screen Color Gradient
+  const screenGrad = ctx.createLinearGradient(
+    sx,
+    sy - 12 + hoverFloat,
+    sx,
+    sy + 12 + hoverFloat
+  );
+  screenGrad.addColorStop(0, `${station.color}40`);
+  screenGrad.addColorStop(1, "rgba(15, 23, 42, 0.9)");
+  ctx.fillStyle = screenGrad;
+  ctx.fillRect(sx + 8, sy - 10 + hoverFloat, sw - 16, 20);
+
+  // Tech Badge Icon Miniature on Screen
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 8px monospace";
+  ctx.textAlign = "center";
+  ctx.fillText("⚡ PROJ", sx + sw / 2, sy - 1 + hoverFloat);
+  ctx.fillStyle = station.color;
+  ctx.font = "bold 7px monospace";
+  ctx.fillText(station.shortTitle.slice(0, 9), sx + sw / 2, sy + 7 + hoverFloat);
+
+  // Corner Capacitor Nodes (Blinking LED dots)
+  const isBlink = Math.floor(time / 400) % 2 === 0;
+  ctx.fillStyle = isBlink ? "#4ade80" : "#166534";
+  ctx.fillRect(sx + 8, sy - 9 + hoverFloat, 2, 2);
+  ctx.fillRect(sx + sw - 10, sy - 9 + hoverFloat, 2, 2);
+
+  // 5. Nameplate Plaque Below Pedestal
+  ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
+  ctx.fillRect(sx + sw / 2 - 42, sy + sh + 4, 84, 12);
+  ctx.strokeStyle = station.color;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(sx + sw / 2 - 42, sy + sh + 4, 84, 12);
+
+  ctx.fillStyle = station.color;
+  ctx.font = "bold 7.5px monospace";
+  ctx.textAlign = "center";
+  ctx.fillText(station.shortTitle, sx + sw / 2, sy + sh + 13);
+}
+
+function drawProjectsGuildInterior(
+  ctx: CanvasRenderingContext2D,
+  time: number,
+  charactersImage: HTMLImageElement | null
+) {
+  const gw = GUILD_INTERIOR_WIDTH; // 700
+  const gh = GUILD_INTERIOR_HEIGHT; // 540
+
+  // 1. Dark Atmospheric Void Backdrop
+  ctx.fillStyle = "#020617";
+  ctx.fillRect(0, 0, gw, gh);
+
+  // 2. Room Outer Drop Shadow & Wall Boundary
+  ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+  ctx.fillRect(40, 60, gw - 80, gh - 90);
+
+  // 3. Herringbone / Parquet Oak Hardwood Floor (Interior Area: x: 60..640, y: 110..480)
+  const floorX = 60;
+  const floorY = 110;
+  const floorW = gw - 120; // 580
+  const floorH = gh - 150; // 390
+
+  // Rich Walnut / Golden Oak Base Flooring
+  ctx.fillStyle = "#3e2723";
+  ctx.fillRect(floorX, floorY, floorW, floorH);
+
+  // Parquet Herringbone Diagonal Slats
+  const plankW = 20;
+  const plankH = 10;
+  for (let py = floorY; py < floorY + floorH; py += plankH) {
+    for (let px = floorX; px < floorX + floorW; px += plankW) {
+      const isAlt = ((px - floorX) / plankW + (py - floorY) / plankH) % 2 === 0;
+      ctx.fillStyle = isAlt ? "#5d4037" : "#4e342e";
+      ctx.fillRect(px, py, plankW - 1, plankH - 1);
+
+      // Wood Grain Highlight Slat
+      ctx.fillStyle = isAlt ? "#6d4c41" : "#5c3d2e";
+      ctx.fillRect(px + 1, py + 1, plankW - 3, 1.5);
+
+      // Occasional polished parquet gleam
+      if ((px * 7 + py * 13) % 47 === 0) {
+        ctx.fillStyle = "rgba(255, 235, 179, 0.08)";
+        ctx.fillRect(px, py, plankW - 1, plankH - 1);
+      }
+    }
+  }
+
+  // Floor Perimeter Mahogany Inlay Border
+  ctx.fillStyle = "#271206";
+  ctx.fillRect(floorX, floorY, floorW, 4);
+  ctx.fillRect(floorX, floorY + floorH - 4, floorW, 4);
+  ctx.fillRect(floorX, floorY, 4, floorH);
+  ctx.fillRect(floorX + floorW - 4, floorY, 4, floorH);
+  ctx.fillStyle = "#fbbf24";
+  ctx.fillRect(floorX + 4, floorY + 4, floorW - 8, 1.5);
+  ctx.fillRect(floorX + 4, floorY + floorH - 5.5, floorW - 8, 1.5);
+
+  // 4. Grand Royal Blue & Gold Guild Runner Carpet
+  const carpetX = 280;
+  const carpetW = 140;
+  const carpetY = floorY + 10;
+  const carpetH = floorH - 15;
+
+  // Velvet Shadow
+  ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+  ctx.fillRect(carpetX - 3, carpetY, carpetW + 6, carpetH);
+
+  // Royal Cobalt Velvet Body
+  const carpetGrad = ctx.createLinearGradient(carpetX, 0, carpetX + carpetW, 0);
+  carpetGrad.addColorStop(0, "#172554");
+  carpetGrad.addColorStop(0.5, "#1e3a8a");
+  carpetGrad.addColorStop(1, "#172554");
+  ctx.fillStyle = carpetGrad;
+  ctx.fillRect(carpetX, carpetY, carpetW, carpetH);
+
+  // Gold Filigree Embroidery Border
+  ctx.strokeStyle = "#fbbf24";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(carpetX + 5, carpetY + 5, carpetW - 10, carpetH - 10);
+  ctx.strokeStyle = "#fef08a";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(carpetX + 9, carpetY + 9, carpetW - 18, carpetH - 18);
+
+  // Carpet Diamond Medallions
+  for (let my = carpetY + 30; my < carpetY + carpetH - 30; my += 50) {
+    ctx.fillStyle = "#fbbf24";
+    ctx.beginPath();
+    ctx.moveTo(carpetX + carpetW / 2, my - 12);
+    ctx.lineTo(carpetX + carpetW / 2 + 16, my);
+    ctx.lineTo(carpetX + carpetW / 2, my + 12);
+    ctx.lineTo(carpetX + carpetW / 2 - 16, my);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#1e3a8a";
+    ctx.beginPath();
+    ctx.moveTo(carpetX + carpetW / 2, my - 7);
+    ctx.lineTo(carpetX + carpetW / 2 + 9, my);
+    ctx.lineTo(carpetX + carpetW / 2, my + 7);
+    ctx.lineTo(carpetX + carpetW / 2 - 9, my);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Tasseled Gold Carpet Fringes
+  ctx.fillStyle = "#fbbf24";
+  for (let fx = carpetX; fx < carpetX + carpetW; fx += 4) {
+    ctx.fillRect(fx, carpetY - 3, 2.5, 3);
+    ctx.fillRect(fx, carpetY + carpetH, 2.5, 3);
+  }
+
+  // 5. Ashlar Stone Foundation & Dark Mahogany Wainscoting Walls (Top, Left, Right)
+  // Top North Wall (y: 35..110)
+  ctx.fillStyle = "#0f172a";
+  ctx.fillRect(50, 35, gw - 100, 75);
+  ctx.fillStyle = "#1e293b";
+  ctx.fillRect(54, 38, gw - 108, 42);
+
+  // Stone Brick Mortar Joints
+  ctx.strokeStyle = "#0f172a";
+  ctx.lineWidth = 1.5;
+  for (let sy = 38; sy < 80; sy += 14) {
+    ctx.beginPath();
+    ctx.moveTo(54, sy);
+    ctx.lineTo(gw - 54, sy);
+    ctx.stroke();
+    const offset = sy % 28 === 0 ? 0 : 18;
+    for (let sx = 54 + offset; sx < gw - 54; sx += 36) {
+      ctx.beginPath();
+      ctx.moveTo(sx, sy);
+      ctx.lineTo(sx, sy + 14);
+      ctx.stroke();
+    }
+  }
+
+  // Lower Mahogany Wainscoting Panel on North Wall (y: 80..110)
+  ctx.fillStyle = "#3e1c07";
+  ctx.fillRect(54, 80, gw - 108, 30);
+  ctx.fillStyle = "#78350f";
+  for (let wx = 60; wx < gw - 70; wx += 28) {
+    ctx.fillRect(wx, 83, 24, 24);
+    ctx.fillStyle = "#270f03";
+    ctx.strokeRect(wx + 2, 85, 20, 20);
+    ctx.fillStyle = "#78350f";
+  }
+  // Gold Chair Rail & Baseboard
+  ctx.fillStyle = "#fbbf24";
+  ctx.fillRect(54, 79, gw - 108, 2);
+  ctx.fillStyle = "#270f03";
+  ctx.fillRect(54, 107, gw - 108, 4);
+
+  // Left & Right Wainscoted Timber Walls
+  ctx.fillStyle = "#1e293b";
+  ctx.fillRect(50, 35, 12, gh - 75);
+  ctx.fillRect(gw - 62, 35, 12, gh - 75);
+  ctx.fillStyle = "#451a03";
+  ctx.fillRect(58, 35, 4, gh - 75);
+  ctx.fillRect(gw - 62, 35, 4, gh - 75);
+
+  // 6. Arched Stained Glass Cathedral Windows (West Wall at x:60, y:190 and East Wall at x:610, y:190)
+  const drawStainedGlassWindow = (wx: number, wy: number) => {
+    ctx.fillStyle = "#0f172a";
+    ctx.fillRect(wx - 2, wy - 2, 16, 74);
+    ctx.fillStyle = "#1e3a8a";
+    ctx.fillRect(wx, wy, 12, 70);
+    // Ruby & Amber Glass Panes
+    ctx.fillStyle = "#ef4444";
+    ctx.fillRect(wx + 2, wy + 4, 8, 16);
+    ctx.fillStyle = "#facc15";
+    ctx.fillRect(wx + 2, wy + 24, 8, 18);
+    ctx.fillStyle = "#06b6d4";
+    ctx.fillRect(wx + 2, wy + 46, 8, 20);
+    // Leaded Cames
+    ctx.strokeStyle = "#0f172a";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(wx, wy, 12, 70);
+
+    // Sunlight Shaft cast across floor
+    const lightAngle = wx < 200 ? 1 : -1;
+    const sunGrad = ctx.createLinearGradient(
+      wx + 6,
+      wy + 35,
+      wx + 6 + lightAngle * 140,
+      wy + 180
+    );
+    sunGrad.addColorStop(0, "rgba(254, 240, 138, 0.22)");
+    sunGrad.addColorStop(0.5, "rgba(56, 189, 248, 0.12)");
+    sunGrad.addColorStop(1, "rgba(254, 240, 138, 0)");
+    ctx.fillStyle = sunGrad;
+    ctx.beginPath();
+    ctx.moveTo(wx + 6, wy + 20);
+    ctx.lineTo(wx + 6 + lightAngle * 150, wy + 160);
+    ctx.lineTo(wx + 6 + lightAngle * 170, wy + 220);
+    ctx.lineTo(wx + 6, wy + 70);
+    ctx.closePath();
+    ctx.fill();
+  };
+
+  drawStainedGlassWindow(54, 210);
+  drawStainedGlassWindow(gw - 66, 210);
+
+  // 7. Grand Stone Fireplace & Chimney (Top Center: x: 300..400, y: 40..112)
+  const fpX = 300;
+  const fpY = 40;
+  const fpW = 100;
+  const fpH = 72;
+
+  // Stone Chimney Breast
+  ctx.fillStyle = "#0f172a";
+  ctx.fillRect(fpX - 4, fpY, fpW + 8, fpH);
+  ctx.fillStyle = "#334155";
+  ctx.fillRect(fpX, fpY + 4, fpW, fpH - 4);
+
+  // Heavy Carved Mantelpiece
+  ctx.fillStyle = "#1e293b";
+  ctx.fillRect(fpX - 8, fpY + 24, fpW + 16, 8);
+  ctx.fillStyle = "#475569";
+  ctx.fillRect(fpX - 6, fpY + 24, fpW + 12, 2.5);
+  ctx.fillStyle = "#fbbf24";
+  ctx.fillRect(fpX + fpW / 2 - 20, fpY + 8, 40, 14); // Guild Crest Plaque
+  ctx.fillStyle = "#0f172a";
+  ctx.fillRect(fpX + fpW / 2 - 18, fpY + 10, 36, 10);
+  ctx.fillStyle = "#facc15";
+  ctx.font = "bold 7px monospace";
+  ctx.textAlign = "center";
+  ctx.fillText("PROJ GUILD", fpX + fpW / 2, fpY + 18);
+
+  // Arched Firebox Cavity
+  ctx.fillStyle = "#020617";
+  ctx.fillRect(fpX + 16, fpY + 34, fpW - 32, 38);
+  ctx.fillStyle = "#1c1917";
+  ctx.beginPath();
+  ctx.arc(fpX + fpW / 2, fpY + 42, 22, Math.PI, 0);
+  ctx.fill();
+
+  // Cast Iron Fire Grate & Burning Logs
+  ctx.fillStyle = "#292524";
+  ctx.fillRect(fpX + 22, fpY + 60, fpW - 44, 8);
+  ctx.fillStyle = "#451a03";
+  ctx.fillRect(fpX + 26, fpY + 56, fpW - 52, 6);
+
+  // Animated Fire Flames & Sparks
+  const f1 = Math.sin(time * 0.015) * 4;
+  const f2 = Math.cos(time * 0.02) * 5;
+  const f3 = Math.sin(time * 0.025 + 1.5) * 3;
+
+  // Outer Crimson Flame
+  ctx.fillStyle = "#dc2626";
+  ctx.beginPath();
+  ctx.moveTo(fpX + 30, fpY + 62);
+  ctx.quadraticCurveTo(fpX + 42 + f1, fpY + 38, fpX + 50 + f2, fpY + 32);
+  ctx.quadraticCurveTo(fpX + 58 + f3, fpY + 38, fpX + 70, fpY + 62);
+  ctx.closePath();
+  ctx.fill();
+
+  // Core Amber / Yellow Flame
+  ctx.fillStyle = "#f97316";
+  ctx.beginPath();
+  ctx.moveTo(fpX + 36, fpY + 62);
+  ctx.quadraticCurveTo(fpX + 46 + f2, fpY + 44, fpX + 50 + f1, fpY + 38);
+  ctx.quadraticCurveTo(fpX + 54 + f3, fpY + 44, fpX + 64, fpY + 62);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "#fef08a";
+  ctx.beginPath();
+  ctx.moveTo(fpX + 42, fpY + 62);
+  ctx.lineTo(fpX + 50, fpY + 46 + f1);
+  ctx.lineTo(fpX + 58, fpY + 62);
+  ctx.closePath();
+  ctx.fill();
+
+  // Leaping Fire Sparks
+  ctx.fillStyle = "#fbbf24";
+  ctx.fillRect(
+    fpX + 46 + Math.sin(time * 0.03) * 12,
+    fpY + 30 - ((time * 0.05) % 20),
+    2,
+    2
+  );
+  ctx.fillRect(
+    fpX + 54 + Math.cos(time * 0.025) * 10,
+    fpY + 28 - (((time + 300) * 0.04) % 18),
+    1.5,
+    1.5
+  );
+
+  // Radial Warm Firelight Gradient on Room Floor
+  const fireHalo = ctx.createRadialGradient(
+    fpX + fpW / 2,
+    fpY + 60,
+    10,
+    fpX + fpW / 2,
+    fpY + 60,
+    160
+  );
+  fireHalo.addColorStop(0, "rgba(251, 146, 60, 0.35)");
+  fireHalo.addColorStop(0.5, "rgba(245, 158, 11, 0.15)");
+  fireHalo.addColorStop(1, "rgba(245, 158, 11, 0)");
+  ctx.fillStyle = fireHalo;
+  ctx.beginPath();
+  ctx.arc(fpX + fpW / 2, fpY + 60, 160, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 8. Bookshelves & Tech Trophy Cabinets (North-West & North-East Corners)
+  // West Tech Library
+  ctx.fillStyle = "#270f03";
+  ctx.fillRect(80, 80, 80, 36);
+  ctx.fillStyle = "#78350f";
+  ctx.fillRect(82, 82, 76, 32);
+  // Colorful Software Engineering Books
+  const bookColors = [
+    "#ef4444",
+    "#3b82f6",
+    "#10b981",
+    "#f59e0b",
+    "#8b5cf6",
+    "#06b6d4",
+  ];
+  for (let bx = 86; bx < 152; bx += 8) {
+    const col = bookColors[Math.floor((bx * 3) / 8) % bookColors.length];
+    ctx.fillStyle = col;
+    ctx.fillRect(bx, 84, 6, 12);
+    ctx.fillRect(bx, 99, 6, 12);
+  }
+
+  // East Drafting Desk & Architecture Blueprints (with Architect Astro)
+  const deskX = 520;
+  const deskY = 82;
+  ctx.fillStyle = "#270f03";
+  ctx.fillRect(deskX, deskY, 80, 34);
+  ctx.fillStyle = "#9a3412";
+  ctx.fillRect(deskX + 2, deskY + 2, 76, 30);
+  // Rolled Blueprints on Desk
+  ctx.fillStyle = "#0284c7";
+  ctx.fillRect(deskX + 8, deskY + 6, 26, 18);
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(deskX + 10, deskY + 8, 22, 14);
+  ctx.fillStyle = "#fbbf24";
+  ctx.fillRect(deskX + 40, deskY + 12, 20, 5); // Brass Drafting Compass
+
+  // Architect Astro standing at the drafting table (Row 0 sprite)
+  drawSpritesheetCharacter(
+    ctx,
+    charactersImage,
+    0,
+    deskX + 26,
+    deskY + 18,
+    "down",
+    false,
+    0,
+    "none"
+  );
+  // Architect Astro Nameplate
+  ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
+  ctx.fillRect(deskX + 42 - 46, deskY + 6, 92, 12);
+  ctx.fillStyle = "#38bdf8";
+  ctx.font = "bold 7.5px monospace";
+  ctx.textAlign = "center";
+  ctx.fillText("Architect Astro 🛠️", deskX + 42, deskY + 15);
+
+  // 9. Interactive 3D Project Exhibition Stations / Pedestals
+  GUILD_PROJECT_STATIONS.forEach((station) => {
+    drawProjectStationPedestal(ctx, station, time);
+  });
+
+  // 10. South Entrance Double Oak Doors & Welcome Mat (x: 310..390, y: 470..520)
+  const doorX = 310;
+  const doorY = gh - 70;
+  const doorW = 80;
+
+  // Crimson Embroidered Welcome Exit Mat
+  ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+  ctx.fillRect(doorX - 10, doorY - 14, doorW + 20, 26);
+  ctx.fillStyle = "#991b1b";
+  ctx.fillRect(doorX - 8, doorY - 12, doorW + 16, 22);
+  ctx.strokeStyle = "#fbbf24";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(doorX - 6, doorY - 10, doorW + 12, 18);
+  ctx.fillStyle = "#fef08a";
+  ctx.font = "bold 8px monospace";
+  ctx.textAlign = "center";
+  ctx.fillText("▼ EXIT TO TOWN ▼", doorX + doorW / 2, doorY + 3);
+
+  // South Wall & Double Oak Doorway
+  ctx.fillStyle = "#0f172a";
+  ctx.fillRect(50, gh - 60, doorX - 50, 60);
+  ctx.fillRect(doorX + doorW, gh - 60, gw - (doorX + doorW) - 50, 60);
+  ctx.fillStyle = "#3e1c07";
+  ctx.fillRect(54, gh - 56, doorX - 58, 20);
+  ctx.fillRect(doorX + doorW + 4, gh - 56, gw - (doorX + doorW) - 58, 20);
+
+  // Double Door Frame
+  ctx.fillStyle = "#1e293b";
+  ctx.fillRect(doorX - 4, doorY, doorW + 8, 48);
+  ctx.fillStyle = "#451a03";
+  ctx.fillRect(doorX, doorY + 2, 38, 44);
+  ctx.fillRect(doorX + 42, doorY + 2, 38, 44);
+  ctx.fillStyle = "#78350f";
+  ctx.fillRect(doorX + 3, doorY + 5, 32, 38);
+  ctx.fillRect(doorX + 45, doorY + 5, 32, 38);
+  // Brass Handles
+  ctx.fillStyle = "#facc15";
+  ctx.fillRect(doorX + 30, doorY + 22, 3, 6);
+  ctx.fillRect(doorX + 47, doorY + 22, 3, 6);
+
+  // 11. Overhead Wrought-Iron Chandeliers with Warm Pulsing Halos
+  const drawChandelier = (cx: number, cy: number) => {
+    // Hanging Chains
+    ctx.strokeStyle = "#1e293b";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(cx, 0);
+    ctx.lineTo(cx, cy);
+    ctx.stroke();
+
+    // Wheel Ring
+    ctx.fillStyle = "#0f172a";
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, 26, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#475569";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // 4 Candles & Flames
+    const candles = [-18, -6, 6, 18];
+    candles.forEach((ox) => {
+      ctx.fillStyle = "#fef3c7";
+      ctx.fillRect(cx + ox - 2, cy - 8, 4, 8);
+      // Flame
+      const cPulse = Math.sin(time * 0.01 + ox) * 2;
+      ctx.fillStyle = "#f59e0b";
+      ctx.beginPath();
+      ctx.moveTo(cx + ox - 2, cy - 8);
+      ctx.lineTo(cx + ox, cy - 14 + cPulse);
+      ctx.lineTo(cx + ox + 2, cy - 8);
+      ctx.closePath();
+      ctx.fill();
+    });
+
+    // Radial Amber Glow on Floor
+    const cHalo = ctx.createRadialGradient(cx, cy + 80, 5, cx, cy + 80, 90);
+    cHalo.addColorStop(0, "rgba(254, 240, 138, 0.2)");
+    cHalo.addColorStop(1, "rgba(254, 240, 138, 0)");
+    ctx.fillStyle = cHalo;
+    ctx.beginPath();
+    ctx.arc(cx, cy + 80, 90, 0, Math.PI * 2);
+    ctx.fill();
+  };
+
+  drawChandelier(200, 100);
+  drawChandelier(500, 100);
+  drawChandelier(350, 240);
+}
+
 export default function GameCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -4156,6 +4720,13 @@ export default function GameCanvas() {
     x: number;
     y: number;
   } | null>(null);
+
+  // Scene Management (Overworld vs Building Interiors)
+  const [currentScene, setCurrentScene] = useState<"overworld" | "projects-guild">("overworld");
+  const currentSceneRef = useRef<"overworld" | "projects-guild">("overworld");
+  useEffect(() => {
+    currentSceneRef.current = currentScene;
+  }, [currentScene]);
 
   // Character Skin Customization
   const [selectedSkinId, setSelectedSkinId] = useState<string>(() => {
@@ -4246,6 +4817,51 @@ export default function GameCanvas() {
     const pTop = py + 16;
     const pBottom = py + 30;
 
+    // --- 1. PROJECTS GUILD INTERIOR SCENE COLLISION ---
+    if (currentSceneRef.current === "projects-guild") {
+      // Interior Boundaries (x: 60..640, y: 110..480)
+      if (pLeft < 60 || pRight > GUILD_INTERIOR_WIDTH - 60 || pTop < 112) {
+        return true;
+      }
+      if (pBottom > GUILD_INTERIOR_HEIGHT - 60) {
+        // Allow stepping into the south exit doorway threshold
+        if (pLeft >= 305 && pRight <= 395) {
+          return false;
+        }
+        return true;
+      }
+
+      // Grand Stone Fireplace (x: 295..405, y: 38..112)
+      if (pRight > 295 && pLeft < 405 && pBottom > 38 && pTop < 112) {
+        return true;
+      }
+
+      // West Bookshelf (x: 76..164, y: 76..116)
+      if (pRight > 76 && pLeft < 164 && pBottom > 76 && pTop < 116) {
+        return true;
+      }
+
+      // East Drafting Desk (x: 516..604, y: 76..116)
+      if (pRight > 516 && pLeft < 604 && pBottom > 76 && pTop < 116) {
+        return true;
+      }
+
+      // Interactive 3D Project Stations
+      for (const st of GUILD_PROJECT_STATIONS) {
+        if (
+          pRight > st.x - 2 &&
+          pLeft < st.x + st.width + 2 &&
+          pBottom > st.y + 12 &&
+          pTop < st.y + st.height + 4
+        ) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    // --- 2. OVERWORLD COLLISION ---
     // Bounds
     if (
       pLeft < 24 ||
@@ -4387,12 +5003,52 @@ export default function GameCanvas() {
   const getNearbyInteractable = useCallback((): {
     npc?: NPC;
     worldObject?: WorldObject;
+    projectStation?: ProjectStation;
+    doorTransition?: "enter_projects_guild" | "exit_guild";
+    doorName?: string;
   } | null => {
     const p = playerRef.current;
     const centerX = p.x + 12;
     const centerY = p.y + 14;
 
-    // 1. Check NPCs
+    // --- 1. PROJECTS GUILD INTERIOR INTERACTIONS ---
+    if (currentSceneRef.current === "projects-guild") {
+      // Check Exit Door Mat (South Door)
+      if (
+        Math.hypot(centerX - 350, centerY - 475) < 40 ||
+        (p.y >= 455 && p.x >= 300 && p.x <= 400)
+      ) {
+        return { doorTransition: "exit_guild", doorName: "Exit to Franze Town" };
+      }
+
+      // Check Architect Astro at Drafting Desk
+      if (Math.hypot(centerX - 566, centerY - 110) < 46) {
+        const astroNpc = NPCS.find((n) => n.id === "npc-engineer");
+        if (astroNpc) return { npc: astroNpc };
+      }
+
+      // Check Project Exhibition Stations
+      for (const st of GUILD_PROJECT_STATIONS) {
+        const stCenterX = st.x + st.width / 2;
+        const stCenterY = st.y + st.height / 2;
+        const dist = Math.hypot(centerX - stCenterX, centerY - stCenterY);
+        if (dist < 46) {
+          return { projectStation: st };
+        }
+      }
+      return null;
+    }
+
+    // --- 2. OVERWORLD INTERACTIONS ---
+    // Check Projects Guild Entrance Doorway (x: 140, y: 170)
+    if (
+      Math.hypot(centerX - 140, centerY - 168) < 38 ||
+      (p.y <= 174 && p.x >= 122 && p.x <= 158 && p.y >= 152)
+    ) {
+      return { doorTransition: "enter_projects_guild", doorName: "Projects Showcase Guild" };
+    }
+
+    // Check Overworld NPCs
     for (const npc of NPCS) {
       const live = npcLiveStateRef.current[npc.id];
       const npcX = live ? live.x : npc.x;
@@ -4403,7 +5059,7 @@ export default function GameCanvas() {
       }
     }
 
-    // 2. Check World Objects
+    // Check World Objects
     for (const obj of WORLD_OBJECTS) {
       const nearX = Math.max(obj.x, Math.min(centerX, obj.x + obj.width));
       const nearY = Math.max(obj.y, Math.min(centerY, obj.y + obj.height));
@@ -4423,6 +5079,41 @@ export default function GameCanvas() {
 
     const nearby = getNearbyInteractable();
     if (!nearby) return;
+
+    if (nearby.doorTransition === "enter_projects_guild") {
+      retroAudio.playDiscovery();
+      setCurrentScene("projects-guild");
+      const p = playerRef.current;
+      p.x = 338;
+      p.y = 430;
+      p.direction = "up";
+      p.isMoving = false;
+      targetDestinationRef.current = null;
+      return;
+    }
+
+    if (nearby.doorTransition === "exit_guild") {
+      retroAudio.playInteract();
+      setCurrentScene("overworld");
+      const p = playerRef.current;
+      p.x = 128;
+      p.y = 182;
+      p.direction = "down";
+      p.isMoving = false;
+      targetDestinationRef.current = null;
+      return;
+    }
+
+    if (nearby.projectStation) {
+      retroAudio.playInteract();
+      const modalKey =
+        nearby.projectStation.projectIndex >= 0
+          ? `project_${nearby.projectStation.projectIndex}`
+          : "projects";
+      setActiveModalType(modalKey);
+      setDiscoveredLocations((prev) => new Set([...prev, nearby.projectStation!.id]));
+      return;
+    }
 
     retroAudio.playInteract();
 
@@ -4461,13 +5152,17 @@ export default function GameCanvas() {
     const clickScreenY = (e.clientY - rect.top) * scaleY;
 
     const p = playerRef.current;
+    const isInterior = currentSceneRef.current === "projects-guild";
+    const currentMapW = isInterior ? GUILD_INTERIOR_WIDTH : MAP_TOTAL_WIDTH;
+    const currentMapH = isInterior ? GUILD_INTERIOR_HEIGHT : MAP_TOTAL_HEIGHT;
+
     const camX = Math.max(
       0,
-      Math.min(p.x + p.width / 2 - canvas.width / 2, MAP_TOTAL_WIDTH - canvas.width)
+      Math.min(p.x + p.width / 2 - canvas.width / 2, currentMapW - canvas.width)
     );
     const camY = Math.max(
       0,
-      Math.min(p.y + p.height / 2 - canvas.height / 2, MAP_TOTAL_HEIGHT - canvas.height)
+      Math.min(p.y + p.height / 2 - canvas.height / 2, currentMapH - canvas.height)
     );
 
     retroAudio.startBgmOnInteraction();
@@ -4574,6 +5269,7 @@ export default function GameCanvas() {
       const mobileDir = mobileDirRef.current;
       const targetDest = targetDestinationRef.current;
       const isPaused = Boolean(activeNpc || activeWorldObject || activeModalType);
+      const isInterior = currentSceneRef.current === "projects-guild";
 
       // --- 1. PLAYER MOVEMENT UPDATE ---
       let dx = 0;
@@ -4635,6 +5331,30 @@ export default function GameCanvas() {
           p.y = nextY;
         }
 
+        // Automatic seamless door triggers when stepping across door thresholds
+        if (isInterior) {
+          if (p.y >= 485 && p.x >= 305 && p.x <= 395) {
+            retroAudio.playInteract();
+            setCurrentScene("overworld");
+            p.x = 128;
+            p.y = 182;
+            p.direction = "down";
+            p.isMoving = false;
+            targetDestinationRef.current = null;
+          }
+        } else {
+          // Stepping into Projects Guild Front Door
+          if (p.y <= 165 && p.x >= 122 && p.x <= 158 && p.y >= 150) {
+            retroAudio.playDiscovery();
+            setCurrentScene("projects-guild");
+            p.x = 338;
+            p.y = 430;
+            p.direction = "up";
+            p.isMoving = false;
+            targetDestinationRef.current = null;
+          }
+        }
+
         p.animTimer += 1;
         if (p.animTimer % 7 === 0) {
           p.frame = (p.frame + 1) % 4;
@@ -4646,76 +5366,93 @@ export default function GameCanvas() {
         p.frame = 0;
       }
 
-      // --- 2. AUTONOMOUS NPC WANDERING AI ---
-      NPCS.forEach((npc) => {
-        const live = npcLiveStateRef.current[npc.id];
-        if (!live || activeNpc?.id === npc.id) return;
+      // --- 2. AUTONOMOUS NPC WANDERING AI (Overworld only) ---
+      if (!isInterior) {
+        NPCS.forEach((npc) => {
+          const live = npcLiveStateRef.current[npc.id];
+          if (!live || activeNpc?.id === npc.id) return;
 
-        if (live.isMoving) {
-          const ndx = live.targetX - live.x;
-          const ndy = live.targetY - live.y;
-          const dist = Math.hypot(ndx, ndy);
+          if (live.isMoving) {
+            const ndx = live.targetX - live.x;
+            const ndy = live.targetY - live.y;
+            const dist = Math.hypot(ndx, ndy);
 
-          if (dist > 2) {
-            const moveSpeed = 1.0;
-            const nextNx = live.x + (ndx / dist) * moveSpeed;
-            const nextNy = live.y + (ndy / dist) * moveSpeed;
+            if (dist > 2) {
+              const moveSpeed = 1.0;
+              const nextNx = live.x + (ndx / dist) * moveSpeed;
+              const nextNy = live.y + (ndy / dist) * moveSpeed;
 
-            // Prevent NPC from phasing into the player
-            const p = playerRef.current;
-            const distToPlayer = Math.hypot((nextNx + 14) - (p.x + 12), (nextNy + 16) - (p.y + 14));
+              // Prevent NPC from phasing into the player
+              const p = playerRef.current;
+              const distToPlayer = Math.hypot(
+                nextNx + 14 - (p.x + 12),
+                nextNy + 16 - (p.y + 14)
+              );
 
-            if (distToPlayer > 26) {
-              live.x = nextNx;
-              live.y = nextNy;
+              if (distToPlayer > 26) {
+                live.x = nextNx;
+                live.y = nextNy;
+              } else {
+                live.isMoving = false;
+                live.frame = 0;
+                live.idleTimer = Math.floor(Math.random() * 80) + 40;
+              }
+
+              if (Math.abs(ndx) > Math.abs(ndy)) {
+                live.direction = ndx > 0 ? "right" : "left";
+              } else {
+                live.direction = ndy > 0 ? "down" : "up";
+              }
+
+              live.animTimer += 1;
+              if (live.animTimer % 8 === 0) {
+                live.frame = (live.frame + 1) % 4;
+              }
             } else {
               live.isMoving = false;
               live.frame = 0;
-              live.idleTimer = Math.floor(Math.random() * 80) + 40;
-            }
-
-            if (Math.abs(ndx) > Math.abs(ndy)) {
-              live.direction = ndx > 0 ? "right" : "left";
-            } else {
-              live.direction = ndy > 0 ? "down" : "up";
-            }
-
-            live.animTimer += 1;
-            if (live.animTimer % 8 === 0) {
-              live.frame = (live.frame + 1) % 4;
+              live.idleTimer = Math.floor(Math.random() * 120) + 60;
             }
           } else {
-            live.isMoving = false;
-            live.frame = 0;
-            live.idleTimer = Math.floor(Math.random() * 120) + 60;
+            live.idleTimer -= 1;
+            if (live.idleTimer <= 0 && npc.wanderRadius > 0) {
+              const angle = Math.random() * Math.PI * 2;
+              const r = Math.random() * npc.wanderRadius;
+              live.targetX = npc.anchorX + Math.cos(angle) * r;
+              live.targetY = npc.anchorY + Math.sin(angle) * r;
+              live.isMoving = true;
+            }
           }
-        } else {
-          live.idleTimer -= 1;
-          if (live.idleTimer <= 0 && npc.wanderRadius > 0) {
-            const angle = Math.random() * Math.PI * 2;
-            const r = Math.random() * npc.wanderRadius;
-            live.targetX = npc.anchorX + Math.cos(angle) * r;
-            live.targetY = npc.anchorY + Math.sin(angle) * r;
-            live.isMoving = true;
-          }
-        }
-      });
+        });
+      }
 
       // --- 3. FLOATING PROMPT LOOKUP ---
       const nearby = getNearbyInteractable();
       if (nearby && !isPaused) {
-        if (nearby.npc) {
+        if (nearby.doorTransition) {
+          setInteractPrompt({
+            text: `[SPACE / E] ${nearby.doorName}`,
+            x: p.x + 12,
+            y: p.y - 12,
+          });
+        } else if (nearby.projectStation) {
+          setInteractPrompt({
+            text: `[SPACE / E] Inspect ${nearby.projectStation.shortTitle}`,
+            x: nearby.projectStation.x + nearby.projectStation.width / 2,
+            y: nearby.projectStation.y - 14,
+          });
+        } else if (nearby.npc) {
           const live = npcLiveStateRef.current[nearby.npc.id];
           const nx = live ? live.x : nearby.npc.x;
           const ny = live ? live.y : nearby.npc.y;
           setInteractPrompt({
-            text: `[SPACE] Talk to ${nearby.npc.name}`,
+            text: `[SPACE / E] Talk to ${nearby.npc.name}`,
             x: nx + 14,
             y: ny - 12,
           });
         } else if (nearby.worldObject) {
           setInteractPrompt({
-            text: `[SPACE] Inspect ${nearby.worldObject.name}`,
+            text: `[SPACE / E] Inspect ${nearby.worldObject.name}`,
             x: nearby.worldObject.x + nearby.worldObject.width / 2,
             y: nearby.worldObject.y - 10,
           });
@@ -4727,97 +5464,106 @@ export default function GameCanvas() {
       // --- 4. VIEWPORT CAMERA TRACKING ---
       const viewWidth = canvas.width;
       const viewHeight = canvas.height;
+      const currentMapW = isInterior ? GUILD_INTERIOR_WIDTH : MAP_TOTAL_WIDTH;
+      const currentMapH = isInterior ? GUILD_INTERIOR_HEIGHT : MAP_TOTAL_HEIGHT;
+
       const camX = Math.max(
         0,
-        Math.min(p.x + p.width / 2 - viewWidth / 2, MAP_TOTAL_WIDTH - viewWidth)
+        Math.min(p.x + p.width / 2 - viewWidth / 2, currentMapW - viewWidth)
       );
       const camY = Math.max(
         0,
-        Math.min(p.y + p.height / 2 - viewHeight / 2, MAP_TOTAL_HEIGHT - viewHeight)
+        Math.min(p.y + p.height / 2 - viewHeight / 2, currentMapH - viewHeight)
       );
 
       ctx.save();
       ctx.clearRect(0, 0, viewWidth, viewHeight);
       ctx.translate(-camX, -camY);
 
-      // 1. Organic Winding Ground & Striped Grass (Flowers strictly inside grass)
-      drawOrganicGround(ctx);
+      if (isInterior) {
+        // Render Projects Guild Interior Scene
+        drawProjectsGuildInterior(ctx, time, charactersImageRef.current);
+      } else {
+        // Render Overworld Scene
+        // 1. Organic Winding Ground & Striped Grass
+        drawOrganicGround(ctx);
 
-      // 2. Fenced Pathway Borders with Dedicated Entrances
-      drawTexturedFences(ctx);
+        // 2. Fenced Pathway Borders with Dedicated Entrances
+        drawTexturedFences(ctx);
 
-      // 3. Sprite-Style Pixel Flower Pots
-      drawSpriteFlowerPots(ctx, time);
+        // 3. Sprite-Style Pixel Flower Pots
+        drawSpriteFlowerPots(ctx, time);
 
-      // 4. Sprite-Style Pixel Bushes & Shrubs
-      drawSpriteBushes(ctx);
+        // 4. Sprite-Style Pixel Bushes & Shrubs
+        drawSpriteBushes(ctx);
 
-      // 4b. Rich 3D Village Outdoor Furniture (Benches, Tables, Wishing Well, Birdbaths, Lamps)
-      drawVillageFurniture(ctx, time);
+        // 4b. Rich 3D Village Outdoor Furniture
+        drawVillageFurniture(ctx, time);
 
-      // 5. Basketball Court
-      drawBasketballCourt(ctx);
+        // 5. Basketball Court
+        drawBasketballCourt(ctx);
 
-      // 6. Statues & Obelisks
-      drawDetailedStatues(ctx, time);
+        // 6. Statues & Obelisks
+        drawDetailedStatues(ctx, time);
 
-      // 7. Grand Aligned Colonnade of Banners (Aligned at y: 220)
-      drawDetailedBanners(ctx, time);
+        // 7. Grand Aligned Colonnade of Banners
+        drawDetailedBanners(ctx, time);
 
-      // 8. Custom Handcrafted Buildings
-      drawCustomBuildings(ctx, time);
+        // 8. Custom Handcrafted Buildings
+        drawCustomBuildings(ctx, time);
 
-      // 9. Central Fountain
-      drawCentralFountain(ctx, time);
+        // 9. Central Fountain
+        drawCentralFountain(ctx, time);
 
-      // 10. Sprite-Style Pixel Forest Trees (Oak & Maple)
-      drawSpriteTrees(ctx, time);
+        // 10. Sprite-Style Pixel Forest Trees
+        drawSpriteTrees(ctx, time);
 
-      // 11. Dynamic Animated Wandering NPCs
-      NPCS.forEach((npc) => {
-        const live = npcLiveStateRef.current[npc.id];
-        const nx = live ? live.x : npc.x;
-        const ny = live ? live.y : npc.y;
-        const dir = live ? live.direction : npc.direction;
-        const isMoving = live ? live.isMoving : false;
-        const frame = live ? live.frame : 0;
+        // 11. Dynamic Animated Wandering NPCs
+        NPCS.forEach((npc) => {
+          const live = npcLiveStateRef.current[npc.id];
+          const nx = live ? live.x : npc.x;
+          const ny = live ? live.y : npc.y;
+          const dir = live ? live.direction : npc.direction;
+          const isMoving = live ? live.isMoving : false;
+          const frame = live ? live.frame : 0;
 
-        if (npc.spriteType === "dog") {
-          drawKissesTheDog(ctx, nx, ny, dir, isMoving, frame, time);
-        } else {
-          drawSpritesheetCharacter(
-            ctx,
-            charactersImageRef.current,
-            npc.spriteRow,
-            nx,
-            ny,
-            dir,
-            isMoving,
-            frame,
-            npc.spriteType === "azra"
-              ? "azra"
-              : npc.spriteType === "sweetheart"
-              ? "allia"
-              : "none"
-          );
-        }
+          if (npc.spriteType === "dog") {
+            drawKissesTheDog(ctx, nx, ny, dir, isMoving, frame, time);
+          } else {
+            drawSpritesheetCharacter(
+              ctx,
+              charactersImageRef.current,
+              npc.spriteRow,
+              nx,
+              ny,
+              dir,
+              isMoving,
+              frame,
+              npc.spriteType === "azra"
+                ? "azra"
+                : npc.spriteType === "sweetheart"
+                ? "allia"
+                : "none"
+            );
+          }
 
-        const nameTagW = Math.max(56, npc.nameTag.length * 6.5 + 14);
-        ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
-        ctx.fillRect(nx + 16 - nameTagW / 2, ny - 10, nameTagW, 13);
-        if (npc.spriteType === "azra") {
-          ctx.fillStyle = "#38bdf8";
-        } else if (npc.spriteType === "sweetheart") {
-          ctx.fillStyle = "#fb7185";
-        } else if (npc.spriteType === "dog") {
-          ctx.fillStyle = "#fde047";
-        } else {
-          ctx.fillStyle = "#ffffff";
-        }
-        ctx.font = "bold 8px monospace";
-        ctx.textAlign = "center";
-        ctx.fillText(npc.nameTag, nx + 16, ny - 1);
-      });
+          const nameTagW = Math.max(56, npc.nameTag.length * 6.5 + 14);
+          ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
+          ctx.fillRect(nx + 16 - nameTagW / 2, ny - 10, nameTagW, 13);
+          if (npc.spriteType === "azra") {
+            ctx.fillStyle = "#38bdf8";
+          } else if (npc.spriteType === "sweetheart") {
+            ctx.fillStyle = "#fb7185";
+          } else if (npc.spriteType === "dog") {
+            ctx.fillStyle = "#fde047";
+          } else {
+            ctx.fillStyle = "#ffffff";
+          }
+          ctx.font = "bold 8px monospace";
+          ctx.textAlign = "center";
+          ctx.fillText(npc.nameTag, nx + 16, ny - 1);
+        });
+      }
 
       // 12. Player Character (Selected Custom Skin)
       const currentSkin =
@@ -4858,7 +5604,15 @@ export default function GameCanvas() {
 
     animationFrameId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(animationFrameId);
-  }, [isColliding, getNearbyInteractable, activeNpc, activeWorldObject, activeModalType, selectedSkinId]);
+  }, [
+    isColliding,
+    getNearbyInteractable,
+    activeNpc,
+    activeWorldObject,
+    activeModalType,
+    selectedSkinId,
+    currentScene,
+  ]);
 
   // Responsive Canvas Sizing
   useEffect(() => {
@@ -4888,15 +5642,19 @@ export default function GameCanvas() {
         {/* Top Game Bar */}
         <div className="flex items-center justify-between border-b-2 border-foreground bg-foreground px-3 py-1.5 font-mono text-xs font-bold text-background">
           <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-            <span className="tracking-wider uppercase">FRANZE TOWN // DEV OVERWORLD</span>
+            <span className={`h-2 w-2 rounded-full ${currentScene === "projects-guild" ? "bg-amber-400" : "bg-red-500"} animate-pulse`} />
+            <span className="tracking-wider uppercase">
+              {currentScene === "projects-guild"
+                ? "PROJECTS GUILD // EXHIBITION HALL"
+                : "FRANZE TOWN // DEV OVERWORLD"}
+            </span>
           </div>
 
           <div className="flex items-center gap-3 sm:gap-4 text-[11px]">
             <div className="hidden lg:flex items-center gap-1.5 text-amber-300">
               <MapPin className="h-3.5 w-3.5" />
               <span>
-                DISCOVERED: {discoveredLocations.size} / {WORLD_OBJECTS.length + NPCS.length}
+                DISCOVERED: {discoveredLocations.size} / {WORLD_OBJECTS.length + NPCS.length + GUILD_PROJECT_STATIONS.length}
               </span>
             </div>
 

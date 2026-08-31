@@ -39,7 +39,17 @@ interface GameModalProps {
 export default function GameModal({ type, onClose }: GameModalProps) {
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [experienceIndex, setExperienceIndex] = useState(0);
-  const [projectIndex, setProjectIndex] = useState(0);
+  const [projectIndex, setProjectIndex] = useState(() => {
+    if (type.startsWith("project_")) {
+      const idx = parseInt(type.replace("project_", ""), 10);
+      if (!isNaN(idx) && idx >= 0 && idx < profileData.projects.items.length) {
+        return idx;
+      }
+    }
+    return 0;
+  });
+
+  const isProjectsModal = type === "projects" || type.startsWith("project_");
 
   const handleClose = () => {
     retroAudio.playCancel();
@@ -62,7 +72,7 @@ export default function GameModal({ type, onClose }: GameModalProps) {
         if (type === "experience") {
           retroAudio.playInteract();
           setExperienceIndex((prev) => (prev > 0 ? prev - 1 : profileData.experience.steps.length - 1));
-        } else if (type === "projects") {
+        } else if (isProjectsModal) {
           retroAudio.playInteract();
           setProjectIndex((prev) => (prev > 0 ? prev - 1 : profileData.projects.items.length - 1));
         }
@@ -70,7 +80,7 @@ export default function GameModal({ type, onClose }: GameModalProps) {
         if (type === "experience") {
           retroAudio.playInteract();
           setExperienceIndex((prev) => (prev < profileData.experience.steps.length - 1 ? prev + 1 : 0));
-        } else if (type === "projects") {
+        } else if (isProjectsModal) {
           retroAudio.playInteract();
           setProjectIndex((prev) => (prev < profileData.projects.items.length - 1 ? prev + 1 : 0));
         }
@@ -78,7 +88,7 @@ export default function GameModal({ type, onClose }: GameModalProps) {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [type]);
+  }, [type, isProjectsModal]);
 
   return (
     <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/85 p-2 sm:p-3 backdrop-blur-sm">
@@ -98,7 +108,7 @@ export default function GameModal({ type, onClose }: GameModalProps) {
         {/* =========================================================================
             1. PROJECTS GUILD SHOWCASE // RESPONSIVE RETRO SPRITE CAROUSEL
             ========================================================================= */}
-        {type === "projects" && (
+        {isProjectsModal && (
           <div className="flex flex-1 flex-col justify-between min-h-0 overflow-hidden space-y-2">
             <div className="shrink-0 flex items-center justify-between border-b border-indigo-500/30 pb-1.5 pr-8">
               <div>

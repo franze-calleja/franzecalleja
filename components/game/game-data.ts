@@ -569,14 +569,141 @@ export const CHARACTER_SKINS: CharacterSkin[] = [
   },
 ];
 
+export const GUILD_INTERIOR_WIDTH = 700;
+export const GUILD_INTERIOR_HEIGHT = 540;
+
+export interface ProjectStation {
+  id: string;
+  projectIndex: number;
+  name: string;
+  shortTitle: string;
+  tagline: string;
+  category: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  techs: string[];
+  color: string;
+  iconName: string;
+}
+
+export const GUILD_PROJECT_STATIONS: ProjectStation[] = [
+  {
+    id: "station-website",
+    projectIndex: 0,
+    name: "MSEUF-Candelaria Institutional Portal & Custom CMS",
+    shortTitle: "MSEUF-CI Portal",
+    tagline: "Custom CMS & Multi-Tenant Portal",
+    category: "Fullstack & Cloud",
+    x: 130,
+    y: 190,
+    width: 64,
+    height: 48,
+    techs: ["Next.js 16", "React 19", "MySQL", "MinIO"],
+    color: "#38bdf8",
+    iconName: "Globe",
+  },
+  {
+    id: "station-aem",
+    projectIndex: 1,
+    name: "AEM System — Algorithmic Educational Support",
+    shortTitle: "AEM Core AI",
+    tagline: "Algorithmic Risk Scoring & Intervention",
+    category: "AI & Fullstack",
+    x: 506,
+    y: 190,
+    width: 64,
+    height: 48,
+    techs: ["Next.js 16", "PostgreSQL", "Gemini API", "Docker"],
+    color: "#a855f7",
+    iconName: "Bot",
+  },
+  {
+    id: "station-upfps",
+    projectIndex: 2,
+    name: "Unified Plant, Facilities, and Property System (UPFPS)",
+    shortTitle: "UPFPS Enterprise",
+    tagline: "Institutional Property & Asset Tracking",
+    category: "Enterprise ERP",
+    x: 130,
+    y: 290,
+    width: 64,
+    height: 48,
+    techs: ["Next.js 16", "React 19", "Prisma", "Express"],
+    color: "#34d399",
+    iconName: "Building2",
+  },
+  {
+    id: "station-phd",
+    projectIndex: 3,
+    name: "PHD Map — Urban Parking Discovery & Reservation",
+    shortTitle: "PHD Map Toronto",
+    tagline: "Geospatial Parking Discovery & Booking",
+    category: "Mobile & Cloud",
+    x: 506,
+    y: 290,
+    width: 64,
+    height: 48,
+    techs: ["React Native", "Expo", "PostgreSQL", "Express"],
+    color: "#f59e0b",
+    iconName: "MapPin",
+  },
+  {
+    id: "station-nfc",
+    projectIndex: 4,
+    name: "CITHM Smart NFC Attendance & Event Tracking",
+    shortTitle: "Smart NFC IoT",
+    tagline: "Hardware-Integrated Event Attendance",
+    category: "IoT & Hardware",
+    x: 130,
+    y: 390,
+    width: 64,
+    height: 48,
+    techs: ["Next.js 16", "Prisma 7", "Docker", "NFC Hardware"],
+    color: "#ec4899",
+    iconName: "Radio",
+  },
+  {
+    id: "station-college-portal",
+    projectIndex: 5,
+    name: "EUC Academic & Admissions Portal",
+    shortTitle: "EUC Academic Portal",
+    tagline: "Digital Admissions & Enrollment Architecture",
+    category: "Academic ERP",
+    x: 506,
+    y: 390,
+    width: 64,
+    height: 48,
+    techs: ["Next.js 16", "MariaDB", "AWS S3", "Zod"],
+    color: "#60a5fa",
+    iconName: "GraduationCap",
+  },
+  {
+    id: "station-master",
+    projectIndex: -1,
+    name: "Projects Showcase Master Codex",
+    shortTitle: "Projects Archive",
+    tagline: "Inspect All Production Repositories",
+    category: "Master Terminal",
+    x: 318,
+    y: 275,
+    width: 64,
+    height: 48,
+    techs: ["Next.js", "Docker", "React", "TypeScript"],
+    color: "#fbbf24",
+    iconName: "Layers",
+  },
+];
+
 export const CONTROLS_GUIDE = [
   { key: "W / ↑", label: "Walk Up" },
   { key: "S / ↓", label: "Walk Down" },
   { key: "A / ←", label: "Walk Left" },
   { key: "D / →", label: "Walk Right" },
   { key: "Click / Tap", label: "Walk to Location" },
-  { key: "Space / E", label: "Interact / Talk" },
+  { key: "Space / E", label: "Interact / Enter Building" },
   { key: "C", label: "Change Character Skin" },
   { key: "Shift / [B]", label: "Sprint / Run" },
-  { key: "Esc", label: "Close Menu" },
+  { key: "Esc", label: "Close Menu / Back" },
 ];

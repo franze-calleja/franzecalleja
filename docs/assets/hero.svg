@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 260" width="1000" height="260" role="img" aria-label="Franze William Calleja — Full-Stack Software Engineer">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#020617"/>
+      <stop offset="45%" stop-color="#0b1730"/>
+      <stop offset="100%" stop-color="#12275c"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0ea5e9"/>
+      <stop offset="55%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#0ea5e9"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#0ea5e9" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#0ea5e9" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#38bdf8" stroke-opacity="0.09" stroke-width="1"/>
+    </pattern>
+    <linearGradient id="fade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <mask id="gridmask">
+      <rect width="1000" height="260" fill="url(#fade)"/>
+    </mask>
+    <clipPath id="round">
+      <rect width="1000" height="260" rx="14"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#round)">
+    <rect width="1000" height="260" fill="url(#bg)"/>
+    <rect width="1000" height="260" fill="url(#grid)" mask="url(#gridmask)"/>
+
+    <circle cx="880" cy="60" r="190" fill="url(#glow)">
+      <animate attributeName="r" values="190;215;190" dur="7s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="120" cy="250" r="150" fill="url(#glow)" opacity="0.5">
+      <animate attributeName="r" values="150;175;150" dur="9s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- telemetry panel: a nod to the observability stack -->
+    <g opacity="0.9">
+      <path d="M560 196 L600 188 L640 200 L680 178 L720 186 L760 166 L800 174 L840 152 L880 162 L920 140 L960 132 L960 214 L560 214 Z"
+            fill="url(#accent)" fill-opacity="0.10">
+        <animate attributeName="fill-opacity" from="0" to="0.10" dur="2.4s" fill="freeze"/>
+      </path>
+      <path d="M560 196 L600 188 L640 200 L680 178 L720 186 L760 166 L800 174 L840 152 L880 162 L920 140 L960 132"
+            fill="none" stroke="url(#accent)" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round"
+            stroke-dasharray="620" stroke-dashoffset="620">
+        <animate attributeName="stroke-dashoffset" from="620" to="0" dur="2.2s" fill="freeze"/>
+      </path>
+      <circle cx="960" cy="132" r="4" fill="#e0f2fe">
+        <animate attributeName="opacity" values="0;1" dur="2.2s" fill="freeze"/>
+        <animate attributeName="r" values="4;6.5;4" dur="2s" begin="2.2s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+
+    <text x="56" y="112" fill="#f8fafc"
+          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif"
+          font-size="52" font-weight="800" letter-spacing="-1">Franze William Calleja</text>
+
+    <rect x="56" y="132" width="150" height="4" rx="2" fill="url(#accent)">
+      <animate attributeName="width" from="0" to="150" dur="1s" fill="freeze"/>
+    </rect>
+
+    <text x="56" y="174" fill="#7dd3fc"
+          font-family="ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,monospace"
+          font-size="17" font-weight="600" letter-spacing="0.5">Full-Stack Software Engineer</text>
+
+    <text x="56" y="202" fill="#94a3b8"
+          font-family="ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,monospace"
+          font-size="13.5">Scalable systems  ·  Cloud &amp; observability  ·  Agentic AI</text>
+
+    <g transform="translate(56, 226)">
+      <circle cx="6" cy="6" r="5" fill="#22c55e">
+        <animate attributeName="opacity" values="1;0.35;1" dur="2s" repeatCount="indefinite"/>
+      </circle>
+      <text x="20" y="10" fill="#64748b"
+            font-family="ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,monospace"
+            font-size="12" letter-spacing="1">OPEN TO WORK  ·  CANDELARIA, QUEZON, PH</text>
+    </g>
+
+    <rect x="0.5" y="0.5" width="999" height="259" rx="14" fill="none" stroke="#1e293b" stroke-width="1"/>
+  </g>
+</svg>

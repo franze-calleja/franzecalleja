@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { CHARACTER_SKINS } from "../components/game/game-data";
+import {
+  CHARACTER_SKINS,
+  GUILD_INTERIOR_WIDTH,
+  GUILD_INTERIOR_HEIGHT,
+  GUILD_PROJECT_STATIONS,
+} from "../components/game/game-data";
 
 describe("Character Skins Roster", () => {
   it("should contain all expected playable hero skins", () => {
@@ -28,3 +33,25 @@ describe("Character Skins Roster", () => {
     });
   });
 });
+
+describe("Projects Guild Interior & Stations", () => {
+  it("should define interior dimensions and valid project stations", () => {
+    expect(GUILD_INTERIOR_WIDTH).toBe(700);
+    expect(GUILD_INTERIOR_HEIGHT).toBe(540);
+    expect(GUILD_PROJECT_STATIONS.length).toBe(7);
+
+    const ids = new Set<string>();
+    GUILD_PROJECT_STATIONS.forEach((st) => {
+      expect(ids.has(st.id)).toBe(false);
+      ids.add(st.id);
+      expect(st.name).toBeTruthy();
+      expect(st.shortTitle).toBeTruthy();
+      expect(st.color).toMatch(/^#/);
+      expect(st.x).toBeGreaterThan(0);
+      expect(st.y).toBeGreaterThan(0);
+      expect(st.width).toBeGreaterThan(0);
+      expect(st.height).toBeGreaterThan(0);
+    });
+  });
+});
+

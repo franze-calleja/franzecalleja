@@ -168,15 +168,39 @@ export function drawTallGrassBases(ctx: PixelCtx): void {
   });
 }
 
-/** Blade tips — drawn AFTER the player so it stands waist-deep in the grass. */
-export function drawTallGrassTips(ctx: PixelCtx, t: number): void {
+/**
+ * Blade tips, depth-sorted against the player by the caller.
+ *
+ * `fromY`/`toY` bound a world-Y band (in the same coordinates as
+ * `TALL_GRASS_AREAS`): only grid cells whose row overlaps `[fromY, toY)`
+ * are drawn. The caller draws two bands per frame — one before the player
+ * (tufts north of their feet, which read as further away) and one after
+ * (tufts at or south of their feet) — so tufts behind the player render
+ * behind, and tufts in front render in front, instead of every tuft in
+ * every patch drawing on top of the player regardless of position.
+ */
+export function drawTallGrassTips(
+  ctx: PixelCtx, t: number, fromY: number, toY: number
+): void {
   withSprite(ctx, 0, 0, () => {
     for (const g of TALL_GRASS_AREAS) {
       for (let wy = g.y; wy < g.y + g.h; wy += 16) {
+        if (wy + 16 <= fromY || wy >= toY) continue; // outside this depth band
         for (let wx = g.x; wx < g.x + g.w; wx += 16) {
           if (hash(wx, wy) % 4 === 0) continue;
           const x = wx / 2, y = wy / 2;
           const sway = Math.round(Math.sin(t * 0.002 + hash(wx, wy) * 0.1) * 1);
+          // 1px outline framing the tuft's bounding box, drawn as a hollow
+          // border (not a filled rect) so it doesn't paint over the gaps
+          // *between* the three blade strokes — a solid outline rect there
+          // would erase the sparse-tuft look and merge whole rows into a
+          // dark block. Border first, fills on top, same ordering idea as
+          // steppedRoof's outline-then-fill.
+          const bx = x + sway, by = y - 2;
+          px(ctx, bx, by, 8, 1, PAL.out);     // top
+          px(ctx, bx, by + 7, 8, 1, PAL.out); // bottom
+          px(ctx, bx, by, 1, 8, PAL.out);     // left
+          px(ctx, bx + 7, by, 1, 8, PAL.out); // right
           px(ctx, x + 1 + sway, y, 1, 5, PAL.tall);
           px(ctx, x + 4 + sway, y - 1, 1, 6, PAL.tallL);
           px(ctx, x + 6 + sway, y + 1, 1, 4, PAL.tall);

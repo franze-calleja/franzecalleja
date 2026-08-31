@@ -4858,6 +4858,7 @@ export default function GameCanvas() {
     if (nearby.doorTransition === "enter_projects_guild") {
       retroAudio.playDiscovery();
       setCurrentScene("projects-guild");
+      leavesRef.current = []; // overworld-space leaves must not follow indoors
       const p = playerRef.current;
       p.x = 338;
       p.y = 430;
@@ -5122,6 +5123,7 @@ export default function GameCanvas() {
           if (p.y <= 165 && p.x >= 122 && p.x <= 158 && p.y >= 150) {
             retroAudio.playDiscovery();
             setCurrentScene("projects-guild");
+            leavesRef.current = []; // overworld-space leaves must not follow indoors
             p.x = 338;
             p.y = 430;
             p.direction = "up";
@@ -5271,6 +5273,11 @@ export default function GameCanvas() {
         Math.min(p.y + p.height / 2 - viewHeight / 2, currentMapH - viewHeight)
       );
 
+      // Depth-sort boundary for tall grass: tufts whose row is above the
+      // player's feet render behind them (drawn before), tufts at or below
+      // render in front (drawn after) — see the two drawTallGrassTips calls.
+      const playerFeetY = p.y + 28;
+
       ctx.save();
       ctx.clearRect(0, 0, viewWidth, viewHeight);
       ctx.translate(-camX, -camY);
@@ -5286,8 +5293,12 @@ export default function GameCanvas() {
         }
 
         // 1b. Tall grass clump bases — drawn before the player so it can
-        // stand behind them; the swaying tips are drawn after the player.
+        // stand behind them; the swaying tips are split by depth below.
         drawTallGrassBases(ctx);
+
+        // 1c. Tall grass tips north of the player's feet — these patches
+        // are further away, so they render behind the player.
+        drawTallGrassTips(ctx, time, 0, playerFeetY - 16);
 
         // 2. Fenced Pathway Borders with Dedicated Entrances
         drawTexturedFences(ctx);
@@ -5395,19 +5406,26 @@ export default function GameCanvas() {
         );
       }
 
-      // 12b. Tall grass blade tips — drawn after the player so it stands
-      // waist-deep in the grass instead of on top of it. Overworld only.
+      // 12b. Tall grass blade tips at or south of the player's feet — these
+      // patches are nearer the camera, so they render in front of the
+      // player, giving the waist-deep-in-grass look. Overworld only.
       if (!isInterior) {
-        drawTallGrassTips(ctx, time);
+        drawTallGrassTips(ctx, time, playerFeetY - 16, MAP_TOTAL_HEIGHT);
       }
 
-      // 12c. Leaf burst on grass entry — own short-lived array, culled above.
-      for (const leaf of leavesRef.current) {
-        ctx.fillStyle = leaf.color;
-        ctx.globalAlpha = Math.max(0, leaf.life / leaf.maxLife);
-        ctx.fillRect(leaf.x, leaf.y, 3, 3);
+      // 12c. Leaf burst on grass entry — own short-lived array, culled
+      // above. Overworld only: leaves are stored in overworld world-space,
+      // so they must not be drawn over an interior scene (the ref itself is
+      // cleared on the overworld->interior transition; this guard also
+      // covers the ~0.4s window where a burst could still be aging).
+      if (!isInterior) {
+        for (const leaf of leavesRef.current) {
+          ctx.fillStyle = leaf.color;
+          ctx.globalAlpha = Math.max(0, leaf.life / leaf.maxLife);
+          ctx.fillRect(leaf.x, leaf.y, 3, 3);
+        }
+        ctx.globalAlpha = 1.0;
       }
-      ctx.globalAlpha = 1.0;
 
       // 13. Ambient Floating Particles
       drawParticles(ctx, particlesRef.current);

@@ -193,26 +193,32 @@ export function chimney(
 }
 
 export function chimneySmoke(ctx: PixelCtx, x: number, y: number, t: number): void {
-  for (let i = 0; i < 4; i++) {
-    const phase = ((t * 0.0009 + i * 0.25) % 1 + 1) % 1;
-    const sy = Math.round(y + 12 - phase * 14);
-    const sx = Math.round(x + Math.sin(phase * 5 + i) * 4);
-    const size = Math.max(1, Math.round(3 - phase * 2));
-    ctx.globalAlpha = 0.55 * (1 - phase);
-    px(ctx, sx, sy, size, size, PAL.smoke);
+  try {
+    for (let i = 0; i < 4; i++) {
+      const phase = ((t * 0.0009 + i * 0.25) % 1 + 1) % 1;
+      const sy = Math.round(y + 12 - phase * 14);
+      const sx = Math.round(x + Math.sin(phase * 5 + i) * 4);
+      const size = Math.max(1, Math.round(3 - phase * 2));
+      ctx.globalAlpha = 0.55 * (1 - phase);
+      px(ctx, sx, sy, size, size, PAL.smoke);
+    }
+  } finally {
+    ctx.globalAlpha = 1;
   }
-  ctx.globalAlpha = 1;
 }
 
 export function lantern(ctx: PixelCtx, x: number, y: number, t: number): void {
   const flicker = 0.72 + 0.28 * Math.sin(t * 0.006);
   px(ctx, x + 2, y - 3, 1, 3, PAL.wood);
   box(ctx, x, y, 5, 6, PAL.goldD);
-  ctx.globalAlpha = flicker;
-  px(ctx, x + 1, y + 1, 3, 4, PAL.gold);
-  ctx.globalAlpha = 0.16 * flicker;
-  px(ctx, x - 3, y - 2, 11, 11, PAL.gold);
-  ctx.globalAlpha = 1;
+  try {
+    ctx.globalAlpha = flicker;
+    px(ctx, x + 1, y + 1, 3, 4, PAL.gold);
+    ctx.globalAlpha = 0.16 * flicker;
+    px(ctx, x - 3, y - 2, 11, 11, PAL.gold);
+  } finally {
+    ctx.globalAlpha = 1;
+  }
 }
 
 export function flowerBox(ctx: PixelCtx, x: number, y: number): void {

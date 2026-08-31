@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { PAL } from "../components/game/game-palette";
-import { chimneySmoke, lantern, flowerBox, ivy } from "../components/game/game-pixel";
+import { chimney, chimneySmoke, lantern, flowerBox, ivy, hangingSign } from "../components/game/game-pixel";
 
 function recorder() {
   const rects: { x: number; y: number; w: number; h: number; color: string; alpha: number }[] = [];
@@ -25,10 +25,24 @@ describe("animated props", () => {
     expect(ctx.globalAlpha).toBe(1);
   });
 
+  it("chimneySmoke restores globalAlpha even if a draw throws", () => {
+    const { ctx } = recorder();
+    const boom = { ...ctx, fillRect() { throw new Error("boom"); } };
+    expect(() => chimneySmoke(boom as never, 10, 0, 100)).toThrow("boom");
+    expect(boom.globalAlpha).toBe(1);
+  });
+
   it("lantern restores globalAlpha to 1", () => {
     const { ctx } = recorder();
     lantern(ctx, 10, 40, 999);
     expect(ctx.globalAlpha).toBe(1);
+  });
+
+  it("lantern restores globalAlpha even if a draw throws", () => {
+    const { ctx } = recorder();
+    const boom = { ...ctx, fillRect() { throw new Error("boom"); } };
+    expect(() => lantern(boom as never, 10, 40, 100)).toThrow("boom");
+    expect(boom.globalAlpha).toBe(1);
   });
 
   it("smoke rises over time", () => {
@@ -47,17 +61,21 @@ describe("animated props", () => {
 
   it("static props never touch alpha", () => {
     const { ctx, rects } = recorder();
+    chimney(ctx, 10, 20, 5, 8);
     flowerBox(ctx, 10, 40);
     ivy(ctx, 60, 20, 50);
+    hangingSign(ctx, 5, 10);
     rects.forEach((r) => expect(r.alpha).toBe(1));
   });
 
   it("props only paint palette colours", () => {
     const { ctx, rects } = recorder();
+    chimney(ctx, 10, 20, 5, 8);
     flowerBox(ctx, 10, 40);
     ivy(ctx, 60, 20, 50);
     chimneySmoke(ctx, 10, 0, 500);
     lantern(ctx, 30, 40, 500);
+    hangingSign(ctx, 5, 10);
     const allowed = new Set<string>(Object.values(PAL));
     rects.forEach((r) => expect(allowed.has(r.color), `${r.color} not in palette`).toBe(true));
   });

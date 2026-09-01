@@ -77,3 +77,89 @@ describe("Projects Showcase Guild", () => {
     expect(JSON.stringify(a.rects)).not.toBe(JSON.stringify(b.rects));
   });
 });
+
+const KEYS = [
+  "projects-guild", "village-post", "azra-sanctuary",
+  "career-archives", "devops-station", "enverga-dojo", "gamer-cottage",
+] as const;
+
+const NAMES: Record<string, string> = {
+  "projects-guild": "Projects Showcase Guild",
+  "village-post": "Village Post & Inquiries Lodge",
+  "azra-sanctuary": "AZRA's AI Arcane Sanctuary",
+  "career-archives": "Career & Work Experience Archives",
+  "devops-station": "DevOps & Telemetry Power Station",
+  "enverga-dojo": "Academy of Enverga (Honors Dojo)",
+  "gamer-cottage": "Franze's Gamer Cottage",
+};
+
+describe("all seven buildings", () => {
+  it("are all registered", () => {
+    KEYS.forEach((k) => expect(BUILDINGS[k], `${k} missing`).toBeDefined());
+  });
+
+  it("sit at their world object coordinates", () => {
+    KEYS.forEach((k) => {
+      const obj = WORLD_OBJECTS.find((o) => o.name === NAMES[k])!;
+      expect(BUILDINGS[k].x, `${k} x`).toBe(obj.x);
+      expect(BUILDINGS[k].y, `${k} y`).toBe(obj.y);
+    });
+  });
+
+  it("all honour the pixel contract", () => {
+    KEYS.forEach((k) => {
+      const { ctx, calls } = recorder();
+      BUILDINGS[k].draw(ctx, 0);
+      ["createLinearGradient", "createRadialGradient", "arc", "ellipse"]
+        .forEach((banned) => expect(calls, `${k} used ${banned}`).not.toContain(banned));
+    });
+  });
+
+  it("all paint only palette colours", () => {
+    const allowed = new Set<string>(Object.values(PAL));
+    KEYS.forEach((k) => {
+      const { ctx, rects } = recorder();
+      BUILDINGS[k].draw(ctx, 0);
+      rects.forEach((r) => expect(allowed.has(r.color), `${k} used ${r.color}`).toBe(true));
+    });
+  });
+
+  it("all leave globalAlpha restored", () => {
+    KEYS.forEach((k) => {
+      const { ctx } = recorder();
+      BUILDINGS[k].draw(ctx, 500);
+      expect(ctx.globalAlpha, `${k} leaked alpha`).toBe(1);
+    });
+  });
+
+  it("are visually distinct from one another", () => {
+    const sigs = KEYS.map((k) => {
+      const { ctx, rects } = recorder();
+      BUILDINGS[k].draw(ctx, 0);
+      return JSON.stringify(rects);
+    });
+    expect(new Set(sigs).size).toBe(KEYS.length);
+  });
+});
+
+// Every building with a chimney gets its own discriminating smoke test —
+// a footprint-bounds test alone does not catch a bad smoke anchor (Task 8).
+// Each chimney here occupies y = 0..13, so every puff must sit at or above
+// y = 0 (r.y + r.h <= 0), never on the chimney's own face.
+describe("chimney smoke anchors", () => {
+  it("devops-station: both stacks emit smoke above their caps", () => {
+    const { ctx, rects } = recorder();
+    BUILDINGS["devops-station"].draw(ctx, 400);
+    const smoke = rects.filter((r) => r.color === PAL.smoke);
+    expect(smoke.length).toBeGreaterThan(0);
+    smoke.forEach((r) => expect(r.y + r.h).toBeLessThanOrEqual(0));
+  });
+
+  it("gamer-cottage: smoke emits above the chimney cap", () => {
+    const { ctx, rects } = recorder();
+    BUILDINGS["gamer-cottage"].draw(ctx, 400);
+    const smoke = rects.filter((r) => r.color === PAL.smoke);
+    expect(smoke.length).toBeGreaterThan(0);
+    smoke.forEach((r) => expect(r.y + r.h).toBeLessThanOrEqual(0));
+  });
+});

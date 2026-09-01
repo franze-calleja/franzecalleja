@@ -4,14 +4,16 @@ import { BUILDINGS } from "../components/game/game-buildings";
 import { WORLD_OBJECTS } from "../components/game/game-data";
 
 function recorder() {
-  const rects: { x: number; y: number; w: number; h: number; color: string }[] = [];
+  const rects: { x: number; y: number; w: number; h: number; color: string; alpha: number }[] = [];
   const calls: string[] = [];
   let fill = "";
   const ctx = {
     globalAlpha: 1,
     get fillStyle() { return fill; },
     set fillStyle(v: string) { fill = v; },
-    fillRect(x: number, y: number, w: number, h: number) { rects.push({ x, y, w, h, color: fill }); },
+    fillRect(x: number, y: number, w: number, h: number) {
+      rects.push({ x, y, w, h, color: fill, alpha: ctx.globalAlpha });
+    },
     save() { calls.push("save"); }, restore() { calls.push("restore"); },
     translate() { calls.push("translate"); }, scale() { calls.push("scale"); },
     createLinearGradient() { calls.push("createLinearGradient"); return {}; },
@@ -47,7 +49,9 @@ describe("Projects Showcase Guild", () => {
   it("stays within its 70x55 logical footprint", () => {
     const { ctx, rects } = recorder();
     BUILDINGS["projects-guild"].draw(ctx, 0);
-    // Chimney and hanging sign may overhang above and to the left by design.
+    // Chimney, chimney smoke, and hanging sign may overhang above and to
+    // the left by design; the stone foundation course may overhang 4px
+    // below the wall's own bottom edge (stoneCourse at y=56,h=4 -> y=60).
     rects.forEach((r) => {
       expect(r.x).toBeGreaterThanOrEqual(-4);
       expect(r.x + r.w).toBeLessThanOrEqual(74);
@@ -55,9 +59,21 @@ describe("Projects Showcase Guild", () => {
     });
   });
 
+  it("emits chimney smoke above the chimney cap, not across its face", () => {
+    const { ctx, rects } = recorder();
+    BUILDINGS["projects-guild"].draw(ctx, 400);
+    const smoke = rects.filter((r) => r.color === PAL.smoke);
+    expect(smoke.length).toBeGreaterThan(0);
+    // The chimney body occupies y = 0..13; every puff must sit above its cap.
+    smoke.forEach((r) => expect(r.y + r.h).toBeLessThanOrEqual(0));
+  });
+
   it("animates — output differs between two timestamps", () => {
     const a = recorder(); BUILDINGS["projects-guild"].draw(a.ctx, 0);
     const b = recorder(); BUILDINGS["projects-guild"].draw(b.ctx, 800);
+    // Compare full rects (including alpha) so a building whose only
+    // animation is an alpha flicker (e.g. lantern) still registers as
+    // animated, even if no rect's geometry moves.
     expect(JSON.stringify(a.rects)).not.toBe(JSON.stringify(b.rects));
   });
 });

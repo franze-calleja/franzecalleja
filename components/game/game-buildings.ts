@@ -16,7 +16,10 @@ const ROOF_TONE = { l: PAL.roofL, m: PAL.roof, d: PAL.roofD, x: PAL.roofX };
 /**
  * Projects Showcase Guild. 70x55 logical (140x110 world) at 70,60.
  * Level 3: timber-framed stucco with a guild sign, chimney, lantern,
- * flower boxes and ivy.
+ * flower boxes and ivy. The chimney and hanging sign overhang above and
+ * to the left of the footprint by design; the stone foundation course
+ * also overhangs by 4px below it (stoneCourse at y=56,h=4 paints to y=60,
+ * flush with the next building's row rather than the wall's own y=56 edge).
  */
 export function drawProjectsGuild(ctx: PixelCtx, t: number): void {
   // Chimney sits behind the roof, so it draws first.
@@ -56,7 +59,7 @@ export function drawProjectsGuild(ctx: PixelCtx, t: number): void {
   // Character props
   flowerBox(ctx, 14, 43);
   flowerBox(ctx, 47, 43);
-  ivy(ctx, 60, 28, 54);
+  ivy(ctx, 60, 30, 54);
   hangingSign(ctx, -2, 28);
   lantern(ctx, 44, 45, t);
   // Correction 2: chimneySmoke draws its puffs in [y-2, y+12], i.e. below

@@ -70,6 +70,116 @@ export const TALL_GRASS_AREAS: Rect[] = [
   { x: 832, y: 560, w: 92,  h: 156 }, // south-east corner
 ];
 
+// Multi-species big trees (Grand Oak, Pine, Autumn Maple, Sakura). Moved
+// from game-canvas.tsx so scenery data lives with the rest of the map data.
+export const DECORATIVE_TREES = [
+  { x: 860, y: 110, w: 64, h: 80, type: "grand_oak" as const },
+  { x: 900, y: 220, w: 48, h: 78, type: "pine" as const },
+  { x: 850, y: 310, w: 58, h: 74, type: "maple" as const },
+  { x: 890, y: 440, w: 58, h: 74, type: "sakura" as const },
+  { x: 840, y: 550, w: 64, h: 80, type: "grand_oak" as const },
+  { x: 230, y: 140, w: 58, h: 74, type: "sakura" as const },
+  { x: 15, y: 410, w: 48, h: 78, type: "pine" as const },
+];
+
+// Flower pot positions (strictly inside grass fields and garden pens)
+export const FLOWER_POTS = [
+  // 1. Right Side Fenced Garden Pen (Safely below Career Archives building at y: 275..343)
+  { x: 810, y: 288, type: "rose" as const },
+  { x: 844, y: 288, type: "sunflower" as const },
+  { x: 810, y: 318, type: "lily" as const },
+  { x: 844, y: 318, type: "orchid" as const },
+
+  // 2. North-West Projects Fenced Garden Pen (Shifted into dedicated left garden pen)
+  { x: 68, y: 56, type: "sunflower" as const },
+  { x: 96, y: 56, type: "rose" as const },
+  { x: 68, y: 84, type: "orchid" as const },
+  { x: 96, y: 84, type: "lily" as const },
+
+  // 3. Central Plaza Garden Planter Pots (Planted neatly beside the avenue)
+  { x: 305, y: 280, type: "rose" as const },
+  { x: 650, y: 280, type: "orchid" as const },
+];
+
+// Multi-species bushes (Berry Bush, Flowering Hedge, Wild Shrub)
+export const DECORATIVE_BUSHES = [
+  { x: 895, y: 270, type: "berry_bush" as const, berry: "#ef4444" },
+  { x: 830, y: 370, type: "berry_bush" as const, berry: "#38bdf8" },
+  { x: 880, y: 530, type: "flowering_hedge" as const, berry: "#f472b6" },
+  { x: 780, y: 480, type: "flowering_hedge" as const, berry: "#ffffff" },
+  { x: 50, y: 130, type: "wild_shrub" as const, berry: "#facc15" },
+  { x: 330, y: 60, type: "berry_bush" as const, berry: "#facc15" },
+  { x: 50, y: 530, type: "wild_shrub" as const, berry: "#ef4444" },
+  { x: 490, y: 540, type: "flowering_hedge" as const, berry: "#38bdf8" },
+];
+
+// Rich 3D Village Outdoor Furniture
+export interface VillageFurniture {
+  id: string;
+  type: "bench" | "chess_table" | "wishing_well" | "birdbath" | "streetlamp" | "barrel_stack";
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+export const VILLAGE_FURNITURE: VillageFurniture[] = [
+  // 1. Cozy Park Benches (Oak Slats + Cast Iron Scrollwork)
+  { id: "bench-nw", type: "bench", x: 195, y: 55, w: 42, h: 24 },
+  { id: "bench-plaza-left", type: "bench", x: 260, y: 345, w: 42, h: 24 },
+  { id: "bench-plaza-right", type: "bench", x: 650, y: 345, w: 42, h: 24 },
+  { id: "bench-sw", type: "bench", x: 220, y: 630, w: 42, h: 24 },
+  { id: "bench-se", type: "bench", x: 500, y: 610, w: 42, h: 24 },
+
+  // 2. Carved Stone Chess / Picnic Tables with Stools
+  { id: "chess-nw", type: "chess_table", x: 280, y: 145, w: 46, h: 32 },
+  { id: "chess-east", type: "chess_table", x: 840, y: 435, w: 46, h: 32 },
+
+  // 3. Ancient Village Wishing Well (North-East Grove near Sanctuary)
+  { id: "well-ne", type: "wishing_well", x: 725, y: 70, w: 50, h: 56 },
+
+  // 4. Carved Limestone Birdbaths with Bluebird
+  { id: "birdbath-left", type: "birdbath", x: 240, y: 475, w: 30, h: 30 },
+  { id: "birdbath-right", type: "birdbath", x: 700, y: 330, w: 30, h: 30 },
+
+  // 5. Classic Wrought Iron Streetlamps (Warm Glowing Lanterns)
+  { id: "lamp-nw", type: "streetlamp", x: 335, y: 190, w: 22, h: 48 },
+  { id: "lamp-ne", type: "streetlamp", x: 625, y: 190, w: 22, h: 48 },
+  { id: "lamp-sw", type: "streetlamp", x: 335, y: 450, w: 22, h: 48 },
+  { id: "lamp-se", type: "streetlamp", x: 625, y: 450, w: 22, h: 48 },
+
+  // 6. Rustic Harvest Oak Barrels & Fruit Crates
+  { id: "barrels-sw", type: "barrel_stack", x: 275, y: 545, w: 40, h: 30 },
+  { id: "barrels-se", type: "barrel_stack", x: 870, y: 595, w: 40, h: 30 },
+];
+
+// Pathway & Garden Fences with Dedicated Entrance Openings
+export const PATHWAY_FENCES = [
+  // 1. North-West Projects Border Fences (leaves x: 106..194 open for entrance)
+  { x: 60, y: 170, w: 46, h: 18 },
+  { x: 194, y: 170, w: 120, h: 18 },
+
+  // 2. North-East AI Sanctuary Border Fences (leaves x: 546..660 open for entrance)
+  { x: 470, y: 150, w: 76, h: 18 },
+  { x: 700, y: 150, w: 45, h: 18 },
+
+  // 3. South-West Academy Dojo Border Fences (leaves x: 116..200 open for entrance)
+  { x: 60, y: 480, w: 56, h: 18 },
+  { x: 200, y: 480, w: 136, h: 18 },
+
+  // 4. South-East Gamer Cottage Border Fences (leaves x: 586..664 open for entrance)
+  { x: 470, y: 470, w: 116, h: 18 },
+  { x: 750, y: 470, w: 80, h: 18 },
+
+  // 5. East Forest Grove Border Fences (leaves y: 340..370 open for entrance)
+  { x: 900, y: 260, w: 18, h: 80 },
+  { x: 900, y: 370, w: 18, h: 90 },
+
+  // 6. Enclosed Garden Pens
+  { x: 800, y: 275, w: 68, h: 68 },
+  { x: 58, y: 46, w: 58, h: 62 },
+];
+
 // Player spawn in the open central fountain plaza
 export const PLAYER_SPAWN_X = 408;
 export const PLAYER_SPAWN_Y = 448;

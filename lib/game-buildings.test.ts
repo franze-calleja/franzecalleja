@@ -140,6 +140,14 @@ describe("all seven buildings", () => {
     });
     expect(new Set(sigs).size).toBe(KEYS.length);
   });
+
+  it("all actually draw something", () => {
+    KEYS.forEach((k) => {
+      const { ctx, rects } = recorder();
+      BUILDINGS[k].draw(ctx, 0);
+      expect(rects.length, `${k} drew nothing`).toBeGreaterThan(0);
+    });
+  });
 });
 
 // Every building with a chimney gets its own discriminating smoke test —

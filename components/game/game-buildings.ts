@@ -2,7 +2,7 @@ import { PAL } from "./game-palette";
 import {
   px, box, dith, hash, gableRoof, steppedRoof, window2, plankDoor, stoneCourse,
   timberFrame, chimney, chimneySmoke, lantern, flowerBox, ivy, hangingSign,
-  type PixelCtx,
+  type PixelCtx, type RoofTone,
 } from "./game-pixel";
 
 export interface BuildingSpec {
@@ -11,7 +11,31 @@ export interface BuildingSpec {
   draw(ctx: PixelCtx, t: number): void;
 }
 
-const ROOF_TONE = { l: PAL.roofL, m: PAL.roof, d: PAL.roofD, x: PAL.roofX };
+/**
+ * One roof ramp per building (Task 14). At native 1x scale the seven
+ * buildings previously shared a single red ROOF_TONE and read as the same
+ * house — the roof colour is the single biggest at-a-glance legibility
+ * lever, so every building gets its own {l,m,d,x} ramp, composed from
+ * existing PAL families wherever one fits and reading light->dark for
+ * light-from-upper-left shading.
+ */
+const GUILD_ROOF: RoofTone = { l: PAL.roofL, m: PAL.roof, d: PAL.roofD, x: PAL.roofX };
+const POST_ROOF: RoofTone = { l: PAL.goldL, m: PAL.gold, d: PAL.goldD, x: PAL.goldX };
+const SANCTUARY_ROOF: RoofTone = { l: PAL.glassL, m: PAL.arcane, d: PAL.arcaneD, x: PAL.arcaneX };
+const ARCHIVES_ROOF: RoofTone = { l: PAL.stoneL, m: PAL.stone, d: PAL.stoneD, x: PAL.stoneX };
+const DEVOPS_ROOF: RoofTone = { l: PAL.steelL, m: PAL.steel, d: PAL.steelD, x: PAL.steelX };
+const DOJO_ROOF: RoofTone = { l: PAL.leafL, m: PAL.leaf, d: PAL.leafD, x: PAL.leafX };
+const COTTAGE_ROOF: RoofTone = { l: PAL.woodL, m: PAL.wood, d: PAL.woodD, x: PAL.woodX };
+
+export const ROOF_TONES: Record<string, RoofTone> = {
+  "projects-guild": GUILD_ROOF,
+  "village-post": POST_ROOF,
+  "azra-sanctuary": SANCTUARY_ROOF,
+  "career-archives": ARCHIVES_ROOF,
+  "devops-station": DEVOPS_ROOF,
+  "enverga-dojo": DOJO_ROOF,
+  "gamer-cottage": COTTAGE_ROOF,
+};
 
 /**
  * Projects Showcase Guild. 70x55 logical (140x110 world) at 70,60.
@@ -28,10 +52,10 @@ export function drawProjectsGuild(ctx: PixelCtx, t: number): void {
   // Correction 1: the body (box at x=8, w=54) is centred at x=35, not the
   // gableRoof default of eaveW/2=28 — pass the explicit centre so the roof
   // sits over its own wall instead of 7px to the left of it.
-  steppedRoof(ctx, gableRoof(24, 56, 4, 9, 35), ROOF_TONE);
+  steppedRoof(ctx, gableRoof(24, 56, 4, 9, 35), GUILD_ROOF);
 
   // Eave with an underside shadow line
-  box(ctx, 4, 22, 62, 5, PAL.roofX);
+  box(ctx, 4, 22, 62, 5, GUILD_ROOF.x);
   px(ctx, 5, 25, 60, 1, PAL.woodD);
 
   // Stucco body
@@ -76,10 +100,10 @@ export function drawProjectsGuild(ctx: PixelCtx, t: number): void {
 export function drawVillagePost(ctx: PixelCtx, t: number): void {
   // The body (box at x=9, w=48) is centred at x=33, not the gableRoof
   // default of eaveW/2=26 — pass the explicit centre (Finding 2).
-  steppedRoof(ctx, gableRoof(22, 52, 4, 8, 33), ROOF_TONE);
+  steppedRoof(ctx, gableRoof(22, 52, 4, 8, 33), POST_ROOF);
 
   // Eave with an underside shadow line
-  box(ctx, 5, 20, 56, 5, PAL.roofX);
+  box(ctx, 5, 20, 56, 5, POST_ROOF.x);
   px(ctx, 6, 23, 54, 1, PAL.woodD);
 
   // Stucco body
@@ -123,55 +147,67 @@ export function drawVillagePost(ctx: PixelCtx, t: number): void {
 
 /**
  * AZRA's AI Arcane Sanctuary. 70x63 logical (140x125 world) at 560,45.
- * Stone body, steeper roof, a pulsing arcane rune band and 3 floating
- * crystals bobbing above the ridge. No chimney — nothing burns here.
+ * Stone body, a tall steep roof so it reads as grand rather than domestic
+ * (Task 14 silhouette pass — same footprint, more roof / less wall), a
+ * chunky glowing rune lintel and 3 floating crystals bobbing above the
+ * ridge. No chimney — nothing burns here.
+ *
+ * Silhouette: the ridge (y=6) and the foundation (y=58..62) are pinned to
+ * their original positions — only the split between roof and wall moves.
+ * Roof rows went 10 -> 13 (height 20 -> 26, +6); wall height shrank by the
+ * same 6 (30 -> 24) so the overall box is unchanged, just taller-roofed.
  */
 export function drawAzraSanctuary(ctx: PixelCtx, t: number): void {
   // Body (box at x=8, w=54) is centred at x=35.
-  steppedRoof(ctx, gableRoof(18, 54, 6, 10, 35), ROOF_TONE);
+  steppedRoof(ctx, gableRoof(18, 54, 6, 13, 35), SANCTUARY_ROOF);
 
-  box(ctx, 4, 24, 62, 5, PAL.roofX);
-  px(ctx, 5, 27, 60, 1, PAL.stoneD);
+  box(ctx, 4, 30, 62, 5, SANCTUARY_ROOF.x);
+  px(ctx, 5, 33, 60, 1, PAL.stoneD);
 
-  // Stone body
-  box(ctx, 8, 28, 54, 30, PAL.stone);
-  dith(ctx, 9, 29, 52, 28, PAL.stone, PAL.stoneL);
-  px(ctx, 50, 29, 6, 28, PAL.stoneD);
-  dith(ctx, 48, 29, 3, 28, PAL.stone, PAL.stoneD);
+  // Stone body — shorter than before (24 vs 30) to pay for the taller roof.
+  box(ctx, 8, 34, 54, 24, PAL.stone);
+  dith(ctx, 9, 35, 52, 22, PAL.stone, PAL.stoneL);
+  px(ctx, 50, 35, 6, 22, PAL.stoneD);
+  dith(ctx, 48, 35, 3, 22, PAL.stone, PAL.stoneD);
 
   // Corner piers — light from upper-left
-  px(ctx, 8, 28, 3, 30, PAL.stoneL);
-  px(ctx, 59, 28, 3, 30, PAL.stoneD);
+  px(ctx, 8, 34, 3, 24, PAL.stoneL);
+  px(ctx, 59, 34, 3, 24, PAL.stoneD);
 
-  window2(ctx, 14, 33);
-  window2(ctx, 45, 33);
-  plankDoor(ctx, 30, 46, 12, 12);
-  stoneCourse(ctx, 6, 58, 58, 4);
-
-  // Glowing rune band, pulsing between two arcane tones
+  // Glowing rune lintel across the top of the wall — enlarged and outlined
+  // (Task 14 prop pass) so it reads at 1x instead of vanishing into dots.
   const pulse = 0.55 + 0.45 * Math.sin(t * 0.004);
+  for (let rx = 10; rx < 58; rx += 7) px(ctx, rx, 34, 5, 3, PAL.out);
+  for (let rx = 10; rx < 58; rx += 7) px(ctx, rx + 1, 34, 3, 1, PAL.glassL);
   try {
     ctx.globalAlpha = pulse;
-    for (let rx = 11; rx < 58; rx += 5) {
-      px(ctx, rx, 30, 3, 2, PAL.arcane);
-      px(ctx, rx + 1, 31, 1, 1, PAL.arcaneD);
-    }
+    for (let rx = 10; rx < 58; rx += 7) px(ctx, rx + 1, 35, 3, 1, PAL.arcane);
   } finally {
     ctx.globalAlpha = 1;
   }
+  for (let rx = 10; rx < 58; rx += 7) px(ctx, rx + 1, 36, 3, 1, PAL.arcaneD);
 
-  // 3 floating crystals, bobbing independently above the ridge
+  window2(ctx, 14, 39);
+  window2(ctx, 45, 39);
+  plankDoor(ctx, 30, 46, 12, 12);
+  stoneCourse(ctx, 6, 58, 58, 4);
+
+  // 3 floating crystals, bobbing independently above the ridge — enlarged
+  // with an outline and a soft halo (Task 14 prop pass).
   for (let i = 0; i < 3; i++) {
-    const cx = 22 + i * 13;
+    const cx = 21 + i * 14;
     const bob = Math.round(Math.sin(t * 0.0025 + i * 2) * 2);
-    const cy = -8 + bob;
+    const cy = -14 + bob;
     try {
-      ctx.globalAlpha = 0.85;
-      px(ctx, cx, cy, 3, 3, PAL.arcane);
-      px(ctx, cx + 1, cy + 1, 1, 1, PAL.arcaneD);
+      ctx.globalAlpha = 0.25;
+      px(ctx, cx - 2, cy - 2, 9, 9, PAL.arcane);
     } finally {
       ctx.globalAlpha = 1;
     }
+    px(ctx, cx, cy, 5, 5, PAL.out);
+    px(ctx, cx + 1, cy + 1, 3, 3, PAL.arcane);
+    px(ctx, cx + 1, cy + 1, 1, 1, PAL.glassL);
+    px(ctx, cx + 2, cy + 3, 1, 1, PAL.arcaneD);
   }
 }
 
@@ -179,24 +215,31 @@ export function drawAzraSanctuary(ctx: PixelCtx, t: number): void {
  * Career & Work Experience Archives. 70x53 logical (140x105 world) at
  * 750,150. Stone with alternating quoins, a stepped-pixel wall clock,
  * 2 tall shuttered windows and 3 stacked crates. No chimney.
+ *
+ * Silhouette (Task 14): a flat parapet replaces the gable so it reads
+ * institutional rather than domestic, the wall widens to fill more of the
+ * footprint (58 -> 64 wide), and the height the gable used to take (16px)
+ * shrinks to a 10px flat cap — the freed 6px goes to the wall so the
+ * building overall reads low, wide and slab-like. The wall's bottom edge
+ * (y=50, where the foundation starts) is unchanged.
  */
 export function drawCareerArchives(ctx: PixelCtx, t: number): void {
-  // Body (box at x=6, w=58) is centred at x=35.
-  steppedRoof(ctx, gableRoof(26, 58, 4, 8, 35), ROOF_TONE);
+  // Flat parapet cap — no gable, wide and low (institutional, not domestic).
+  box(ctx, 2, 6, 66, 10, ARCHIVES_ROOF.m);
+  px(ctx, 3, 7, 64, 2, ARCHIVES_ROOF.l);
+  px(ctx, 3, 12, 64, 3, ARCHIVES_ROOF.d);
 
-  box(ctx, 2, 18, 66, 5, PAL.roofX);
-  px(ctx, 3, 21, 64, 1, PAL.stoneD);
-
-  // Stone body
-  box(ctx, 6, 22, 58, 28, PAL.stone);
-  dith(ctx, 7, 23, 51, 26, PAL.stone, PAL.stoneL);
-  px(ctx, 58, 23, 5, 26, PAL.stoneD);
-  dith(ctx, 55, 23, 3, 26, PAL.stone, PAL.stoneD);
+  // Body (box at x=3, w=64) is wider than before — fills more of the
+  // footprint's width, another institutional cue.
+  box(ctx, 3, 16, 64, 34, PAL.stone);
+  dith(ctx, 4, 17, 54, 32, PAL.stone, PAL.stoneL);
+  px(ctx, 61, 17, 5, 32, PAL.stoneD);
+  dith(ctx, 58, 17, 3, 32, PAL.stone, PAL.stoneD);
 
   // Alternating quoins down both edges
-  for (let qy = 22; qy < 48; qy += 6) {
-    px(ctx, 6, qy, 4, 4, PAL.stoneL);
-    px(ctx, 60, qy, 4, 4, PAL.stoneL);
+  for (let qy = 16; qy < 46; qy += 6) {
+    px(ctx, 3, qy, 4, 4, PAL.stoneL);
+    px(ctx, 63, qy, 4, 4, PAL.stoneL);
   }
 
   // 2 tall narrow windows with closed wooden shutters (no glass)
@@ -206,32 +249,32 @@ export function drawCareerArchives(ctx: PixelCtx, t: number): void {
     for (let i = y + 2; i < y + 16; i += 4) px(ctx, x, i, 9, 1, PAL.woodL);
     px(ctx, x + 4, y, 1, 17, PAL.wood);
   };
-  tallShutteredWindow(13, 26);
-  tallShutteredWindow(45, 26);
+  tallShutteredWindow(10, 20);
+  tallShutteredWindow(48, 20);
 
   plankDoor(ctx, 29, 40, 12, 10);
-  stoneCourse(ctx, 4, 50, 60, 4);
+  stoneCourse(ctx, 1, 50, 66, 4);
 
   // Wall clock — stepped pixel face with two hands, the minute hand ticks
   const CLOCK = [4, 6, 6, 4] as const;
   const clockCx = 35;
-  CLOCK.forEach((w, i) => px(ctx, clockCx - w / 2 - 1, 22 + i - 1, w + 2, 3, PAL.out));
-  CLOCK.forEach((w, i) => px(ctx, clockCx - w / 2, 22 + i, w, 1, PAL.wallL));
+  CLOCK.forEach((w, i) => px(ctx, clockCx - w / 2 - 1, 16 + i - 1, w + 2, 3, PAL.out));
+  CLOCK.forEach((w, i) => px(ctx, clockCx - w / 2, 16 + i, w, 1, PAL.wallL));
   const tick = Math.floor(t / 500) % 2;
-  px(ctx, clockCx + tick, 23, 1, 2, PAL.woodD);
-  px(ctx, clockCx - 1, 24, 2, 1, PAL.woodD);
-  px(ctx, clockCx, 24, 1, 1, PAL.gold);
+  px(ctx, clockCx + tick, 17, 1, 2, PAL.woodD);
+  px(ctx, clockCx - 1, 18, 2, 1, PAL.woodD);
+  px(ctx, clockCx, 18, 1, 1, PAL.gold);
 
   // 3 stacked crates against the wall, right of the second window
-  box(ctx, 56, 40, 7, 8, PAL.wood);
-  px(ctx, 57, 41, 5, 6, PAL.woodL);
-  px(ctx, 57, 44, 5, 1, PAL.woodD);
-  box(ctx, 57, 32, 6, 8, PAL.wood);
-  px(ctx, 58, 33, 4, 6, PAL.woodL);
-  px(ctx, 58, 36, 4, 1, PAL.woodD);
-  box(ctx, 56, 24, 7, 8, PAL.wood);
-  px(ctx, 57, 25, 5, 6, PAL.woodL);
-  px(ctx, 57, 28, 5, 1, PAL.woodD);
+  box(ctx, 59, 40, 7, 8, PAL.wood);
+  px(ctx, 60, 41, 5, 6, PAL.woodL);
+  px(ctx, 60, 44, 5, 1, PAL.woodD);
+  box(ctx, 60, 32, 6, 8, PAL.wood);
+  px(ctx, 61, 33, 4, 6, PAL.woodL);
+  px(ctx, 61, 36, 4, 1, PAL.woodD);
+  box(ctx, 59, 24, 7, 8, PAL.wood);
+  px(ctx, 60, 25, 5, 6, PAL.woodL);
+  px(ctx, 60, 28, 5, 1, PAL.woodD);
 }
 
 /**
@@ -246,8 +289,8 @@ export function drawDevopsStation(ctx: PixelCtx, t: number): void {
   chimney(ctx, 44, 0, 9, 13);
 
   // Flat concrete roof cap — no gable here
-  box(ctx, 4, 6, 62, 6, PAL.roofX);
-  px(ctx, 5, 7, 60, 1, PAL.roofL);
+  box(ctx, 4, 6, 62, 6, DEVOPS_ROOF.x);
+  px(ctx, 5, 7, 60, 1, DEVOPS_ROOF.l);
 
   // Stone body with a metal-plate seam
   box(ctx, 8, 12, 54, 40, PAL.stone);
@@ -269,20 +312,27 @@ export function drawDevopsStation(ctx: PixelCtx, t: number): void {
     px(ctx, vx, 48, 2, 1, PAL.goldD);
   }
 
-  // 2 pressure gauges, gold rims with a black-out dial
+  // 2 pressure gauges, gold rims with a black-out dial and a needle — sized
+  // up and given a needle for contrast (Task 14 prop pass: the original
+  // 4x4 dial was flagged as unreadable at native scale).
   const gauge = (x: number, y: number) => {
-    px(ctx, x - 1, y - 1, 6, 6, PAL.out);
-    px(ctx, x, y, 4, 4, PAL.gold);
-    px(ctx, x + 1, y + 1, 2, 2, PAL.stoneD);
+    px(ctx, x - 1, y - 1, 10, 10, PAL.out);
+    px(ctx, x, y, 8, 8, PAL.gold);
+    px(ctx, x + 1, y + 1, 6, 6, PAL.stoneD);
+    px(ctx, x + 3, y + 1, 1, 3, PAL.gold);
+    px(ctx, x + 3, y + 3, 2, 1, PAL.goldD);
   };
-  gauge(20, 16);
-  gauge(30, 16);
+  gauge(17, 14);
+  gauge(31, 14);
 
-  // 3 status lamps, each blinking on its own hash-offset phase
+  // 3 status lamps, each blinking on its own hash-offset phase — enlarged
+  // with an outline ring so they read as lit indicators at native scale.
   for (let i = 0; i < 3; i++) {
     const phase = hash(i, 41) % 6;
     const on = Math.floor(t / 300 + phase) % 2 === 0;
-    px(ctx, 44 + i * 3, 16, 2, 2, on ? PAL.leaf : PAL.leafD);
+    const lx = 42 + i * 7;
+    px(ctx, lx - 1, 13, 6, 6, PAL.out);
+    px(ctx, lx, 14, 4, 4, on ? PAL.leaf : PAL.leafD);
   }
 
   // Twin smoke plumes, offset in phase so they don't puff in lockstep.
@@ -299,12 +349,12 @@ export function drawDevopsStation(ctx: PixelCtx, t: number): void {
  */
 export function drawEnvergaDojo(ctx: PixelCtx, t: number): void {
   // Upper tier — narrow, both roofs share the body's centre at x=35.
-  steppedRoof(ctx, gableRoof(16, 34, 4, 6, 35), ROOF_TONE);
-  box(ctx, 14, 16, 42, 3, PAL.roofX);
+  steppedRoof(ctx, gableRoof(16, 34, 4, 6, 35), DOJO_ROOF);
+  box(ctx, 14, 16, 42, 3, DOJO_ROOF.x);
 
   // Lower tier — wide, the main eave
-  steppedRoof(ctx, gableRoof(30, 58, 20, 6, 35), ROOF_TONE);
-  box(ctx, 4, 32, 62, 5, PAL.roofX);
+  steppedRoof(ctx, gableRoof(30, 58, 20, 6, 35), DOJO_ROOF);
+  box(ctx, 4, 32, 62, 5, DOJO_ROOF.x);
   px(ctx, 5, 35, 60, 1, PAL.woodD);
 
   // Plaster body
@@ -347,9 +397,9 @@ export function drawGamerCottage(ctx: PixelCtx, t: number): void {
   chimney(ctx, 48, 0, 9, 13);
 
   // Body (box at x=8, w=54) is centred at x=35.
-  steppedRoof(ctx, gableRoof(24, 56, 4, 9, 35), ROOF_TONE);
+  steppedRoof(ctx, gableRoof(24, 56, 4, 9, 35), COTTAGE_ROOF);
 
-  box(ctx, 4, 22, 62, 5, PAL.roofX);
+  box(ctx, 4, 22, 62, 5, COTTAGE_ROOF.x);
   px(ctx, 5, 25, 60, 1, PAL.woodD);
 
   box(ctx, 8, 26, 54, 30, PAL.wall);

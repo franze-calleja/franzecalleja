@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { PAL } from "../components/game/game-palette";
-import { BUILDINGS } from "../components/game/game-buildings";
+import { BUILDINGS, ROOF_TONES } from "../components/game/game-buildings";
 import { WORLD_OBJECTS } from "../components/game/game-data";
 
 function recorder() {
@@ -146,6 +146,40 @@ describe("all seven buildings", () => {
       const { ctx, rects } = recorder();
       BUILDINGS[k].draw(ctx, 0);
       expect(rects.length, `${k} drew nothing`).toBeGreaterThan(0);
+    });
+  });
+});
+
+describe("per-building roof tones (Task 14)", () => {
+  it("every building has its own registered RoofTone", () => {
+    KEYS.forEach((k) => expect(ROOF_TONES[k], `${k} missing a RoofTone`).toBeDefined());
+  });
+
+  it("every building's RoofTone is distinct from every other building's", () => {
+    const sigs = KEYS.map((k) => JSON.stringify(ROOF_TONES[k]));
+    expect(new Set(sigs).size).toBe(KEYS.length);
+  });
+
+  it("the Guild keeps the approved reference red ramp", () => {
+    const guild = ROOF_TONES["projects-guild"];
+    expect(guild).toEqual({ l: PAL.roofL, m: PAL.roof, d: PAL.roofD, x: PAL.roofX });
+  });
+
+  it("all roof tones use only PAL values", () => {
+    const allowed = new Set<string>(Object.values(PAL));
+    KEYS.forEach((k) => {
+      const tone = ROOF_TONES[k];
+      (["l", "m", "d", "x"] as const).forEach((step) => {
+        expect(allowed.has(tone[step]), `${k}.${step} (${tone[step]}) is not a PAL value`).toBe(true);
+      });
+    });
+  });
+
+  it("each tone's four steps are themselves distinct colours", () => {
+    KEYS.forEach((k) => {
+      const tone = ROOF_TONES[k];
+      const steps = [tone.l, tone.m, tone.d, tone.x];
+      expect(new Set(steps).size, `${k} roof tone has duplicate steps`).toBe(4);
     });
   });
 });

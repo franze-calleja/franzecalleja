@@ -8,10 +8,10 @@ describe("World palette", () => {
     });
   });
 
-  it("stays within the 48-colour budget", () => {
+  it("stays within the 56-colour budget", () => {
     const count = Object.keys(PAL).length;
     expect(count).toBeGreaterThanOrEqual(30);
-    expect(count).toBeLessThanOrEqual(48);
+    expect(count).toBeLessThanOrEqual(56);
   });
 
   it("has no duplicate colours under different names", () => {

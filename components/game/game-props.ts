@@ -371,41 +371,177 @@ export function drawFurniture(ctx: CanvasRenderingContext2D, t: number): void {
 }
 
 // --- Trees ------------------------------------------------------------------
+//
+// Each species gets its own canopy silhouette, foliage ramp and trunk instead
+// of sharing one blob shape. A canopy is a stack of rows, each row a
+// [width, centreOffset] pair: the offset nudges that row's clump left or
+// right so the outline scallops into overlapping clusters rather than
+// tracing a smooth, mirrored arc.
 
-/** Stepped canopy rows, top to bottom — the replacement for ctx.arc. */
-const CANOPY = [6, 12, 18, 22, 24, 24, 22, 18, 12, 6] as const;
+type TreeType = (typeof DECORATIVE_TREES)[number]["type"];
+type CanopyRow = readonly [w: number, o: number];
+interface FoliageTone { l: string; m: string; d: string; x: string }
+
+/** Broad, round, many-lobed crown — the biggest silhouette of the four. */
+const OAK_CANOPY: readonly CanopyRow[] = [
+  [8, 0], [14, 1], [18, -1], [24, 1], [20, -2], [28, 1], [30, 0],
+  [26, -1], [24, 2], [28, -1], [20, 1], [18, -2], [12, 0], [6, 0],
+] as const;
+
+/** Three narrowing branch tiers, each resetting narrower at its own top —
+ *  the classic layered-conifer notch between whorls. */
+const PINE_CANOPY: readonly CanopyRow[] = [
+  [2, 0], [6, 0], [8, -1], [10, 1], [8, 0], [14, 0],
+  [8, 0], [12, 1], [14, -1], [16, 0], [14, 1], [20, 0],
+  [12, 0], [16, -1], [18, 1], [20, 0], [18, -1], [24, 0],
+] as const;
+
+/** Upright vase shape, bulging in the upper-middle. */
+const MAPLE_CANOPY: readonly CanopyRow[] = [
+  [8, 0], [16, 1], [20, -1], [26, 1], [28, 0], [24, -1],
+  [26, 1], [22, -2], [20, 1], [16, 0], [10, -1], [6, 0],
+] as const;
+
+/** Fluffier, more frequent bumps — reads as clustered blossom puffs. */
+const SAKURA_CANOPY: readonly CanopyRow[] = [
+  [6, 0], [14, 1], [10, -2], [18, 1], [14, -1], [22, 0],
+  [16, 2], [20, -1], [14, 1], [18, -2], [10, 0], [6, 0],
+] as const;
+
+/** Per-species canopy silhouette. */
+export const TREE_CANOPY: Record<TreeType, readonly CanopyRow[]> = {
+  grand_oak: OAK_CANOPY,
+  pine: PINE_CANOPY,
+  maple: MAPLE_CANOPY,
+  sakura: SAKURA_CANOPY,
+};
+
+const GREEN_TONE: FoliageTone = { l: PAL.leafL, m: PAL.leaf, d: PAL.leafD, x: PAL.leafX };
+/** Cherry blossom mass: cream highlight through pink to a deep-green shadow
+ *  hint, instead of the green ramp every other species uses. */
+const BLOSSOM_TONE: FoliageTone = { l: PAL.wallL, m: PAL.bloom2, d: PAL.bloom, x: PAL.leafD };
+
+/** Per-species foliage ramp: light -> mid -> dark -> deepest. */
+export const TREE_TONE: Record<TreeType, FoliageTone> = {
+  grand_oak: GREEN_TONE,
+  pine: GREEN_TONE,
+  maple: GREEN_TONE,
+  sakura: BLOSSOM_TONE,
+};
+
+/** [centreX, width, height] trunk footprint per species, all logical px. */
+export const TREE_TRUNK: Record<TreeType, readonly [cx: number, w: number, h: number]> = {
+  grand_oak: [16, 7, 11],
+  pine: [12, 5, 16],
+  maple: [14, 6, 12],
+  sakura: [14, 5, 12],
+};
 
 /**
- * Decorative forest trees. All four species (grand oak, pine, maple,
- * sakura) share one canopy silhouette in this pass — the sprite-art
- * language is the trunk-and-leaf-mass toolkit shape, not the species'
- * old individually-painted foliage.
+ * Paints one canopy: outline pass, then a diagonal light-upper-left ->
+ * dark-lower-right fill split into three vertical bands, each band itself
+ * split into a lit left cluster and a shaded right cluster. The two splits
+ * (band boundaries, left/right seams) are dithered so three foliage masses
+ * blend into each other instead of banding.
+ */
+function drawCanopy(c: PixelCtx, rows: readonly CanopyRow[], cx: number, tone: FoliageTone, sway: number): void {
+  const n = rows.length;
+  const zoneOf = (r: number) => (r < n * 0.35 ? 0 : r < n * 0.7 ? 1 : 2);
+  const bands = rows.map(([w, o], r) => {
+    const x = cx + o + sway - w / 2;
+    const zone = zoneOf(r);
+    const left = zone === 0 ? tone.l : zone === 1 ? tone.m : tone.d;
+    const right = zone === 0 ? tone.m : zone === 1 ? tone.d : tone.x;
+    const split = Math.max(1, Math.min(w - 1, Math.round(w * 0.55)));
+    return { x, w, left, right, split, zone };
+  });
+
+  // Outline pass first — each row's fill then covers the next row's shared edge.
+  rows.forEach(([w, o], r) => px(c, cx + o + sway - w / 2 - 1, r - 1, w + 2, 3, PAL.out));
+
+  // Lit-left / shaded-right cluster fill per row.
+  bands.forEach(({ x, w, left, right, split }, r) => {
+    px(c, x, r, split, 1, left);
+    px(c, x + split, r, w - split, 1, right);
+  });
+
+  // Dither the left/right seam on alternating rows...
+  bands.forEach(({ x, split, left, right }, r) => {
+    if (r % 2 === 0 && split > 0) dith(c, x + split - 1, r, 2, 1, left, right);
+  });
+  // ...and the seams between the three vertical bands.
+  bands.forEach(({ x, w, zone }, r) => {
+    if (r === 0 || zone === bands[r - 1].zone) return;
+    dith(c, x, r, w, 1, bands[r - 1].right, bands[r].left);
+  });
+}
+
+/** Bark-textured trunk: lit left edge, shadowed right edge, a seam of bark
+ *  lines, and a root flare where it meets the ground. */
+function drawTrunk(c: PixelCtx, cx: number, topY: number, w: number, h: number, denseBark: boolean): void {
+  const x = cx - Math.floor(w / 2);
+  box(c, x, topY, w, h, PAL.wood);
+  px(c, x + 1, topY + 1, 1, h - 2, PAL.woodL);
+  px(c, x + w - 2, topY + 1, 1, h - 2, PAL.woodX);
+  const step = denseBark ? 3 : 4;
+  for (let j = topY + 3; j < topY + h - 2; j += step) {
+    px(c, x + Math.floor(w / 2) - 1, j, 1, 2, PAL.woodD);
+  }
+  box(c, x - 1, topY + h - 3, w + 2, 3, PAL.woodD); // root flare
+  px(c, x, topY + h - 3, w, 1, PAL.woodX);
+}
+
+/** Small per-species dressing painted over the finished canopy. */
+function drawSpeciesAccent(c: PixelCtx, type: TreeType, cx: number, canopyRows: number, sway: number): void {
+  const midY = Math.round(canopyRows * 0.5);
+  switch (type) {
+    case "grand_oak":
+      px(c, cx + sway - 6, midY - 2, 2, 2, PAL.woodD);
+      px(c, cx + sway + 5, midY + 2, 2, 2, PAL.woodD);
+      break;
+    case "pine":
+      px(c, cx + sway - 2, 6, 2, 3, PAL.woodD);
+      px(c, cx + sway + 3, 12, 2, 3, PAL.woodD);
+      break;
+    case "maple":
+      dith(c, cx + sway - 9, midY - 3, 6, 3, PAL.gold, PAL.goldD);
+      px(c, cx + sway + 6, midY + 1, 3, 2, PAL.gold);
+      break;
+    case "sakura":
+      px(c, cx + sway - 4, 2, 1, 1, PAL.wallL);
+      px(c, cx + sway + 3, midY, 1, 1, PAL.wallL);
+      px(c, cx + sway - 6, midY + 2, 1, 1, PAL.wallL);
+      break;
+  }
+}
+
+/**
+ * Decorative forest trees. Each of the four species (grand oak, pine,
+ * maple, sakura) gets its own canopy silhouette, foliage ramp and trunk —
+ * see TREE_CANOPY / TREE_TONE / TREE_TRUNK above.
  */
 export function drawTrees(ctx: CanvasRenderingContext2D, t: number): void {
-  DECORATIVE_TREES.forEach((tree, i) => {
+  DECORATIVE_TREES.forEach((tree) => {
     withSprite(ctx as unknown as PixelCtx, tree.x, tree.y, () => {
       const c = ctx as unknown as PixelCtx;
       const sway = Math.round(Math.sin(t * 0.0015 + hash(tree.x, tree.y) * 0.05));
 
-      // Opaque stepped shadow — no ellipse, no alpha
-      px(c, 6, 30, 12, 1, PAL.grassX);
-      px(c, 4, 31, 16, 1, PAL.grassX);
-      px(c, 6, 32, 12, 1, PAL.grassX);
+      const rows = TREE_CANOPY[tree.type];
+      const tone = TREE_TONE[tree.type];
+      const [cx, tw, th] = TREE_TRUNK[tree.type];
+      const trunkTop = rows.length - 3;
+      const trunkBottom = trunkTop + th;
 
-      // Trunk
-      box(c, 10, 20, 5, 12, PAL.wood);
-      px(c, 11, 21, 1, 10, PAL.woodL);
-      px(c, 13, 21, 1, 10, PAL.woodD);
+      // Opaque stepped shadow — no ellipse, no alpha — drawn first so the
+      // trunk and canopy paint over any overlap.
+      const sw = tw + 10;
+      px(c, cx - sw / 2 + 2, trunkBottom, sw - 4, 1, PAL.grassX);
+      px(c, cx - sw / 2, trunkBottom + 1, sw, 1, PAL.grassX);
+      px(c, cx - sw / 2 + 2, trunkBottom + 2, sw - 4, 1, PAL.grassX);
 
-      // Canopy: outline pass, then fill, then a lit upper-left face
-      CANOPY.forEach((w, r) => px(c, 12 - w / 2 + sway - 1, r - 1, w + 2, 3, PAL.out));
-      CANOPY.forEach((w, r) => px(c, 12 - w / 2 + sway, r, w, 1, r < 4 ? PAL.leaf : PAL.leafD));
-      dith(c, 12 - 8 + sway, 3, 8, 2, PAL.leaf, PAL.leafD);
-      px(c, 12 - 6 + sway, 2, 4, 1, PAL.grassL);
-
-      // Occasional fruit, stable per tree
-      if (hash(tree.x, tree.y) % 3 === 0) px(c, 14 + sway, 6, 2, 2, PAL.bloom);
-      void i;
+      drawTrunk(c, cx, trunkTop, tw, th, tree.type === "grand_oak" || tree.type === "sakura");
+      drawCanopy(c, rows, cx, tone, sway);
+      drawSpeciesAccent(c, tree.type, cx, rows.length, sway);
     });
   });
 }

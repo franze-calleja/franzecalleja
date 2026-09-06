@@ -172,13 +172,19 @@ export function drawTallGrassBases(ctx: PixelCtx): void {
  * Blade tips, one Drawable per grid cell, y-sorted against the player and
  * everything else in the scene layer by the caller.
  *
- * `baseline` is the cell's own bottom edge (`wy + 16`, in the same
- * world-Y coordinates as `TALL_GRASS_AREAS`) — the same convention as
- * every other entity in the sorted layer, so a tuft south of the player's
- * feet (higher baseline) draws after them and one north (lower baseline)
- * draws before, without the caller having to split one band into a
- * "before" and "after" pass itself (the old two-call mechanism this
- * replaced: see git history for `drawTallGrassTips(ctx, t, fromY, toY)`).
+ * `baseline` is `wy + 32`, **not** the cell's literal bottom edge (`wy +
+ * 16`) — this replicates the old two-call renderer's effective threshold
+ * exactly, and getting this wrong is a real regression (Fix round 1), not
+ * a cosmetic nit: the old code split bands at `playerFeetY - 16`, so a
+ * cell drew in front whenever `wy + 16 > playerFeetY - 16`, i.e.
+ * `wy + 32 > playerFeetY` — the extra 16px fudge compensated for blade
+ * height extending upward past the cell's nominal bottom edge. Using the
+ * literal `wy + 16` here instead (what "the same convention as every
+ * other entity" would naively suggest) shifts that threshold by 16 world
+ * px: a whole row of tufts in every patch would sort behind the player
+ * one row earlier than they used to. See `lib/game-rustle.test.ts`'s
+ * interleaving test, which fails against `wy + 16` and passes against
+ * `wy + 32`.
  *
  * No outline: grass blades are ground texture, not a discrete object, so
  * the 1px-outline constraint doesn't apply here (unlike props, buildings,
@@ -193,7 +199,7 @@ export function collectTallGrassTips(ctx: PixelCtx, t: number): Drawable[] {
       for (let wx = g.x; wx < g.x + g.w; wx += 16) {
         if (hash(wx, wy) % 4 === 0) continue; // gaps keep it organic
         out.push({
-          baseline: wy + 16,
+          baseline: wy + 32,
           draw: () => {
             withSprite(ctx, 0, 0, () => {
               const x = wx / 2, y = wy / 2;

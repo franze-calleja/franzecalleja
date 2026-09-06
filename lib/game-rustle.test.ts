@@ -4,7 +4,7 @@ import {
   spawnLeaves,
   collectTallGrassTips,
 } from "../components/game/game-terrain";
-import { hash, type PixelCtx } from "../components/game/game-pixel";
+import { hash, sortByBaseline, type PixelCtx, type Drawable } from "../components/game/game-pixel";
 import { PAL } from "../components/game/game-palette";
 import { TALL_GRASS_AREAS } from "../components/game/game-data";
 
@@ -75,9 +75,15 @@ describe("spawnLeaves", () => {
  * player's feet and one for tufts at/below) with per-tuft baselines that
  * feed the same generic sort every other entity in the scene layer uses.
  * These tests cover the new mechanism: every non-gap grid cell in every
- * patch becomes its own Drawable, and its baseline is exactly the cell's
- * own bottom edge (`wy + 16`) — the value the old code partitioned bands
- * on.
+ * patch becomes its own Drawable, and its baseline is `wy + 32` — **not**
+ * the cell's literal bottom edge (`wy + 16`). That extra 16px replicates
+ * the old renderer's own fudge factor (it split bands at
+ * `playerFeetY - 16`, not `playerFeetY`) and matters: `wy + 16` looks like
+ * the more "obvious" baseline and still passes a test that only checks
+ * static per-cell rendering, but it shifts an entire row of tufts, in
+ * every patch, 16 world px closer to the camera than the pre-refactor
+ * renderer drew them (Fix round 1 caught this). The "genuine interleaving"
+ * test below is what actually catches it — see the comment there.
  */
 describe("collectTallGrassTips", () => {
   /** Reproduces the non-gap cell enumeration (patch grid + hash gap rule)
@@ -102,14 +108,14 @@ describe("collectTallGrassTips", () => {
     expect(drawables.length).toBe(expectedCells().length);
   });
 
-  it("gives every drawable a finite numeric baseline equal to its cell's bottom edge (wy + 16)", () => {
+  it("gives every drawable a finite numeric baseline equal to wy + 32 (not the cell's literal bottom edge, wy + 16)", () => {
     const { ctx } = recordingCtx();
     const drawables = collectTallGrassTips(ctx, 0);
     drawables.forEach((d) => {
       expect(Number.isFinite(d.baseline), `baseline ${d.baseline} is not finite`).toBe(true);
     });
 
-    const expectedBaselines = expectedCells().map((c) => c.wy + 16).sort((a, b) => a - b);
+    const expectedBaselines = expectedCells().map((c) => c.wy + 32).sort((a, b) => a - b);
     const actualBaselines = drawables.map((d) => d.baseline).sort((a, b) => a - b);
     expect(actualBaselines).toEqual(expectedBaselines);
   });
@@ -154,5 +160,76 @@ describe("collectTallGrassTips", () => {
 
     expect(realCalls.length).toBe(oracleCalls.length);
     expect(new Set(realCalls)).toEqual(new Set(oracleCalls));
+  });
+
+  /**
+   * The pixel-oracle test above only proves each tuft's *own* rendering is
+   * unchanged — it never constructs a player baseline or checks how a tuft
+   * interleaves with one, so it cannot catch a baseline-formula regression
+   * (Fix round 1: it didn't, and a first draft of *this* test didn't either
+   * — see the note on `cellAt` below). This test does.
+   *
+   * TALL_GRASS_AREAS[0] is {x:286, y:48, w:58, h:88}, giving grid rows at
+   * wy = 48, 64, 80, 96, 112, 128. Pick playerFeetY = 120 (a plain number,
+   * standing in for a real `p.y + 28`):
+   *
+   *  - "justNorth" (wy=96, cell bottom 112) is the regression-sensitive
+   *    case. The pre-Task-16 renderer split bands at `playerFeetY - 16`
+   *    and drew a cell in front whenever `wy+16 > playerFeetY-16`, i.e.
+   *    `wy+32 > playerFeetY`: here 96+32=128 > 120, so the old renderer
+   *    drew it in front (after the player). The *literal* bottom edge
+   *    (wy+16=112) is <= 120, so if collectTallGrassTips used `wy + 16`
+   *    this cell would wrongly sort behind the player instead — exactly
+   *    the Fix round 1 bug. `wy + 32` (128) correctly sorts after.
+   *  - "wellNorth" (wy=48, cell bottom 64) sorts behind under either
+   *    formula (48+32=80 < 120, and 48+16=64 < 120 too) — a sanity
+   *    contrast, not the regression case itself.
+   *
+   * `cellAt` locates a Drawable by its *world position* (wx, wy), via the
+   * same deterministic enumeration order `expectedCells()` uses — not by
+   * an assumed baseline value. Looking a cell up by baseline instead would
+   * silently defeat this test: under a `wy + 16` regression, baseline 128
+   * belongs to a *different* cell (wy=112, one row further south), so a
+   * `tufts.find(t => t.baseline === 128)` lookup would quietly compare the
+   * wrong cell and pass anyway. (A first draft of this test did exactly
+   * that, and it passed against both `wy + 16` and `wy + 32` — i.e. it
+   * tested nothing.)
+   */
+  function cellAt(wantWx: number, wantWy: number): number {
+    let index = 0;
+    for (const g of TALL_GRASS_AREAS) {
+      for (let wy = g.y; wy < g.y + g.h; wy += 16) {
+        for (let wx = g.x; wx < g.x + g.w; wx += 16) {
+          if (hash(wx, wy) % 4 === 0) continue;
+          if (wx === wantWx && wy === wantWy) return index;
+          index++;
+        }
+      }
+    }
+    return -1;
+  }
+
+  it("a tuft just north of the player's feet still draws after them (in front), matching the pre-Task-16 two-band split", () => {
+    const { ctx } = recordingCtx();
+    const tufts = collectTallGrassTips(ctx, 0);
+
+    // Both wx values are confirmed non-gap cells (hash(wx,wy) % 4 !== 0) at
+    // their respective wy in TALL_GRASS_AREAS[0].
+    const justNorthIndex = cellAt(286, 96);
+    const wellNorthIndex = cellAt(302, 48);
+    expect(justNorthIndex, "cell wx=286,wy=96 not found — did TALL_GRASS_AREAS[0] change?").toBeGreaterThanOrEqual(0);
+    expect(wellNorthIndex, "cell wx=302,wy=48 not found — did TALL_GRASS_AREAS[0] change?").toBeGreaterThanOrEqual(0);
+
+    const justNorth = tufts[justNorthIndex];
+    const wellNorth = tufts[wellNorthIndex];
+    const playerFeetY = 120;
+    const player: Drawable = { baseline: playerFeetY, draw: () => {} };
+
+    const order = sortByBaseline([justNorth, wellNorth, player]).map((d) => {
+      if (d === player) return "player";
+      return d === justNorth ? "justNorth" : "wellNorth";
+    });
+
+    expect(order).toEqual(["wellNorth", "player", "justNorth"]);
   });
 });

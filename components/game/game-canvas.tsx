@@ -537,11 +537,22 @@ function drawBasketballCourt(ctx: CanvasRenderingContext2D) {
 /**
  * The fountain is a single fixed-position landmark (not data-driven, unlike
  * every other category), so it takes part in the scene layer's y-sort as
- * one hardcoded Drawable rather than through a collect* function. This
- * mirrors its own cy (378) plus the bottom of its apron drop-shadow (+18) —
- * see the `cy + 18` ellipse at the top of drawCentralFountain below.
+ * one hardcoded Drawable rather than through a collect* function.
+ *
+ * Every other category's baseline is the bottom edge of its *solid*
+ * footprint, not its shadow — so this is `cy + 10 + 34 = 422`: the bottom
+ * of the widest opaque apron ring ("2. Octagonal Mosaic Bluestone
+ * Stylobate Apron" below, `ellipse(cx, cy + 10, 66, 34, ...)`), not the
+ * translucent drop-shadow ellipse above it (`cy + 18` centre, ry 36,
+ * bottom ~432 — that shape is alpha-blended shadow, not the fountain's
+ * own edge, the same way a building's baseline isn't measured from its
+ * cast shadow either). The fountain has no collision box, so a player can
+ * walk right up to and past this baseline; it was previously computed
+ * from the shadow's centre instead of the masonry's bottom edge (Fix
+ * round 1) — 396 vs. the correct 422, a 26px error a player would walk
+ * straight through.
  */
-const FOUNTAIN_BASELINE = 396;
+const FOUNTAIN_BASELINE = 422;
 
 function drawCentralFountain(ctx: CanvasRenderingContext2D, time: number) {
   const cx = 420;

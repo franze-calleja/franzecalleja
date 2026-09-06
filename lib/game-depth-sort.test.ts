@@ -105,8 +105,14 @@ describe("every collected drawable has a finite numeric baseline", () => {
     });
   });
 
-  it("collects a non-trivial total scene (roughly the ~80 entities the plan expects)", () => {
+  it("collects a non-trivial total scene (roughly 250-300 drawables once tall-grass tufts are counted)", () => {
+    // Props/buildings/landmarks alone are ~70 entities, but tall-grass
+    // tufts (one per non-gap 16px grid cell, across six patches) dominate
+    // the real total — around 245 of them. Sorting a per-frame array this
+    // size is still trivial; this just guards the earlier "~80" estimate
+    // (written before tall grass was folded into the sort) from misleading
+    // the next reader about the actual scene size.
     const total = categories.reduce((sum, [, drawables]) => sum + drawables.length, 0);
-    expect(total).toBeGreaterThan(40);
+    expect(total).toBeGreaterThan(200);
   });
 });

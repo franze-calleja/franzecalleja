@@ -67,6 +67,30 @@ export function dith(
 }
 
 /**
+ * A single unit of the y-sorted scene layer: something with a footprint
+ * that can occlude, or be occluded by, anything else in that layer.
+ * `baseline` is the world y of the bottom of the entity's footprint — where
+ * it visually "touches the ground" (e.g. a building's `y + height`, a
+ * character's `y + 28`). Lower baseline = further from the camera = drawn
+ * first, so a higher-baseline entity painted afterward correctly covers it.
+ */
+export interface Drawable {
+  baseline: number;
+  draw: () => void;
+}
+
+/**
+ * Sorts a frame's worth of Drawables back-to-front by baseline. Stable
+ * (equal baselines keep their relative order) — but that guarantee only
+ * holds if the caller builds `items` in a fixed order every frame; sorting
+ * an array whose *input* order varies (e.g. from unordered Map/object
+ * iteration) would still flicker even though the sort itself is stable.
+ */
+export function sortByBaseline(items: readonly Drawable[]): Drawable[] {
+  return [...items].sort((a, b) => a.baseline - b.baseline);
+}
+
+/**
  * The single deterministic pseudo-random source for the whole world.
  * Scatter must be stable across frames or cached terrain will not match
  * live-drawn terrain. Returns 0..255.

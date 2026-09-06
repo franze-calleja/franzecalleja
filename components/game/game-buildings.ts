@@ -2,12 +2,18 @@ import { PAL } from "./game-palette";
 import {
   px, box, dith, hash, gableRoof, steppedRoof, window2, plankDoor, stoneCourse,
   timberFrame, chimney, chimneySmoke, lantern, flowerBox, ivy, hangingSign,
-  type PixelCtx, type RoofTone,
+  withSprite, type PixelCtx, type RoofTone, type Drawable,
 } from "./game-pixel";
 
 export interface BuildingSpec {
   x: number;
   y: number;
+  /** World-px footprint height, mirroring the matching WORLD_OBJECTS entry's
+   *  `height` (game-data.ts) — kept here too so collectBuildings can compute
+   *  a baseline (`y + height`) without cross-referencing that array by id;
+   *  the two ids don't even match for every building (e.g. "career-archives"
+   *  here vs. "career-archive" there). */
+  height: number;
   draw(ctx: PixelCtx, t: number): void;
 }
 
@@ -437,11 +443,25 @@ export function drawGamerCottage(ctx: PixelCtx, t: number): void {
 }
 
 export const BUILDINGS: Record<string, BuildingSpec> = {
-  "projects-guild": { x: 70, y: 60, draw: drawProjectsGuild },
-  "village-post": { x: 350, y: 55, draw: drawVillagePost },
-  "azra-sanctuary": { x: 560, y: 45, draw: drawAzraSanctuary },
-  "career-archives": { x: 750, y: 150, draw: drawCareerArchives },
-  "devops-station": { x: 60, y: 260, draw: drawDevopsStation },
-  "enverga-dojo": { x: 60, y: 560, draw: drawEnvergaDojo },
-  "gamer-cottage": { x: 560, y: 535, draw: drawGamerCottage },
+  "projects-guild": { x: 70, y: 60, height: 110, draw: drawProjectsGuild },
+  "village-post": { x: 350, y: 55, height: 95, draw: drawVillagePost },
+  "azra-sanctuary": { x: 560, y: 45, height: 125, draw: drawAzraSanctuary },
+  "career-archives": { x: 750, y: 150, height: 105, draw: drawCareerArchives },
+  "devops-station": { x: 60, y: 260, height: 110, draw: drawDevopsStation },
+  "enverga-dojo": { x: 60, y: 560, height: 110, draw: drawEnvergaDojo },
+  "gamer-cottage": { x: 560, y: 535, height: 110, draw: drawGamerCottage },
 };
+
+/**
+ * One Drawable per building, in the registry's own (fixed, insertion-order)
+ * iteration — deterministic every frame, which the y-sort depends on for
+ * stable output when two baselines tie. Baseline = y + height: the world y
+ * where the building's footprint meets the ground, same convention as
+ * every other entity in the sorted scene layer.
+ */
+export function collectBuildings(ctx: PixelCtx, t: number): Drawable[] {
+  return Object.values(BUILDINGS).map((b) => ({
+    baseline: b.y + b.height,
+    draw: () => withSprite(ctx, b.x, b.y, () => b.draw(ctx, t)),
+  }));
+}

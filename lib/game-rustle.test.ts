@@ -2,18 +2,20 @@ import { describe, it, expect } from "vitest";
 import {
   isInTallGrass,
   spawnLeaves,
-  drawTallGrassTips,
+  collectTallGrassTips,
 } from "../components/game/game-terrain";
-import type { PixelCtx } from "../components/game/game-pixel";
+import { hash, type PixelCtx } from "../components/game/game-pixel";
+import { PAL } from "../components/game/game-palette";
 import { TALL_GRASS_AREAS } from "../components/game/game-data";
 
 /**
- * Records every fillRect the tips pass issues, tagged with the fillStyle in
- * effect at call time, as opaque strings — enough to compare two runs for
- * set equality without caring about the real canvas transform (withSprite's
- * save/translate/scale are no-ops here; px() only ever calls fillRect).
+ * Records every fillRect a Drawable's draw() issues, tagged with the
+ * fillStyle in effect at call time, as opaque strings — enough to compare
+ * runs for set equality without caring about the real canvas transform
+ * (withSprite's save/translate/scale are no-ops here; px() only ever calls
+ * fillRect).
  */
-function collectFillRects(run: (ctx: PixelCtx) => void): string[] {
+function recordingCtx() {
   const calls: string[] = [];
   const ctx = {
     fillStyle: "",
@@ -27,8 +29,7 @@ function collectFillRects(run: (ctx: PixelCtx) => void): string[] {
     translate() {},
     scale() {},
   } as unknown as PixelCtx;
-  run(ctx);
-  return calls;
+  return { ctx, calls };
 }
 
 describe("isInTallGrass", () => {
@@ -68,55 +69,90 @@ describe("spawnLeaves", () => {
   });
 });
 
-describe("drawTallGrassTips depth-sort band", () => {
-  // The band partitions on each cell's *bottom edge* (wy + 16): a cell is
-  // drawn by band (fromY, toY) iff fromY < wy + 16 <= toY. That makes any
-  // two adjacent bands (0, S) and (S, MAX) — for *any* S, grid-aligned or
-  // not — strictly complementary: every cell's bottom edge is either <= S
-  // or > S, never both, so the bands can't double-draw or drop a cell.
-  const FAR = 100000;
+/**
+ * Task 16 replaced the old two-call, hand-rolled y-band split
+ * (`drawTallGrassTips(ctx, t, fromY, toY)`, one call for tufts above the
+ * player's feet and one for tufts at/below) with per-tuft baselines that
+ * feed the same generic sort every other entity in the scene layer uses.
+ * These tests cover the new mechanism: every non-gap grid cell in every
+ * patch becomes its own Drawable, and its baseline is exactly the cell's
+ * own bottom edge (`wy + 16`) — the value the old code partitioned bands
+ * on.
+ */
+describe("collectTallGrassTips", () => {
+  /** Reproduces the non-gap cell enumeration (patch grid + hash gap rule)
+   *  as an independent oracle for the count and baseline assertions. */
+  function expectedCells(): Array<{ wx: number; wy: number }> {
+    const cells: Array<{ wx: number; wy: number }> = [];
+    for (const g of TALL_GRASS_AREAS) {
+      for (let wy = g.y; wy < g.y + g.h; wy += 16) {
+        for (let wx = g.x; wx < g.x + g.w; wx += 16) {
+          if (hash(wx, wy) % 4 === 0) continue;
+          cells.push({ wx, wy });
+        }
+      }
+    }
+    return cells;
+  }
 
-  // TALL_GRASS_AREAS[0] (y: 48..136, bottom edges up to 144) is the only
-  // patch with any row below y=290 — the next-lowest patch (index 4,
-  // "east, below the Archives") starts at y=292 (bottom edge 308) — so
-  // band(0, 290) isolates patch 0 exactly, and everything it draws lands
-  // at logical y < 100 (world y <= 128, /2 = 64, plus a few px of blade
-  // overhang).
-  const PATCH0_ONLY_BOUNDARY = 290;
-  const PATCH0_Y_CEILING = 100;
-
-  it("emits calls only for cells whose bottom edge falls in the given band", () => {
-    const full = new Set(collectFillRects((ctx) => drawTallGrassTips(ctx, 0, 0, FAR)));
-    const patch0Only = [...full].filter((c) => Number(c.split(",")[1]) < PATCH0_Y_CEILING);
-    const band = collectFillRects(
-      (ctx) => drawTallGrassTips(ctx, 0, 0, PATCH0_ONLY_BOUNDARY)
-    );
-
-    expect(band.length).toBeGreaterThan(0);
-    expect(new Set(band)).toEqual(new Set(patch0Only));
-
-    // A band with no grass patch inside it emits nothing.
-    const empty = collectFillRects((ctx) => drawTallGrassTips(ctx, 0, FAR, FAR + 100));
-    expect(empty).toHaveLength(0);
+  it("returns exactly one drawable per non-gap grid cell", () => {
+    const { ctx } = recordingCtx();
+    const drawables = collectTallGrassTips(ctx, 0);
+    expect(drawables.length).toBeGreaterThan(0);
+    expect(drawables.length).toBe(expectedCells().length);
   });
 
-  it.each([
-    ["a patch boundary", PATCH0_ONLY_BOUNDARY],
-    ["an arbitrary, non-grid-aligned split matching the real call sites", 301],
-    ["another arbitrary split, mid-patch", 400],
-  ])("splits strictly at %s: before/after are disjoint and their union is exactly the unbounded call", (_label, split) => {
-    const full = new Set(collectFillRects((ctx) => drawTallGrassTips(ctx, 0, 0, FAR)));
-    const before = new Set(collectFillRects((ctx) => drawTallGrassTips(ctx, 0, 0, split)));
-    const after = new Set(collectFillRects((ctx) => drawTallGrassTips(ctx, 0, split, FAR)));
+  it("gives every drawable a finite numeric baseline equal to its cell's bottom edge (wy + 16)", () => {
+    const { ctx } = recordingCtx();
+    const drawables = collectTallGrassTips(ctx, 0);
+    drawables.forEach((d) => {
+      expect(Number.isFinite(d.baseline), `baseline ${d.baseline} is not finite`).toBe(true);
+    });
 
-    // (1) union equals exactly the unbounded call — no tuft lost.
-    const union = new Set([...before, ...after]);
-    expect(union).toEqual(full);
+    const expectedBaselines = expectedCells().map((c) => c.wy + 16).sort((a, b) => a - b);
+    const actualBaselines = drawables.map((d) => d.baseline).sort((a, b) => a - b);
+    expect(actualBaselines).toEqual(expectedBaselines);
+  });
 
-    // (2) disjoint — no tuft drawn twice (this is what the earlier,
-    // overlap-tolerant filter got wrong: a row straddling the boundary
-    // would land in both sets).
-    for (const rect of before) expect(after.has(rect)).toBe(false);
-    expect(before.size + after.size).toBe(full.size);
+  it("draws each cell exactly once — no rect is emitted twice", () => {
+    // A duplicated cell (the exact failure mode of the old overlapping
+    // y-bands) would re-emit that cell's 3 identical fillRect calls, so a
+    // straight count vs. distinct-signature comparison catches it without
+    // needing to re-derive wx/wy from the closure.
+    const { ctx, calls } = recordingCtx();
+    const drawables = collectTallGrassTips(ctx, 0);
+    drawables.forEach((d) => d.draw());
+
+    expect(calls.length).toBe(drawables.length * 3);
+    expect(new Set(calls).size).toBe(calls.length);
+  });
+
+  it("drawing every collected tuft reproduces the pre-Task-16 renderer's pixels exactly", () => {
+    // Independent oracle: the old cell math (grid walk, gap rule, sway,
+    // three px() rects), inlined here rather than calling the code under
+    // test twice, so this actually checks the visual effect survived the
+    // refactor instead of just re-asserting the implementation.
+    const { ctx: oracleCtx, calls: oracleCalls } = recordingCtx();
+    for (const g of TALL_GRASS_AREAS) {
+      for (let wy = g.y; wy < g.y + g.h; wy += 16) {
+        for (let wx = g.x; wx < g.x + g.w; wx += 16) {
+          if (hash(wx, wy) % 4 === 0) continue;
+          const x = wx / 2, y = wy / 2;
+          const sway = Math.round(Math.sin(0 * 0.002 + hash(wx, wy) * 0.1) * 1);
+          oracleCtx.fillStyle = PAL.tall;
+          oracleCtx.fillRect(x + 1 + sway, y, 1, 5);
+          oracleCtx.fillStyle = PAL.tallL;
+          oracleCtx.fillRect(x + 4 + sway, y - 1, 1, 6);
+          oracleCtx.fillStyle = PAL.tall;
+          oracleCtx.fillRect(x + 6 + sway, y + 1, 1, 4);
+        }
+      }
+    }
+
+    const { ctx: realCtx, calls: realCalls } = recordingCtx();
+    collectTallGrassTips(realCtx, 0).forEach((d) => d.draw());
+
+    expect(realCalls.length).toBe(oracleCalls.length);
+    expect(new Set(realCalls)).toEqual(new Set(oracleCalls));
   });
 });

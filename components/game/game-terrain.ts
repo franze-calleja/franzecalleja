@@ -1,5 +1,5 @@
 import { PAL } from "./game-palette";
-import { px, dith, hash, withSprite, type PixelCtx } from "./game-pixel";
+import { px, dith, hash, withSprite, type PixelCtx, type Drawable } from "./game-pixel";
 import { MAP_TOTAL_WIDTH, MAP_TOTAL_HEIGHT, PATH_AREAS, TALL_GRASS_AREAS } from "./game-data";
 import { buildExclusionMask, isExcluded } from "./game-mask";
 
@@ -169,18 +169,16 @@ export function drawTallGrassBases(ctx: PixelCtx): void {
 }
 
 /**
- * Blade tips, depth-sorted against the player by the caller.
+ * Blade tips, one Drawable per grid cell, y-sorted against the player and
+ * everything else in the scene layer by the caller.
  *
- * `fromY`/`toY` bound a world-Y band (in the same coordinates as
- * `TALL_GRASS_AREAS`): only grid cells whose *bottom edge* falls in
- * `(fromY, toY]` are drawn — partitioning on the bottom edge (rather than
- * an overlap test) keeps the two bands the caller draws per frame
- * disjoint and complete, with no cell in both and none skipped. The
- * caller draws two bands per frame — one before the player (tufts north
- * of their feet, which read as further away) and one after (tufts at or
- * south of their feet) — so tufts behind the player render behind, and
- * tufts in front render in front, instead of every tuft in every patch
- * drawing on top of the player regardless of position.
+ * `baseline` is the cell's own bottom edge (`wy + 16`, in the same
+ * world-Y coordinates as `TALL_GRASS_AREAS`) — the same convention as
+ * every other entity in the sorted layer, so a tuft south of the player's
+ * feet (higher baseline) draws after them and one north (lower baseline)
+ * draws before, without the caller having to split one band into a
+ * "before" and "after" pass itself (the old two-call mechanism this
+ * replaced: see git history for `drawTallGrassTips(ctx, t, fromY, toY)`).
  *
  * No outline: grass blades are ground texture, not a discrete object, so
  * the 1px-outline constraint doesn't apply here (unlike props, buildings,
@@ -188,22 +186,26 @@ export function drawTallGrassBases(ctx: PixelCtx): void {
  * and reverted — on this grid it tiles edge-to-edge into a continuous
  * dark lattice across the patch.
  */
-export function drawTallGrassTips(
-  ctx: PixelCtx, t: number, fromY: number, toY: number
-): void {
-  withSprite(ctx, 0, 0, () => {
-    for (const g of TALL_GRASS_AREAS) {
-      for (let wy = g.y; wy < g.y + g.h; wy += 16) {
-        if (wy + 16 <= fromY || wy + 16 > toY) continue; // outside this depth band
-        for (let wx = g.x; wx < g.x + g.w; wx += 16) {
-          if (hash(wx, wy) % 4 === 0) continue;
-          const x = wx / 2, y = wy / 2;
-          const sway = Math.round(Math.sin(t * 0.002 + hash(wx, wy) * 0.1) * 1);
-          px(ctx, x + 1 + sway, y, 1, 5, PAL.tall);
-          px(ctx, x + 4 + sway, y - 1, 1, 6, PAL.tallL);
-          px(ctx, x + 6 + sway, y + 1, 1, 4, PAL.tall);
-        }
+export function collectTallGrassTips(ctx: PixelCtx, t: number): Drawable[] {
+  const out: Drawable[] = [];
+  for (const g of TALL_GRASS_AREAS) {
+    for (let wy = g.y; wy < g.y + g.h; wy += 16) {
+      for (let wx = g.x; wx < g.x + g.w; wx += 16) {
+        if (hash(wx, wy) % 4 === 0) continue; // gaps keep it organic
+        out.push({
+          baseline: wy + 16,
+          draw: () => {
+            withSprite(ctx, 0, 0, () => {
+              const x = wx / 2, y = wy / 2;
+              const sway = Math.round(Math.sin(t * 0.002 + hash(wx, wy) * 0.1) * 1);
+              px(ctx, x + 1 + sway, y, 1, 5, PAL.tall);
+              px(ctx, x + 4 + sway, y - 1, 1, 6, PAL.tallL);
+              px(ctx, x + 6 + sway, y + 1, 1, 4, PAL.tall);
+            });
+          },
+        });
       }
     }
-  });
+  }
+  return out;
 }

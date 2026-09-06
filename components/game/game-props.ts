@@ -1,7 +1,7 @@
 import { PAL } from "./game-palette";
 import {
   px, box, dith, hash, withSprite, gableRoof, steppedRoof, stoneCourse, timberFrame, lantern,
-  type PixelCtx, type RoofTone,
+  type PixelCtx, type RoofTone, type Drawable,
 } from "./game-pixel";
 import { DECORATIVE_TREES, FLOWER_POTS, DECORATIVE_BUSHES, VILLAGE_FURNITURE, PATHWAY_FENCES } from "./game-data";
 
@@ -65,16 +65,29 @@ export function fenceRunVertical(c: PixelCtx, length: number): void {
  * static scenery, nothing here animates.
  */
 export function drawFences(ctx: CanvasRenderingContext2D, t: number): void {
+  collectFences(ctx, t).forEach((d) => d.draw());
+}
+
+/**
+ * One Drawable per fence run. Baseline = fence.y + fence.h — the same
+ * bottom edge the overworld collision box already uses for this data
+ * (game-canvas.tsx's `fence.y + fence.h` check), so occlusion and collision
+ * agree on where each run "touches the ground".
+ */
+export function collectFences(ctx: CanvasRenderingContext2D, t: number): Drawable[] {
   void t;
-  PATHWAY_FENCES.forEach((fence) => {
-    withSprite(ctx as unknown as PixelCtx, fence.x, fence.y, () => {
-      const c = ctx as unknown as PixelCtx;
-      const vertical = fence.h > fence.w * 1.5;
-      const length = Math.round((vertical ? fence.h : fence.w) / 2);
-      if (vertical) fenceRunVertical(c, length);
-      else fenceRunHorizontal(c, length);
-    });
-  });
+  return PATHWAY_FENCES.map((fence) => ({
+    baseline: fence.y + fence.h,
+    draw: () => {
+      withSprite(ctx as unknown as PixelCtx, fence.x, fence.y, () => {
+        const c = ctx as unknown as PixelCtx;
+        const vertical = fence.h > fence.w * 1.5;
+        const length = Math.round((vertical ? fence.h : fence.w) / 2);
+        if (vertical) fenceRunVertical(c, length);
+        else fenceRunHorizontal(c, length);
+      });
+    },
+  }));
 }
 
 // --- Flower pots ------------------------------------------------------------
@@ -97,41 +110,60 @@ const BLOOM_TONE: Record<(typeof FLOWER_POTS)[number]["type"], string> = {
  * topped with a small stepped bloom that sways gently.
  */
 export function drawFlowerPots(ctx: CanvasRenderingContext2D, t: number): void {
+  collectFlowerPots(ctx, t).forEach((d) => d.draw());
+}
+
+/**
+ * One Drawable per pot. Baseline = pot.y + 22 — the same fixed offset the
+ * overworld collision box uses for this data (pots carry no per-item
+ * height field; 22 is the pot's own bottom edge, matching `potBottom` in
+ * game-canvas.tsx's collision check).
+ */
+export function collectFlowerPots(ctx: CanvasRenderingContext2D, t: number): Drawable[] {
   const sway = Math.round(Math.sin(t * 0.003));
 
-  FLOWER_POTS.forEach((pot) => {
-    withSprite(ctx as unknown as PixelCtx, pot.x, pot.y, () => {
-      const c = ctx as unknown as PixelCtx;
+  return FLOWER_POTS.map((pot) => ({
+    baseline: pot.y + 22,
+    draw: () => drawOnePot(ctx, pot, sway),
+  }));
+}
 
-      // Opaque stepped shadow — no ellipse, no alpha
-      px(c, 1, 12, 8, 1, PAL.grassX);
-      px(c, 0, 13, 10, 1, PAL.grassX);
-      px(c, 1, 14, 8, 1, PAL.grassX);
+function drawOnePot(
+  ctx: CanvasRenderingContext2D,
+  pot: (typeof FLOWER_POTS)[number],
+  sway: number
+): void {
+  withSprite(ctx as unknown as PixelCtx, pot.x, pot.y, () => {
+    const c = ctx as unknown as PixelCtx;
 
-      // Terracotta urn: 3-tone ramp with a dithered shading boundary
-      box(c, 0, 4, 9, 8, PAL.roof);
-      px(c, 1, 5, 2, 6, PAL.roofL);
-      dith(c, 3, 5, 3, 6, PAL.roof, PAL.roofD);
-      px(c, 7, 5, 1, 6, PAL.roofX);
+    // Opaque stepped shadow — no ellipse, no alpha
+    px(c, 1, 12, 8, 1, PAL.grassX);
+    px(c, 0, 13, 10, 1, PAL.grassX);
+    px(c, 1, 14, 8, 1, PAL.grassX);
 
-      // Beveled rim and dark soil line
-      box(c, -1, 2, 11, 3, PAL.roofD);
-      px(c, 0, 2, 9, 1, PAL.roofL);
-      px(c, 1, 4, 7, 1, PAL.woodD);
+    // Terracotta urn: 3-tone ramp with a dithered shading boundary
+    box(c, 0, 4, 9, 8, PAL.roof);
+    px(c, 1, 5, 2, 6, PAL.roofL);
+    dith(c, 3, 5, 3, 6, PAL.roof, PAL.roofD);
+    px(c, 7, 5, 1, 6, PAL.roofX);
 
-      // Stem leaves flanking the bloom
-      px(c, 1, 1, 2, 2, PAL.leaf);
-      px(c, 6, 1, 2, 2, PAL.leaf);
-      px(c, 2, 2, 1, 1, PAL.leafD);
-      px(c, 6, 2, 1, 1, PAL.leafD);
+    // Beveled rim and dark soil line
+    box(c, -1, 2, 11, 3, PAL.roofD);
+    px(c, 0, 2, 9, 1, PAL.roofL);
+    px(c, 1, 4, 7, 1, PAL.woodD);
 
-      // Bloom: outline pass, then fill, tone keyed by pot type, swaying gently
-      const tone = BLOOM_TONE[pot.type];
-      const bx = 4 + sway;
-      BLOOM_ROWS.forEach((w, r) => px(c, bx - w / 2 - 1, r - 1, w + 2, 3, PAL.out));
-      BLOOM_ROWS.forEach((w, r) => px(c, bx - w / 2, r, w, 1, tone));
-      px(c, bx, 0, 1, 1, PAL.wallL); // sunlit petal glint
-    });
+    // Stem leaves flanking the bloom
+    px(c, 1, 1, 2, 2, PAL.leaf);
+    px(c, 6, 1, 2, 2, PAL.leaf);
+    px(c, 2, 2, 1, 1, PAL.leafD);
+    px(c, 6, 2, 1, 1, PAL.leafD);
+
+    // Bloom: outline pass, then fill, tone keyed by pot type, swaying gently
+    const tone = BLOOM_TONE[pot.type];
+    const bx = 4 + sway;
+    BLOOM_ROWS.forEach((w, r) => px(c, bx - w / 2 - 1, r - 1, w + 2, 3, PAL.out));
+    BLOOM_ROWS.forEach((w, r) => px(c, bx - w / 2, r, w, 1, tone));
+    px(c, bx, 0, 1, 1, PAL.wallL); // sunlit petal glint
   });
 }
 
@@ -156,39 +188,54 @@ function berryTone(hex: string): string {
  * stepped canopy; only the fruit/blossom dressing differs by type.
  */
 export function drawBushes(ctx: CanvasRenderingContext2D, t: number): void {
+  collectBushes(ctx, t).forEach((d) => d.draw());
+}
+
+/**
+ * One Drawable per bush. Baseline = bush.y + 24 — the same fixed offset the
+ * overworld collision box uses for this data (bushes carry no per-item
+ * height field; 24 matches `bushBottom` in game-canvas.tsx's collision
+ * check).
+ */
+export function collectBushes(ctx: CanvasRenderingContext2D, t: number): Drawable[] {
   void t; // bushes are static scenery — no animation
-  DECORATIVE_BUSHES.forEach((bush) => {
-    withSprite(ctx as unknown as PixelCtx, bush.x, bush.y, () => {
-      const c = ctx as unknown as PixelCtx;
-      const cx = 9; // canopy centre, logical
+  return DECORATIVE_BUSHES.map((bush) => ({
+    baseline: bush.y + 24,
+    draw: () => drawOneBush(ctx, bush),
+  }));
+}
 
-      // Opaque stepped shadow — no ellipse, no alpha
-      px(c, cx - 5, 12, 10, 1, PAL.grassX);
-      px(c, cx - 7, 13, 14, 1, PAL.grassX);
-      px(c, cx - 5, 14, 10, 1, PAL.grassX);
+function drawOneBush(ctx: CanvasRenderingContext2D, bush: (typeof DECORATIVE_BUSHES)[number]): void {
+  withSprite(ctx as unknown as PixelCtx, bush.x, bush.y, () => {
+    const c = ctx as unknown as PixelCtx;
+    const cx = 9; // canopy centre, logical
 
-      // Canopy: outline pass, then a lit-upper / shaded-lower fill
-      BUSH_CANOPY.forEach((w, r) => px(c, cx - w / 2 - 1, r - 1, w + 2, 3, PAL.out));
-      BUSH_CANOPY.forEach((w, r) => px(c, cx - w / 2, r, w, 1, r < 3 ? PAL.leaf : PAL.leafD));
-      dith(c, cx - 6, 2, 12, 2, PAL.leaf, PAL.leafD);
-      px(c, cx - 3, 1, 6, 1, PAL.grassL); // sun-catching crown tip
+    // Opaque stepped shadow — no ellipse, no alpha
+    px(c, cx - 5, 12, 10, 1, PAL.grassX);
+    px(c, cx - 7, 13, 14, 1, PAL.grassX);
+    px(c, cx - 5, 14, 10, 1, PAL.grassX);
 
-      const tone = berryTone(bush.berry);
-      const seed = hash(bush.x, bush.y);
+    // Canopy: outline pass, then a lit-upper / shaded-lower fill
+    BUSH_CANOPY.forEach((w, r) => px(c, cx - w / 2 - 1, r - 1, w + 2, 3, PAL.out));
+    BUSH_CANOPY.forEach((w, r) => px(c, cx - w / 2, r, w, 1, r < 3 ? PAL.leaf : PAL.leafD));
+    dith(c, cx - 6, 2, 12, 2, PAL.leaf, PAL.leafD);
+    px(c, cx - 3, 1, 6, 1, PAL.grassL); // sun-catching crown tip
 
-      if (bush.type === "wild_shrub") {
-        // Jagged wild growth: stray leaf tufts breaking the round silhouette,
-        // stable per bush via hash so they don't shimmer between frames.
-        px(c, cx - 8 + (seed % 3), 4, 2, 2, PAL.grassL);
-        px(c, cx + 6 - (seed % 3), 8, 2, 2, PAL.grassL);
-      } else {
-        // Berry / blossom clusters
-        px(c, cx - 5, 6, 2, 2, tone);
-        px(c, cx + 4, 5, 2, 2, tone);
-        px(c, cx - 1, 9, 2, 2, tone);
-        if (bush.type === "flowering_hedge") px(c, cx - 1, 9, 1, 1, PAL.wallL); // petal glint
-      }
-    });
+    const tone = berryTone(bush.berry);
+    const seed = hash(bush.x, bush.y);
+
+    if (bush.type === "wild_shrub") {
+      // Jagged wild growth: stray leaf tufts breaking the round silhouette,
+      // stable per bush via hash so they don't shimmer between frames.
+      px(c, cx - 8 + (seed % 3), 4, 2, 2, PAL.grassL);
+      px(c, cx + 6 - (seed % 3), 8, 2, 2, PAL.grassL);
+    } else {
+      // Berry / blossom clusters
+      px(c, cx - 5, 6, 2, 2, tone);
+      px(c, cx + 4, 5, 2, 2, tone);
+      px(c, cx - 1, 9, 2, 2, tone);
+      if (bush.type === "flowering_hedge") px(c, cx - 1, 9, 1, 1, PAL.wallL); // petal glint
+    }
   });
 }
 
@@ -355,19 +402,31 @@ function drawBarrelStack(c: PixelCtx): void {
  * stepped pixel shape or a toolkit part — no ctx.arc/ellipse, no gradients.
  */
 export function drawFurniture(ctx: CanvasRenderingContext2D, t: number): void {
-  VILLAGE_FURNITURE.forEach((f) => {
-    withSprite(ctx as unknown as PixelCtx, f.x, f.y, () => {
-      const c = ctx as unknown as PixelCtx;
-      switch (f.type) {
-        case "bench": drawBench(c); break;
-        case "chess_table": drawChessTable(c); break;
-        case "wishing_well": drawWishingWell(c); break;
-        case "birdbath": drawBirdbath(c, t); break;
-        case "streetlamp": drawStreetlamp(c, t); break;
-        case "barrel_stack": drawBarrelStack(c); break;
-      }
-    });
-  });
+  collectFurniture(ctx, t).forEach((d) => d.draw());
+}
+
+/**
+ * One Drawable per furniture piece. Baseline = f.y + f.h — the same bottom
+ * edge the overworld collision box already uses for this data
+ * (game-canvas.tsx's `f.y + f.h` check).
+ */
+export function collectFurniture(ctx: CanvasRenderingContext2D, t: number): Drawable[] {
+  return VILLAGE_FURNITURE.map((f) => ({
+    baseline: f.y + f.h,
+    draw: () => {
+      withSprite(ctx as unknown as PixelCtx, f.x, f.y, () => {
+        const c = ctx as unknown as PixelCtx;
+        switch (f.type) {
+          case "bench": drawBench(c); break;
+          case "chess_table": drawChessTable(c); break;
+          case "wishing_well": drawWishingWell(c); break;
+          case "birdbath": drawBirdbath(c, t); break;
+          case "streetlamp": drawStreetlamp(c, t); break;
+          case "barrel_stack": drawBarrelStack(c); break;
+        }
+      });
+    },
+  }));
 }
 
 // --- Trees ------------------------------------------------------------------
@@ -521,27 +580,46 @@ function drawSpeciesAccent(c: PixelCtx, type: TreeType, cx: number, canopyRows: 
  * see TREE_CANOPY / TREE_TONE / TREE_TRUNK above.
  */
 export function drawTrees(ctx: CanvasRenderingContext2D, t: number): void {
-  DECORATIVE_TREES.forEach((tree) => {
-    withSprite(ctx as unknown as PixelCtx, tree.x, tree.y, () => {
-      const c = ctx as unknown as PixelCtx;
-      const sway = Math.round(Math.sin(t * 0.0015 + hash(tree.x, tree.y) * 0.05));
+  collectTrees(ctx, t).forEach((d) => d.draw());
+}
 
-      const rows = TREE_CANOPY[tree.type];
-      const tone = TREE_TONE[tree.type];
-      const [cx, tw, th] = TREE_TRUNK[tree.type];
-      const trunkTop = rows.length - 3;
-      const trunkBottom = trunkTop + th;
+/**
+ * One Drawable per tree. Baseline = tree.y + tree.h — the same bottom edge
+ * the overworld collision box already uses for the trunk (game-canvas.tsx's
+ * `trunkBottom = tree.y + tree.h`), i.e. where the trunk meets the ground,
+ * not the top of the canopy.
+ */
+export function collectTrees(ctx: CanvasRenderingContext2D, t: number): Drawable[] {
+  return DECORATIVE_TREES.map((tree) => ({
+    baseline: tree.y + tree.h,
+    draw: () => drawOneTree(ctx, tree, t),
+  }));
+}
 
-      // Opaque stepped shadow — no ellipse, no alpha — drawn first so the
-      // trunk and canopy paint over any overlap.
-      const sw = tw + 10;
-      px(c, cx - sw / 2 + 2, trunkBottom, sw - 4, 1, PAL.grassX);
-      px(c, cx - sw / 2, trunkBottom + 1, sw, 1, PAL.grassX);
-      px(c, cx - sw / 2 + 2, trunkBottom + 2, sw - 4, 1, PAL.grassX);
+function drawOneTree(
+  ctx: CanvasRenderingContext2D,
+  tree: (typeof DECORATIVE_TREES)[number],
+  t: number
+): void {
+  withSprite(ctx as unknown as PixelCtx, tree.x, tree.y, () => {
+    const c = ctx as unknown as PixelCtx;
+    const sway = Math.round(Math.sin(t * 0.0015 + hash(tree.x, tree.y) * 0.05));
 
-      drawTrunk(c, cx, trunkTop, tw, th, tree.type === "grand_oak" || tree.type === "sakura");
-      drawCanopy(c, rows, cx, tone, sway);
-      drawSpeciesAccent(c, tree.type, cx, rows.length, sway);
-    });
+    const rows = TREE_CANOPY[tree.type];
+    const tone = TREE_TONE[tree.type];
+    const [cx, tw, th] = TREE_TRUNK[tree.type];
+    const trunkTop = rows.length - 3;
+    const trunkBottom = trunkTop + th;
+
+    // Opaque stepped shadow — no ellipse, no alpha — drawn first so the
+    // trunk and canopy paint over any overlap.
+    const sw = tw + 10;
+    px(c, cx - sw / 2 + 2, trunkBottom, sw - 4, 1, PAL.grassX);
+    px(c, cx - sw / 2, trunkBottom + 1, sw, 1, PAL.grassX);
+    px(c, cx - sw / 2 + 2, trunkBottom + 2, sw - 4, 1, PAL.grassX);
+
+    drawTrunk(c, cx, trunkTop, tw, th, tree.type === "grand_oak" || tree.type === "sakura");
+    drawCanopy(c, rows, cx, tone, sway);
+    drawSpeciesAccent(c, tree.type, cx, rows.length, sway);
   });
 }

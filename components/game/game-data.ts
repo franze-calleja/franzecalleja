@@ -106,11 +106,15 @@ export const DECORATIVE_BUSHES = [
   { x: 895, y: 270, type: "berry_bush" as const, berry: "#ef4444" },
   { x: 830, y: 370, type: "berry_bush" as const, berry: "#38bdf8" },
   { x: 880, y: 530, type: "flowering_hedge" as const, berry: "#f472b6" },
-  { x: 780, y: 480, type: "flowering_hedge" as const, berry: "#ffffff" },
+  // Was (780,480): overlapped the Trail-to-Court PATH_AREA and sat only
+  // ~31 world px from the East Forest Grove chess table (Task 15).
+  { x: 820, y: 507, type: "flowering_hedge" as const, berry: "#ffffff" },
   { x: 50, y: 130, type: "wild_shrub" as const, berry: "#facc15" },
   { x: 330, y: 60, type: "berry_bush" as const, berry: "#facc15" },
   { x: 50, y: 530, type: "wild_shrub" as const, berry: "#ef4444" },
-  { x: 490, y: 540, type: "flowering_hedge" as const, berry: "#38bdf8" },
+  // Was (490,540): overlapped the tall-grass patch south of the plaza
+  // approach, right beside the Gamer Cottage's bench-se (Task 15).
+  { x: 574, y: 660, type: "flowering_hedge" as const, berry: "#38bdf8" },
 ];
 
 // Rich 3D Village Outdoor Furniture

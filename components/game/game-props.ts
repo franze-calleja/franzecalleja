@@ -19,8 +19,16 @@ const WELL_ROOF_TONE: RoofTone = { l: PAL.roofL, m: PAL.roof, d: PAL.roofD, x: P
 const POST_SPACING = 11;
 
 /** Horizontal rail-and-post run, `length` logical px long, built on `timberFrame`. */
-function fenceRunHorizontal(c: PixelCtx, length: number): void {
+export function fenceRunHorizontal(c: PixelCtx, length: number): void {
   const THICK = 8;
+  // Opaque stepped shadow — 3-row stepped ellipse, narrow-wide-narrow, no
+  // ctx.ellipse, no alpha, scaled to the run's own length (Task 10 follow-up:
+  // every other renderer got this shadow, fences were the sole exception).
+  const narrow = Math.max(0, length - 4);
+  px(c, 2, THICK + 1, narrow, 1, PAL.grassX);
+  px(c, 0, THICK + 2, length, 1, PAL.grassX);
+  px(c, 2, THICK + 3, narrow, 1, PAL.grassX);
+
   px(c, -1, -1, length + 2, THICK + 2, PAL.out);
   const posts: number[] = [];
   for (let p = POST_SPACING; p < length - 2; p += POST_SPACING) posts.push(p);
@@ -31,8 +39,15 @@ function fenceRunHorizontal(c: PixelCtx, length: number): void {
 }
 
 /** Vertical rail-and-rung run for the two north-south border fences. */
-function fenceRunVertical(c: PixelCtx, length: number): void {
+export function fenceRunVertical(c: PixelCtx, length: number): void {
   const THICK = 8;
+  // Opaque stepped shadow — the same narrow-wide-narrow ellipse, rotated:
+  // 3 columns instead of 3 rows, scaled to the run's own length.
+  const narrow = Math.max(0, length - 4);
+  px(c, THICK + 1, 2, 1, narrow, PAL.grassX);
+  px(c, THICK + 2, 0, 2, length, PAL.grassX);
+  px(c, THICK + 4, 2, 1, narrow, PAL.grassX);
+
   px(c, -1, -1, THICK + 2, length + 2, PAL.out);
   px(c, 0, 0, THICK, length, PAL.wood);
   px(c, 0, 0, 1, length, PAL.woodL);

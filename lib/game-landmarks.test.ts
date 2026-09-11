@@ -92,6 +92,44 @@ describe("reconstructed curve-heavy renderers", () => {
       expect(rects.length, `${name} drew nothing`).toBeGreaterThan(0);
     });
   });
+
+  it("all emit only integer coordinates — withSprite's own contract, and the class of bug an odd width / a stray /2 or /4 position reintroduces", () => {
+    // Mirrors lib/game-pixel-parts.test.ts's equivalent check for pixelDisc
+    // in isolation, extended across every HEAVY renderer's actual output.
+    // Would have caught a centred `box(c, -w / 2, 0, w, h, ...)` with an odd
+    // w=45 (half-pixel offsets throughout, and — worse — the whole court
+    // silently shifted off the world position its PATH_AREAS ground texture
+    // expects) directly, instead of relying on a comment or a screenshot.
+    Object.entries(HEAVY).forEach(([name, fn]) => {
+      const { ctx, rects } = recorder();
+      fn(ctx as never, 0);
+      expect(rects.length).toBeGreaterThan(0);
+      rects.forEach((r) => {
+        expect(Number.isInteger(r.x), `${name} drew a non-integer x=${r.x}`).toBe(true);
+        expect(Number.isInteger(r.y), `${name} drew a non-integer y=${r.y}`).toBe(true);
+        expect(Number.isInteger(r.w), `${name} drew a non-integer w=${r.w}`).toBe(true);
+        expect(Number.isInteger(r.h), `${name} drew a non-integer h=${r.h}`).toBe(true);
+      });
+    });
+  });
+});
+
+describe("basketball court world alignment", () => {
+  it("anchors its art at the sprite's own (0,0) — top-left, matching PATH_AREAS's { x: 730, y: 535 } — not centred on it", () => {
+    // box(c, 0, 0, w, h, PAL.roof) draws its PAL.out outline at exactly the
+    // rect it's given before insetting the fill by 1px — so that outline
+    // rect (uniquely identified by matching the court's own w=45, h=50) is
+    // the true edge of the court's art. It must sit at exactly local (0,0),
+    // reproducing world [730,820]x[535,635] — the same rect PATH_AREAS uses
+    // to paint the stone texture underneath. A centred court would place
+    // this outline near x=-22, silently detaching the art from that texture.
+    const { ctx, rects } = recorder();
+    drawBasketballCourt(ctx as never, 0);
+    const surfaceOutline = rects.filter((r) => r.color === PAL.out && r.w === 45 && r.h === 50);
+    expect(surfaceOutline).toHaveLength(1);
+    expect(surfaceOutline[0].x).toBe(0);
+    expect(surfaceOutline[0].y).toBe(0);
+  });
 });
 
 describe("fountain water animation", () => {
@@ -122,10 +160,6 @@ describe("fountain water animation", () => {
 });
 
 describe("FOUNTAIN_BASELINE", () => {
-  it("is a finite world-y number the y-sort can key off", () => {
-    expect(Number.isFinite(FOUNTAIN_BASELINE)).toBe(true);
-  });
-
   it("equals the bottom edge of the fountain's own opaque masonry footprint in world space, not the shadow", () => {
     // Render in world space (translate/scale honoured) and take the lowest
     // y among rects painted in the fountain's own stone/water/outline tones

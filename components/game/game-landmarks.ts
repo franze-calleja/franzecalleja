@@ -35,57 +35,71 @@ const CENTER_RING = [10, 16, 18] as const; // half-circle bulge at the court's o
 export function drawBasketballCourt(ctx: CanvasRenderingContext2D, time: number): void {
   withSprite(ctx as unknown as PixelCtx, 730, 535, () => {
     const c = ctx as unknown as PixelCtx;
-    const w = 45; // half of the original 90-world-px court, in logical units
-    const h = 50; // half of the original 100-world-px court
+    // Top-left anchored, matching PATH_AREAS's { x: 730, y: 535, w: 90, h:
+    // 100 } exactly — that rect drives the stone path texture painted
+    // underneath by drawPaths(), so the court's own art must start at this
+    // sprite's local (0, 0) and extend to (w, h), never centre on it (an
+    // earlier version centred here, silently shifting the court 45 world px
+    // off the texture it's supposed to sit on). w=45 and h=50 are the full
+    // logical width/height (90/UNIT and 100/UNIT) — not half-widths.
+    const w = 45;
+    const h = 50;
+    // True centre (w/2=22.5) is fractional since w is odd; every coordinate
+    // in this renderer must stay an integer (withSprite's own contract), so
+    // every "centred" element below is centred on this instead, 1 world px
+    // off true centre — imperceptible, and it keeps `Number.isInteger` true
+    // for every rect this function emits.
+    const cx = 22;
 
     // Opaque stepped drop shadow — no ellipse, no alpha.
-    px(c, -w / 2 + 3, h + 1, w - 6, 1, PAL.grassX);
-    px(c, -w / 2 + 1, h + 2, w - 2, 1, PAL.grassX);
-    px(c, -w / 2 + 3, h + 3, w - 6, 1, PAL.grassX);
+    px(c, 3, h + 1, w - 6, 1, PAL.grassX);
+    px(c, 1, h + 2, w - 2, 1, PAL.grassX);
+    px(c, 3, h + 3, w - 6, 1, PAL.grassX);
 
     // Concrete apron border, then the terracotta hardwood surface inset.
-    box(c, -w / 2 - 2, -2, w + 4, h + 4, PAL.stoneD);
-    px(c, -w / 2 - 1, -1, w + 2, 1, PAL.stoneL);
-    box(c, -w / 2, 0, w, h, PAL.roof);
-    dith(c, -w / 2 + 1, 1, w - 2, h - 2, PAL.roof, PAL.roofD);
+    box(c, -2, -2, w + 4, h + 4, PAL.stoneD);
+    px(c, -1, -1, w + 2, 1, PAL.stoneL);
+    box(c, 0, 0, w, h, PAL.roof);
+    dith(c, 1, 1, w - 2, h - 2, PAL.roof, PAL.roofD);
     // Parquet plank grooves.
-    for (let py = 4; py < h; py += 3) px(c, -w / 2 + 1, py, w - 2, 1, PAL.roofX);
+    for (let py = 4; py < h; py += 3) px(c, 1, py, w - 2, 1, PAL.roofX);
 
     // Painted lane / key, gold-bordered.
     const keyW = 16, keyH = 22;
-    box(c, -keyW / 2, 2, keyW, keyH, PAL.steelX);
-    px(c, -keyW / 2, 2, keyW, 1, PAL.gold);
-    px(c, -keyW / 2, 2, 1, keyH, PAL.gold);
-    px(c, keyW / 2 - 1, 2, 1, keyH, PAL.gold);
+    box(c, cx - keyW / 2, 2, keyW, keyH, PAL.steelX);
+    px(c, cx - keyW / 2, 2, keyW, 1, PAL.gold);
+    px(c, cx - keyW / 2, 2, 1, keyH, PAL.gold);
+    px(c, cx + keyW / 2 - 1, 2, 1, keyH, PAL.gold);
 
     // Free-throw circle at the head of the key.
-    pixelRing(c, 0, keyH, FREE_THROW_RING, PAL.pathL);
+    pixelRing(c, cx, keyH, FREE_THROW_RING, PAL.pathL);
     // 3-point arc — upper half only, hugging the court's top edge.
-    pixelRing(c, 0, -1, THREE_PT_RING, PAL.pathL);
+    pixelRing(c, cx, -1, THREE_PT_RING, PAL.pathL);
     // Half-court circle bulging up from the bottom baseline, plus the line.
-    px(c, -w / 2 + 1, h - 4, w - 2, 1, PAL.pathL);
-    pixelRing(c, 0, h - 4 - CENTER_RING.length, CENTER_RING, PAL.pathL);
+    px(c, 1, h - 4, w - 2, 1, PAL.pathL);
+    pixelRing(c, cx, h - 4 - CENTER_RING.length, CENTER_RING, PAL.pathL);
     // Perimeter out-of-bounds line.
-    px(c, -w / 2 + 1, 1, w - 2, 1, PAL.pathL);
-    px(c, -w / 2 + 1, h - 2, w - 2, 1, PAL.pathL);
-    px(c, -w / 2 + 1, 1, 1, h - 2, PAL.pathL);
-    px(c, w / 2 - 2, 1, 1, h - 2, PAL.pathL);
+    px(c, 1, 1, w - 2, 1, PAL.pathL);
+    px(c, 1, h - 2, w - 2, 1, PAL.pathL);
+    px(c, 1, 1, 1, h - 2, PAL.pathL);
+    px(c, w - 2, 1, 1, h - 2, PAL.pathL);
 
     // Hoop: padded stanchion base, straight support post, backboard, rim, net.
-    const hx = 0, hy = 2;
-    box(c, hx - 3, hy - 2, 6, 4, PAL.steelX);
-    px(c, hx - 2, hy - 1, 4, 2, PAL.steel);
-    px(c, hx - 1, hy - 4, 2, 4, PAL.steelD); // straight support post — always was a line, not a curve
-    box(c, hx - 9, hy - 10, 18, 6, PAL.glass);
-    px(c, hx - 8, hy - 9, 16, 1, PAL.glassL);
-    px(c, hx - 4, hy - 8, 8, 3, PAL.bloom); // red target square
-    px(c, hx - 1, hy - 4, 2, 1, PAL.bloom); // rim
+    const hy = 2;
+    box(c, cx - 3, hy - 2, 6, 4, PAL.steelX);
+    px(c, cx - 2, hy - 1, 4, 2, PAL.steel);
+    px(c, cx - 1, hy - 4, 2, 4, PAL.steelD); // straight support post — always was a line, not a curve
+    box(c, cx - 9, hy - 10, 18, 6, PAL.glass);
+    px(c, cx - 8, hy - 9, 16, 1, PAL.glassL);
+    px(c, cx - 4, hy - 8, 8, 3, PAL.bloom); // red target square
+    px(c, cx - 1, hy - 4, 2, 1, PAL.bloom); // rim
     const NET = [8, 6, 4, 2] as const;
-    NET.forEach((nw, i) => px(c, hx - nw / 2, hy - 3 + i, nw, 1, PAL.wallL));
+    NET.forEach((nw, i) => px(c, cx - nw / 2, hy - 3 + i, nw, 1, PAL.wallL));
 
-    // Basketball, with a subtle idle bounce.
+    // Basketball, with a subtle idle bounce. Position is a fixed integer
+    // (not w/4, which is fractional) placed right-of-centre on the court.
     const bounce = Math.round(Math.abs(Math.sin(time * 0.003)) * 2);
-    const bx = w / 4, by = h - 22 - bounce;
+    const bx = 32, by = 28 - bounce;
     px(c, bx - 2, by + 5, 6, 1, PAL.grassX); // ball shadow, opaque
     const BALL = [4, 6, 6, 4] as const;
     pixelDisc(c, bx, by, BALL, PAL.roof);
@@ -419,7 +433,7 @@ function drawDockerMotif(c: PixelCtx, time: number, float: number): void {
   // Stacked shipping containers.
   box(c, dx - 5, dy - 1, 4, 4, PAL.glass);
   box(c, dx, dy - 1, 4, 4, PAL.gold);
-  box(c, dx - 3, dy - 5, 4, 4, PAL.arcane); // top crate — arcane cyan reads against grass better than leaf-green
+  box(c, dx - 3, dy - 5, 4, 4, PAL.bloom2); // top crate — pink reads against both the grass and the glass crate below it
 
   // Blowhole droplets on a sine path — never an arc.
   const ph = (time * 0.004) % 1;

@@ -67,6 +67,47 @@ export function dith(
 }
 
 /**
+ * Filled pixel circle from a row-width table — the sprite-art replacement
+ * for ctx.arc/ctx.ellipse. Widths are per row, top to bottom, and must be
+ * even so `cx - w / 2` stays an integer (an odd width reintroduces the
+ * half-pixel offset `gableRoof` already had to fix once). Outline pass
+ * first (bleeding 1px above/below each row), then the fill pass, so
+ * abutting rows show a clean 1px edge with no seams across the disc's face
+ * — the same two-pass trick `steppedRoof` uses for its courses.
+ */
+export function pixelDisc(
+  ctx: PixelCtx, cx: number, y: number, widths: readonly number[], fill: string, outline = true
+): void {
+  if (outline) {
+    widths.forEach((w, i) => px(ctx, cx - w / 2 - 1, y + i - 1, w + 2, 3, PAL.out));
+  }
+  widths.forEach((w, i) => px(ctx, cx - w / 2, y + i, w, 1, fill));
+}
+
+/**
+ * Hollow stepped-circle outline from a row-width table — the "ring, not a
+ * disc" sibling of `pixelDisc`, for flat ground markings (a court's centre
+ * circle or key arc) that read as a painted line rather than a solid
+ * shape. Edge pixels only per row; a row whose width has shrunk to the
+ * cap (<=4, or the first/last row) is drawn solid since there is no room
+ * left to carve out a hollow middle. No PAL.out border — ground markings
+ * aren't discrete objects (rule 5), so this never draws one.
+ */
+export function pixelRing(
+  ctx: PixelCtx, cx: number, y: number, widths: readonly number[], color: string
+): void {
+  const n = widths.length;
+  widths.forEach((w, i) => {
+    if (w <= 4 || i === 0 || i === n - 1) {
+      px(ctx, cx - w / 2, y + i, w, 1, color);
+    } else {
+      px(ctx, cx - w / 2, y + i, 2, 1, color);
+      px(ctx, cx + w / 2 - 2, y + i, 2, 1, color);
+    }
+  });
+}
+
+/**
  * A single unit of the y-sorted scene layer: something with a footprint
  * that can occlude, or be occluded by, anything else in that layer.
  * `baseline` is the world y of the bottom of the entity's footprint — where

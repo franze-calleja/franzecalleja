@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { PAL } from "../components/game/game-palette";
-import { gableRoof, steppedRoof, window2, plankDoor, stoneCourse, timberFrame } from "../components/game/game-pixel";
+import {
+  gableRoof, steppedRoof, window2, plankDoor, stoneCourse, timberFrame, pixelDisc, pixelRing,
+} from "../components/game/game-pixel";
 
 function recorder() {
   const rects: { x: number; y: number; w: number; h: number; color: string }[] = [];
@@ -96,6 +98,90 @@ describe("steppedRoof", () => {
     steppedRoof(ctx, gableRoof(8, 16, 0, 3), tone);
     const allowed = new Set<string>([PAL.out, PAL.roofL, PAL.roof, PAL.roofD, PAL.roofX]);
     rects.forEach((r) => expect(allowed.has(r.color)).toBe(true));
+  });
+});
+
+describe("pixelDisc", () => {
+  const WIDTHS = [4, 8, 12, 8, 4] as const; // even, symmetric taper — a circle silhouette
+
+  it("draws the whole outline pass before any fill pass", () => {
+    const { ctx, rects } = recorder();
+    pixelDisc(ctx, 20, 10, WIDTHS, PAL.stone);
+    const lastOutline = rects.map((r) => r.color).lastIndexOf(PAL.out);
+    const firstFill = rects.findIndex((r) => r.color !== PAL.out);
+    expect(lastOutline).toBeLessThan(firstFill);
+  });
+
+  it("centres every row on cx", () => {
+    const { ctx, rects } = recorder();
+    pixelDisc(ctx, 20, 10, WIDTHS, PAL.stone);
+    const fill = rects.filter((r) => r.color === PAL.stone);
+    expect(fill).toHaveLength(WIDTHS.length);
+    fill.forEach((r, i) => {
+      expect(r.x + r.w / 2).toBe(20);
+      expect(r.w).toBe(WIDTHS[i]);
+      expect(r.y).toBe(10 + i);
+    });
+  });
+
+  it("keeps every row on an integer x, since widths are even", () => {
+    const { ctx, rects } = recorder();
+    pixelDisc(ctx, 20, 10, WIDTHS, PAL.stone);
+    rects.forEach((r) => expect(Number.isInteger(r.x), `x=${r.x} is not an integer`).toBe(true));
+  });
+
+  it("skips the outline pass when outline=false", () => {
+    const { ctx, rects } = recorder();
+    pixelDisc(ctx, 20, 10, WIDTHS, PAL.stone, false);
+    expect(rects.some((r) => r.color === PAL.out)).toBe(false);
+    expect(rects).toHaveLength(WIDTHS.length);
+  });
+
+  it("outlines each row 1px proud on both sides, like steppedRoof's courses", () => {
+    const { ctx, rects } = recorder();
+    pixelDisc(ctx, 20, 10, WIDTHS, PAL.stone);
+    const outline = rects.filter((r) => r.color === PAL.out);
+    expect(outline).toHaveLength(WIDTHS.length);
+    outline.forEach((o, i) => {
+      expect(o.x).toBe(20 - WIDTHS[i] / 2 - 1);
+      expect(o.w).toBe(WIDTHS[i] + 2);
+      expect(o.h).toBe(3);
+    });
+  });
+});
+
+describe("pixelRing", () => {
+  const WIDTHS = [4, 10, 14, 10, 4] as const;
+
+  it("carves a hollow middle out of wide rows, leaving only edge marks", () => {
+    const { ctx, rects } = recorder();
+    pixelRing(ctx, 20, 10, WIDTHS, PAL.pathL);
+    // Row 2 (w=14) is neither a cap row nor <=4, so it must split into two
+    // separate marks rather than one solid run across the whole width.
+    const row2 = rects.filter((r) => r.y === 12);
+    expect(row2.length).toBeGreaterThan(1);
+    const totalRow2Width = row2.reduce((sum, r) => sum + r.w, 0);
+    expect(totalRow2Width).toBeLessThan(14);
+  });
+
+  it("draws the polar cap rows solid", () => {
+    const { ctx, rects } = recorder();
+    pixelRing(ctx, 20, 10, WIDTHS, PAL.pathL);
+    const capRow = rects.filter((r) => r.y === 10); // first row, w=4 (<=4 threshold anyway)
+    expect(capRow).toHaveLength(1);
+    expect(capRow[0].w).toBe(4);
+  });
+
+  it("never draws a PAL.out border — ground markings aren't discrete objects", () => {
+    const { ctx, rects } = recorder();
+    pixelRing(ctx, 20, 10, WIDTHS, PAL.pathL);
+    expect(rects.every((r) => r.color === PAL.pathL)).toBe(true);
+  });
+
+  it("actually draws something", () => {
+    const { ctx, rects } = recorder();
+    pixelRing(ctx, 20, 10, WIDTHS, PAL.pathL);
+    expect(rects.length).toBeGreaterThan(0);
   });
 });
 

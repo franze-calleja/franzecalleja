@@ -419,7 +419,7 @@ function drawDockerMotif(c: PixelCtx, time: number, float: number): void {
   // Stacked shipping containers.
   box(c, dx - 5, dy - 1, 4, 4, PAL.glass);
   box(c, dx, dy - 1, 4, 4, PAL.gold);
-  box(c, dx - 3, dy - 5, 4, 4, PAL.leaf);
+  box(c, dx - 3, dy - 5, 4, 4, PAL.arcane); // top crate — arcane cyan reads against grass better than leaf-green
 
   // Blowhole droplets on a sine path — never an arc.
   const ph = (time * 0.004) % 1;

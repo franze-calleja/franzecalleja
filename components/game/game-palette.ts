@@ -56,6 +56,13 @@ export const PAL = Object.freeze({
   steelD: "#455b63",
   steelX: "#28383d",
 
+  // Violet — the one project-station accent with no analogue elsewhere in
+  // the palette (station-aem's original #a855f7). Kept to a light/dark
+  // pair rather than a full four-tone ramp since nothing else in the world
+  // needs violet yet.
+  violetL: "#b98cf0",
+  violetD: "#6a3fa0",
+
   // Foliage
   leafL: "#8bc46e",
   leaf: "#5f9e4a",

@@ -55,21 +55,28 @@ const BOOK_TONES = [PAL.roof, PAL.arcane, PAL.leaf, PAL.gold, PAL.steel, PAL.gla
 // blink and nameplate border, so a player could tell the 7 pedestals apart
 // on sight. Uniform PAL.arcane lost that entirely. This is the same fix as
 // BOOK_TONES: a fixed rotation through PAL rather than the literal hex
-// (which the "paints only palette colours" contract forbids). The palette
-// has no purple ramp to match station-aem's #a855f7 (see BANNER_TONE's own
-// comment in game-landmarks.ts for the same tradeoff with Lebron's banner),
-// so this trades hue-fidelity for the distinctness the room actually
-// needs. Indexed by `station.projectIndex` (0-5 for the six real
-// projects); the master codex (projectIndex -1) always gets the last,
-// gold-toned slot — a deliberate callback to its own original gold accent.
+// (which the "paints only palette colours" contract forbids). Indexed by
+// `station.projectIndex` (0-5 for the six real projects); the master codex
+// (projectIndex -1) always gets the last, gold-toned slot — a deliberate
+// callback to its own original gold accent.
+//
+// aem's original #a855f7 is purple, which the palette had no ramp for
+// (round 1 substituted PAL.leafL/leafD as a stand-in). That collided
+// visually with upfps's PAL.grassL/grassS — both greens, RGB distance
+// ~10-16, well under a just-noticeable difference once each is flattened
+// into a 14x8 glow box — reintroducing the "can't tell pedestals apart"
+// problem for those two stations. Fixed at the root: PAL.violetL/violetD
+// (game-palette.ts) gives aem its own hue instead of borrowing another
+// station's. Minimum pairwise RGB distance across all 7 glow tones below
+// is now ~73 (arcane vs. glassL), comfortably clear of that threshold.
 const STATION_TONES: readonly { glow: string; back: string }[] = [
-  { glow: PAL.arcane, back: PAL.arcaneD }, // 0 website — cyan
-  { glow: PAL.leafL, back: PAL.leafD },    // 1 aem — green (purple has no ramp)
-  { glow: PAL.grassL, back: PAL.grassS },  // 2 upfps — grass green
-  { glow: PAL.roofL, back: PAL.roofD },    // 3 phd — amber/red
-  { glow: PAL.bloom2, back: PAL.bloom },   // 4 nfc — pink
-  { glow: PAL.glassL, back: PAL.glassD },  // 5 college-portal — blue
-  { glow: PAL.goldL, back: PAL.goldD },    // 6 master codex — gold
+  { glow: PAL.arcane, back: PAL.arcaneD },   // 0 website — cyan
+  { glow: PAL.violetL, back: PAL.violetD },  // 1 aem — violet (matches original #a855f7)
+  { glow: PAL.grassL, back: PAL.grassS },    // 2 upfps — grass green
+  { glow: PAL.roofL, back: PAL.roofD },      // 3 phd — amber/red
+  { glow: PAL.bloom2, back: PAL.bloom },     // 4 nfc — pink
+  { glow: PAL.glassL, back: PAL.glassD },    // 5 college-portal — blue
+  { glow: PAL.goldL, back: PAL.goldD },      // 6 master codex — gold
 ] as const;
 
 function stationTone(station: ProjectStation): { glow: string; back: string } {

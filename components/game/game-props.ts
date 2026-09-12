@@ -3,7 +3,10 @@ import {
   px, box, dith, hash, withSprite, gableRoof, steppedRoof, stoneCourse, timberFrame, lantern,
   type PixelCtx, type RoofTone, type Drawable,
 } from "./game-pixel";
-import { DECORATIVE_TREES, FLOWER_POTS, DECORATIVE_BUSHES, VILLAGE_FURNITURE, PATHWAY_FENCES } from "./game-data";
+import {
+  DECORATIVE_TREES, FLOWER_POTS, DECORATIVE_BUSHES, VILLAGE_FURNITURE, PATHWAY_FENCES,
+  BERRY_RED, BERRY_SKY, BERRY_PINK, BERRY_GOLD,
+} from "./game-data";
 
 // This module replaces five renderers (fences, flower pots, bushes, village
 // furniture, trees) that predated the pixel contract and painted with
@@ -172,13 +175,18 @@ function drawOnePot(
 /** Stepped canopy rows, top to bottom — the round-bush replacement for ctx.arc. */
 const BUSH_CANOPY = [6, 12, 16, 16, 12, 6] as const;
 
-/** Maps each bush's original rgba() berry colour to the nearest opaque palette tone. */
+/**
+ * Maps each bush's original rgba() berry colour tag (game-data.ts's
+ * BERRY_* constants) to the nearest opaque palette tone. Switches on the
+ * imported constants rather than inline hex strings so this renderer module
+ * never has to spell out a hex literal to read its own input data.
+ */
 function berryTone(hex: string): string {
   switch (hex) {
-    case "#ef4444": return PAL.bloom;   // red
-    case "#38bdf8": return PAL.glass;   // sky blue
-    case "#f472b6": return PAL.bloom2;  // pink
-    case "#facc15": return PAL.gold;    // gold
+    case BERRY_RED: return PAL.bloom;   // red
+    case BERRY_SKY: return PAL.glass;   // sky blue
+    case BERRY_PINK: return PAL.bloom2; // pink
+    case BERRY_GOLD: return PAL.gold;   // gold
     default: return PAL.wallL;          // white, or anything unmapped
   }
 }

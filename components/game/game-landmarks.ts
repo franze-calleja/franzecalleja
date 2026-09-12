@@ -230,15 +230,18 @@ export function drawCentralFountain(ctx: CanvasRenderingContext2D, time: number)
 interface BannerTone { dark: string; mid: string; light: string; trim: string }
 
 /** Nearest opaque palette ramp per banner's original rgba scheme. Lebron's
- *  royal purple has no palette equivalent (the world palette has no purple
- *  ramp) so it maps to the blue "arcane" ramp instead — still a cool, rich
- *  "royal" tone with the same gold trim, not a literal colour match. */
+ *  royal purple now maps to PAL.violetL/violetD (added for the Guild
+ *  interior's aem station) instead of borrowing the blue "arcane" ramp —
+ *  that substitution predated violet's addition to the palette. Violet is
+ *  only a light/dark pair (no separate mid tone), so `dark` and `mid` both
+ *  use violetD and `light` is violetL; the gold trim doubles as a nod to
+ *  Lebron's own purple-and-gold colours. */
 const BANNER_TONE: Record<string, BannerTone> = {
   "banner-mseuf": { dark: PAL.roofX, mid: PAL.roofD, light: PAL.roof, trim: PAL.gold },
   "banner-raones": { dark: PAL.steelX, mid: PAL.steel, light: PAL.steelL, trim: PAL.arcane },
   "banner-ellipsense": { dark: PAL.leafX, mid: PAL.leafD, light: PAL.leaf, trim: PAL.leafL },
   "banner-techbears": { dark: PAL.goldX, mid: PAL.goldD, light: PAL.gold, trim: PAL.goldL },
-  "banner-lebron": { dark: PAL.arcaneX, mid: PAL.arcaneD, light: PAL.arcane, trim: PAL.gold },
+  "banner-lebron": { dark: PAL.violetD, mid: PAL.violetD, light: PAL.violetL, trim: PAL.gold },
 };
 const DEFAULT_BANNER_TONE: BannerTone = { dark: PAL.roofX, mid: PAL.roofD, light: PAL.roof, trim: PAL.gold };
 

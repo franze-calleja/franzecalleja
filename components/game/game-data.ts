@@ -101,20 +101,31 @@ export const FLOWER_POTS = [
   { x: 650, y: 280, type: "orchid" as const },
 ];
 
+// Original web-colour tags for each bush's berries/blossoms. These predate
+// the pixel contract (they were once literal CSS colours) and now survive
+// only as identifiers game-props.ts's berryTone() maps to a PAL tone — kept
+// as named constants, rather than inlined, so no renderer module needs to
+// spell out a hex literal to read this field.
+export const BERRY_RED = "#ef4444";
+export const BERRY_SKY = "#38bdf8";
+export const BERRY_PINK = "#f472b6";
+export const BERRY_WHITE = "#ffffff";
+export const BERRY_GOLD = "#facc15";
+
 // Multi-species bushes (Berry Bush, Flowering Hedge, Wild Shrub)
 export const DECORATIVE_BUSHES = [
-  { x: 895, y: 270, type: "berry_bush" as const, berry: "#ef4444" },
-  { x: 830, y: 370, type: "berry_bush" as const, berry: "#38bdf8" },
-  { x: 880, y: 530, type: "flowering_hedge" as const, berry: "#f472b6" },
+  { x: 895, y: 270, type: "berry_bush" as const, berry: BERRY_RED },
+  { x: 830, y: 370, type: "berry_bush" as const, berry: BERRY_SKY },
+  { x: 880, y: 530, type: "flowering_hedge" as const, berry: BERRY_PINK },
   // Was (780,480): overlapped the Trail-to-Court PATH_AREA and sat only
   // ~31 world px from the East Forest Grove chess table (Task 15).
-  { x: 820, y: 507, type: "flowering_hedge" as const, berry: "#ffffff" },
-  { x: 50, y: 130, type: "wild_shrub" as const, berry: "#facc15" },
-  { x: 330, y: 60, type: "berry_bush" as const, berry: "#facc15" },
-  { x: 50, y: 530, type: "wild_shrub" as const, berry: "#ef4444" },
+  { x: 820, y: 507, type: "flowering_hedge" as const, berry: BERRY_WHITE },
+  { x: 50, y: 130, type: "wild_shrub" as const, berry: BERRY_GOLD },
+  { x: 330, y: 60, type: "berry_bush" as const, berry: BERRY_GOLD },
+  { x: 50, y: 530, type: "wild_shrub" as const, berry: BERRY_RED },
   // Was (490,540): overlapped the tall-grass patch south of the plaza
   // approach, right beside the Gamer Cottage's bench-se (Task 15).
-  { x: 574, y: 660, type: "flowering_hedge" as const, berry: "#38bdf8" },
+  { x: 574, y: 660, type: "flowering_hedge" as const, berry: BERRY_SKY },
 ];
 
 // Rich 3D Village Outdoor Furniture

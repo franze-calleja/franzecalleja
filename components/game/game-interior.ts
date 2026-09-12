@@ -25,10 +25,16 @@ import {
 // runner (pixelDisc only draws circles — a deliberate redesign, not a
 // literal shape-for-shape port).
 //
-// Text is dropped entirely (nameplates, the fireplace's carved plaque, the
-// exit sign): PixelCtx has no fillText, matching every other sprite-art
-// renderer in this codebase (e.g. hangingSign draws a blank plank, not a
-// label). Project identity still reaches the player through the DOM
+// Text (the fireplace plaque, Architect Astro's nameplate, the exit sign)
+// is NOT drawn by this module: PixelCtx is a narrowed slice of
+// CanvasRenderingContext2D that deliberately excludes fillText/font/stroke
+// APIs, to keep gradients and curves out of reach of renderer code, and
+// fillText is collateral to that narrowing rather than something the pixel
+// contract itself forbids — canvas text is an established pattern here
+// (game-canvas.tsx already draws every overworld NPC's nameplate this way).
+// Those three labels are restored by the caller (game-canvas.tsx), on the
+// full context, using that same nameplate technique. Project identity for
+// each station also still reaches the player through the DOM
 // "Inspect <name>" prompt and the station's own modal, both unchanged.
 //
 // Room dimensions are GUILD_INTERIOR_WIDTH/HEIGHT (world px, unchanged) at
@@ -42,6 +48,37 @@ const H = GUILD_INTERIOR_HEIGHT / UNIT; // 270 logical
 // so it can drive nothing this module paints; the "paints only palette
 // colours" contract test would fail the instant it touched a fillRect).
 const BOOK_TONES = [PAL.roof, PAL.arcane, PAL.leaf, PAL.gold, PAL.steel, PAL.glass] as const;
+
+// Per-station display tones. The original used `station.color` — a
+// distinct hex per station (#38bdf8, #a855f7, #34d399, #f59e0b, #ec4899,
+// #60a5fa, #fbbf24) — for the floor halo, screen border/gradient, LED
+// blink and nameplate border, so a player could tell the 7 pedestals apart
+// on sight. Uniform PAL.arcane lost that entirely. This is the same fix as
+// BOOK_TONES: a fixed rotation through PAL rather than the literal hex
+// (which the "paints only palette colours" contract forbids). The palette
+// has no purple ramp to match station-aem's #a855f7 (see BANNER_TONE's own
+// comment in game-landmarks.ts for the same tradeoff with Lebron's banner),
+// so this trades hue-fidelity for the distinctness the room actually
+// needs. Indexed by `station.projectIndex` (0-5 for the six real
+// projects); the master codex (projectIndex -1) always gets the last,
+// gold-toned slot — a deliberate callback to its own original gold accent.
+const STATION_TONES: readonly { glow: string; back: string }[] = [
+  { glow: PAL.arcane, back: PAL.arcaneD }, // 0 website — cyan
+  { glow: PAL.leafL, back: PAL.leafD },    // 1 aem — green (purple has no ramp)
+  { glow: PAL.grassL, back: PAL.grassS },  // 2 upfps — grass green
+  { glow: PAL.roofL, back: PAL.roofD },    // 3 phd — amber/red
+  { glow: PAL.bloom2, back: PAL.bloom },   // 4 nfc — pink
+  { glow: PAL.glassL, back: PAL.glassD },  // 5 college-portal — blue
+  { glow: PAL.goldL, back: PAL.goldD },    // 6 master codex — gold
+] as const;
+
+function stationTone(station: ProjectStation): { glow: string; back: string } {
+  const REAL_PROJECT_COUNT = STATION_TONES.length - 1;
+  const idx = station.projectIndex >= 0
+    ? station.projectIndex % REAL_PROJECT_COUNT
+    : STATION_TONES.length - 1;
+  return STATION_TONES[idx];
+}
 
 /**
  * Pedestal: stepped stone plinth with a pulsing arcane display floating
@@ -74,14 +111,16 @@ export function drawStationPedestal(
   px(ctx, x + 9, y + 4, 14, 1, PAL.gold);
   px(ctx, x + 9, y + 18, 14, 1, PAL.gold);
 
-  // Pulsing arcane display floating above the column — the one luminous
-  // element on the pedestal, so the one place alpha is allowed. Restored
-  // to 1 in `finally` even if a future edit makes the body above throw.
-  box(ctx, x + 8, y - 8, 16, 10, PAL.arcaneD);
+  // Pulsing display floating above the column, tinted per station (see
+  // STATION_TONES) — the one luminous element on the pedestal, so the one
+  // place alpha is allowed. Restored to 1 in `finally` even if a future
+  // edit makes the body above throw.
+  const tone = stationTone(station);
+  box(ctx, x + 8, y - 8, 16, 10, tone.back);
   try {
     const pulse = 0.55 + 0.45 * Math.sin(t * 0.004 + x);
     ctx.globalAlpha = pulse;
-    px(ctx, x + 9, y - 7, 14, 8, PAL.arcane);
+    px(ctx, x + 9, y - 7, 14, 8, tone.glow);
   } finally {
     ctx.globalAlpha = 1;
   }
@@ -163,8 +202,10 @@ export function drawGuildInterior(
     // --- Central guild rug: a gold-bordered disc under the master
     // station, replacing the old rectangular runner carpet's linear
     // gradient. Outer disc drawn with its own outline; the inner disc
-    // (8 rows starting one row down, each 6px narrower) leaves a 1px gold
-    // border on every edge with no separate stroke call. ---
+    // (8 rows starting one row down, each 6px narrower — 3px per side)
+    // leaves a 1px gold border top and bottom (rows 0 and 9 of the outer
+    // disc, which the inner disc never reaches) and a 3px gold border on
+    // each side, with no separate stroke call. ---
     pixelDisc(ctx, W / 2, 150, [20, 34, 44, 50, 52, 52, 50, 44, 34, 20], PAL.gold);
     pixelDisc(ctx, W / 2, 151, [28, 38, 44, 46, 46, 44, 38, 28], PAL.roof, false);
 

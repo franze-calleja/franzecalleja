@@ -32,6 +32,7 @@ import {
   collectStatues, collectBanners, drawCentralFountain, drawBasketballCourt, FOUNTAIN_BASELINE,
 } from "./game-landmarks";
 import { drawGuildInterior } from "./game-interior";
+import { PAL } from "./game-palette";
 import {
   renderTerrainToCache,
   drawTerrain,
@@ -366,6 +367,40 @@ function drawKissesTheDog(
   ctx.fillRect(7, -12 + heartFloat, 2, 2);
 
   ctx.restore();
+}
+
+/**
+ * The Guild interior's two static text labels — the fireplace's guild
+ * plaque and the exit sign above the south door. Both were dropped when
+ * drawProjectsGuildInterior moved into game-interior.ts, because that
+ * module only receives PixelCtx (no fillText/font). Restored here on the
+ * full context, using the same fillText + backing-rect technique the
+ * overworld's NPC nameplates use below (canvas text is fine; it's UI, not
+ * the gradient/curve/alpha art the pixel contract restricts). Positions
+ * match game-interior.ts's hearth (world 300..400, 0..72) and door
+ * (world 310..390, 488..540).
+ */
+function drawGuildInteriorLabels(ctx: CanvasRenderingContext2D): void {
+  // Guild crest plaque, on the chimney breast above the firebox.
+  ctx.fillStyle = PAL.gold;
+  ctx.fillRect(325, 28, 50, 14);
+  ctx.fillStyle = PAL.out;
+  ctx.fillRect(327, 30, 46, 10);
+  ctx.fillStyle = PAL.goldL;
+  ctx.font = "bold 7px monospace";
+  ctx.textAlign = "center";
+  ctx.fillText("PROJ GUILD", 350, 38);
+
+  // Exit sign above the south doorway.
+  ctx.fillStyle = PAL.roofD;
+  ctx.fillRect(295, 466, 110, 16);
+  ctx.strokeStyle = PAL.gold;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(295, 466, 110, 16);
+  ctx.fillStyle = PAL.goldL;
+  ctx.font = "bold 8px monospace";
+  ctx.textAlign = "center";
+  ctx.fillText("▼ EXIT TO TOWN ▼", 350, 477);
 }
 
 function drawParticles(ctx: CanvasRenderingContext2D, particles: Particle[]) {
@@ -1228,15 +1263,30 @@ export default function GameCanvas() {
         // where the player actually stands (unlike the overworld below,
         // which now sorts by baseline). Flagged, not fixed, per Task 12.
         drawGuildInterior(ctx, time, charactersImageRef.current);
+        // The hearth plaque and exit sign: canvas text, restored here
+        // because game-interior.ts only has PixelCtx (no fillText/font).
+        drawGuildInteriorLabels(ctx);
         // Architect Astro stands fixed at the drafting desk. This needs
         // drawImage, which PixelCtx (and so game-interior.ts) deliberately
         // doesn't expose, so it stays here rather than in the sprite-art
         // module. Position matches game-interior.ts's desk art (logical
         // 260,41 = world 520,82) and the fixed hit-test radius around
         // (566,110) in getNearbyInteractable below.
+        const astroDeskX = 520;
+        const astroDeskY = 82;
         drawSpritesheetCharacter(
-          ctx, charactersImageRef.current, 0, 546, 100, "down", false, 0, "none"
+          ctx, charactersImageRef.current, 0, astroDeskX + 26, astroDeskY + 18,
+          "down", false, 0, "none"
         );
+        // Astro's nameplate, matching the overworld NPC nameplate style
+        // (rgba backing + fillText) rather than the generic per-NPC block
+        // below, since this is a fixed guild-only render, not a live NPC.
+        ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
+        ctx.fillRect(astroDeskX + 42 - 46, astroDeskY + 6, 92, 12);
+        ctx.fillStyle = PAL.arcane;
+        ctx.font = "bold 7.5px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("Architect Astro 🛠️", astroDeskX + 42, astroDeskY + 15);
         drawPlayer();
       } else {
         // Render Overworld Scene

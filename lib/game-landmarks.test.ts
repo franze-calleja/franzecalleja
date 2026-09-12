@@ -12,9 +12,23 @@ import {
 function recorder() {
   const rects: { x: number; y: number; w: number; h: number; color: string }[] = [];
   const calls: string[] = [];
+  // Every globalAlpha write, in order — see lib/game-interior.test.ts's
+  // recorder for why a plain `globalAlpha: 1` field can't tell "restored"
+  // apart from "never touched" (it only remembers the last value written).
+  // None of the four HEAVY renderers below use alpha at all today (they
+  // animate via discrete frame/colour cycling instead — see e.g.
+  // drawCentralFountain's ripple, which swaps PAL.glass/glassD per frame
+  // rather than fading), so there is no existing alpha block to delete for
+  // a "does this test bite" check the way lib/game-props.test.ts has one.
+  // What this DOES still guard against is a future regression: if a HEAVY
+  // renderer starts using alpha for a glow and leaks it, `alphaLog` makes
+  // that visible instead of silently passing.
+  const alphaLog: number[] = [];
   let fill = "";
+  let alpha = 1;
   const ctx = {
-    globalAlpha: 1,
+    get globalAlpha() { return alpha; },
+    set globalAlpha(v: number) { alpha = v; alphaLog.push(v); },
     get fillStyle() { return fill; },
     set fillStyle(v: string) { fill = v; },
     fillRect(x: number, y: number, w: number, h: number) { rects.push({ x, y, w, h, color: fill }); },
@@ -24,7 +38,7 @@ function recorder() {
     arc() { calls.push("arc"); }, ellipse() { calls.push("ellipse"); },
     imageSmoothingEnabled: true,
   };
-  return { ctx, rects, calls };
+  return { ctx, rects, calls, alphaLog };
 }
 
 /**
@@ -77,7 +91,7 @@ describe("reconstructed curve-heavy renderers", () => {
     });
   });
 
-  it("all leave globalAlpha restored", () => {
+  it("all leave globalAlpha restored (none of the four touch it today — this guards a future glow effect)", () => {
     Object.entries(HEAVY).forEach(([name, fn]) => {
       const { ctx } = recorder();
       fn(ctx as never, 300);

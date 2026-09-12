@@ -8,9 +8,20 @@ import { GUILD_PROJECT_STATIONS } from "../components/game/game-data";
 function recorder() {
   const rects: { x: number; y: number; w: number; h: number; color: string }[] = [];
   const calls: string[] = [];
+  // Every globalAlpha write, in order — a plain `globalAlpha: 1` field
+  // (the shape used before this fix, and still used by lib/game-props.test.ts
+  // and lib/game-landmarks.test.ts) only ever reflects the LAST value
+  // written, so "expect(ctx.globalAlpha).toBe(1)" passes identically
+  // whether the renderer pulses alpha and restores it, or never touches
+  // alpha at all — deleting the entire pulse/ember block wouldn't fail
+  // that assertion. Logging every write lets a test also assert alpha was
+  // actually *used* mid-draw, not just that it ended at 1.
+  const alphaLog: number[] = [];
   let fill = "";
+  let alpha = 1;
   const ctx = {
-    globalAlpha: 1,
+    get globalAlpha() { return alpha; },
+    set globalAlpha(v: number) { alpha = v; alphaLog.push(v); },
     get fillStyle() { return fill; },
     set fillStyle(v: string) { fill = v; },
     fillRect(x: number, y: number, w: number, h: number) { rects.push({ x, y, w, h, color: fill }); },
@@ -21,7 +32,7 @@ function recorder() {
     arc() { calls.push("arc"); }, ellipse() { calls.push("ellipse"); },
     imageSmoothingEnabled: true,
   };
-  return { ctx, rects, calls };
+  return { ctx, rects, calls, alphaLog };
 }
 
 describe("guild interior", () => {
@@ -66,17 +77,23 @@ describe("guild interior", () => {
     });
   });
 
-  it("leaves globalAlpha restored to 1 after the full scene, at a non-zero time", () => {
+  it("pulses globalAlpha for the hearth embers and every pedestal, then restores it to 1", () => {
     // t=700 is chosen (not 0) so a pulse/flicker term mid-cycle is actually
-    // exercised rather than trivially starting at its rest value.
-    const { ctx } = recorder();
+    // exercised rather than trivially starting at its rest value. Asserting
+    // a non-1 value was logged is what makes this test able to fail: with
+    // the old plain-field recorder, deleting the embers'/pedestals'
+    // try/finally alpha block entirely would still leave
+    // `ctx.globalAlpha === 1` true, since the field simply never moved.
+    const { ctx, alphaLog } = recorder();
     drawGuildInterior(ctx as never, 700, null);
+    expect(alphaLog.some((v) => v !== 1), "globalAlpha was never touched").toBe(true);
     expect(ctx.globalAlpha).toBe(1);
   });
 
-  it("leaves globalAlpha restored after a single pedestal at a non-zero time", () => {
-    const { ctx } = recorder();
+  it("pulses globalAlpha for a single pedestal's display, then restores it to 1", () => {
+    const { ctx, alphaLog } = recorder();
     drawStationPedestal(ctx as never, GUILD_PROJECT_STATIONS[0], 700);
+    expect(alphaLog.some((v) => v !== 1), "globalAlpha was never touched").toBe(true);
     expect(ctx.globalAlpha).toBe(1);
   });
 

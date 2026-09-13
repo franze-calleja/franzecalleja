@@ -3,11 +3,18 @@ import {
   AZRA_SANCTUARY_INTERIOR_HEIGHT,
   AZRA_SANCTUARY_INTERIOR_WIDTH,
   CHARACTER_SKINS,
+  CAREER_ARCHIVE_INTERIOR_HEIGHT,
+  CAREER_ARCHIVE_INTERIOR_WIDTH,
+  ACADEMY_INTERIOR_HEIGHT,
+  ACADEMY_INTERIOR_WIDTH,
+  FLOWER_POTS,
   DEVOPS_STATION_INTERIOR_HEIGHT,
   DEVOPS_STATION_INTERIOR_WIDTH,
   GUILD_INTERIOR_WIDTH,
   GUILD_INTERIOR_HEIGHT,
   GUILD_PROJECT_STATIONS,
+  GAMER_COTTAGE_INTERIOR_HEIGHT,
+  GAMER_COTTAGE_INTERIOR_WIDTH,
   NPCS,
   VILLAGE_POST_INTERIOR_HEIGHT,
   VILLAGE_POST_INTERIOR_WIDTH,
@@ -149,5 +156,30 @@ describe("DevOps Station Interior", () => {
   it("uses the shared interior viewport dimensions", () => {
     expect(DEVOPS_STATION_INTERIOR_WIDTH).toBe(700);
     expect(DEVOPS_STATION_INTERIOR_HEIGHT).toBe(540);
+  });
+});
+
+describe("Career and Academy interiors", () => {
+  it("returns from the Career Archives before the exterior flower-bed collision", () => {
+    const returnBody = { left: 808 + 4, right: 808 + 20, top: 260 + 16, bottom: 260 + 30 };
+    FLOWER_POTS.forEach((pot) => {
+      const overlaps = returnBody.right > pot.x && returnBody.left < pot.x + 18 &&
+        returnBody.bottom > pot.y + 6 && returnBody.top < pot.y + 22;
+      expect(overlaps, `Career exit overlaps flower at ${pot.x}, ${pot.y}`).toBe(false);
+    });
+  });
+
+  it("uses the shared interior viewport dimensions", () => {
+    expect(CAREER_ARCHIVE_INTERIOR_WIDTH).toBe(700);
+    expect(CAREER_ARCHIVE_INTERIOR_HEIGHT).toBe(540);
+    expect(ACADEMY_INTERIOR_WIDTH).toBe(700);
+    expect(ACADEMY_INTERIOR_HEIGHT).toBe(540);
+  });
+});
+
+describe("Gamer Cottage interior", () => {
+  it("uses the shared interior viewport dimensions", () => {
+    expect(GAMER_COTTAGE_INTERIOR_WIDTH).toBe(700);
+    expect(GAMER_COTTAGE_INTERIOR_HEIGHT).toBe(540);
   });
 });

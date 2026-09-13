@@ -9,6 +9,9 @@ import {
   VILLAGE_POST_INTERIOR_WIDTH, VILLAGE_POST_INTERIOR_HEIGHT,
   AZRA_SANCTUARY_INTERIOR_WIDTH, AZRA_SANCTUARY_INTERIOR_HEIGHT,
   DEVOPS_STATION_INTERIOR_WIDTH, DEVOPS_STATION_INTERIOR_HEIGHT,
+  CAREER_ARCHIVE_INTERIOR_WIDTH, CAREER_ARCHIVE_INTERIOR_HEIGHT,
+  ACADEMY_INTERIOR_WIDTH, ACADEMY_INTERIOR_HEIGHT,
+  GAMER_COTTAGE_INTERIOR_WIDTH, GAMER_COTTAGE_INTERIOR_HEIGHT,
   type ProjectStation,
 } from "./game-data";
 
@@ -51,6 +54,12 @@ const SANCTUARY_W = AZRA_SANCTUARY_INTERIOR_WIDTH / UNIT;
 const SANCTUARY_H = AZRA_SANCTUARY_INTERIOR_HEIGHT / UNIT;
 const DEVOPS_W = DEVOPS_STATION_INTERIOR_WIDTH / UNIT;
 const DEVOPS_H = DEVOPS_STATION_INTERIOR_HEIGHT / UNIT;
+const ARCHIVE_W = CAREER_ARCHIVE_INTERIOR_WIDTH / UNIT;
+const ARCHIVE_H = CAREER_ARCHIVE_INTERIOR_HEIGHT / UNIT;
+const ACADEMY_W = ACADEMY_INTERIOR_WIDTH / UNIT;
+const ACADEMY_H = ACADEMY_INTERIOR_HEIGHT / UNIT;
+const COTTAGE_W = GAMER_COTTAGE_INTERIOR_WIDTH / UNIT;
+const COTTAGE_H = GAMER_COTTAGE_INTERIOR_HEIGHT / UNIT;
 
 // Book-spine colours for the west shelf — a fixed rotation through PAL, not
 // each project's own accent (station.color is a hex literal outside PAL,
@@ -422,5 +431,120 @@ export function drawDevopsStationInterior(ctx: PixelCtx, t: number): void {
     for (let x = 122; x < 228; x += 13) px(ctx, x, 122, 7, 2, PAL.goldD);
     px(ctx, 106, 130, 138, 7, PAL.steelX);
     px(ctx, 110, 130, 130, 2, PAL.steelL);
+  });
+}
+
+/** Career archive reading room, centered on a timeline desk. */
+export function drawCareerArchiveInterior(ctx: PixelCtx, t: number): void {
+  withSprite(ctx, 0, 0, () => {
+    stoneCourse(ctx, 0, 0, ARCHIVE_W, ARCHIVE_H);
+    for (let y = 12; y < 250; y += 16) {
+      px(ctx, 8, y, ARCHIVE_W - 16, 1, PAL.stoneD);
+      for (let x = 16 + ((y / 16) % 2) * 8; x < ARCHIVE_W - 16; x += 32) px(ctx, x, y + 8, 1, 6, PAL.stoneL);
+    }
+    stoneCourse(ctx, 0, 0, ARCHIVE_W, 12);
+    stoneCourse(ctx, 0, 0, 10, 250);
+    stoneCourse(ctx, ARCHIVE_W - 10, 0, 10, 250);
+    px(ctx, 0, 250, ARCHIVE_W, 20, PAL.woodD);
+    plankDoor(ctx, 155, 244, 40, 26);
+
+    // Two dense document shelves make the room read as an archive, not an office.
+    [20, 288].forEach((x) => {
+      box(ctx, x, 28, 42, 132, PAL.wood);
+      for (let y = 36; y < 150; y += 20) {
+        px(ctx, x + 4, y, 34, 3, PAL.woodD);
+        for (let book = 0; book < 7; book++) px(ctx, x + 6 + book * 4, y + 4, 3, 12, BOOK_TONES[(book + Math.floor(y / 20)) % BOOK_TONES.length]);
+      }
+    });
+    // Career timeline desk / interaction target.
+    box(ctx, 108, 91, 134, 42, PAL.out);
+    box(ctx, 111, 94, 128, 36, PAL.woodD);
+    px(ctx, 116, 99, 118, 22, PAL.wallL);
+    for (let x = 124; x < 224; x += 24) {
+      px(ctx, x, 105, 8, 8, PAL.violetD);
+      px(ctx, x + 2, 107, 4, 4, Math.floor(t / 450 + x) % 2 ? PAL.gold : PAL.grassL);
+      px(ctx, x + 8, 108, 14, 2, PAL.steelD);
+    }
+    px(ctx, 104, 132, 142, 7, PAL.wood);
+  });
+}
+
+/** Academy honors dojo, with a medal display and open training floor. */
+export function drawAcademyInterior(ctx: PixelCtx, t: number): void {
+  withSprite(ctx, 0, 0, () => {
+    for (let y = 0; y < ACADEMY_H; y += 14) stoneCourse(ctx, 0, y, ACADEMY_W, 14);
+    stoneCourse(ctx, 0, 0, ACADEMY_W, 12);
+    px(ctx, 0, 250, ACADEMY_W, 20, PAL.woodD);
+    plankDoor(ctx, 155, 244, 40, 26);
+    // Tatami grid holds the eye on the training floor.
+    box(ctx, 74, 76, 202, 112, PAL.grassD);
+    for (let x = 76; x < 274; x += 32) px(ctx, x, 78, 1, 108, PAL.grassL);
+    for (let y = 78; y < 186; y += 28) px(ctx, 76, y, 198, 1, PAL.grassL);
+    // Honors display is the interaction target.
+    box(ctx, 128, 28, 94, 36, PAL.wood);
+    box(ctx, 131, 31, 88, 30, PAL.out);
+    for (let x = 140; x < 210; x += 18) {
+      px(ctx, x, 36, 10, 14, PAL.goldD);
+      px(ctx, x + 2, 38, 6, 8, Math.floor(t / 350 + x) % 2 ? PAL.gold : PAL.wallL);
+    }
+    // Training dummies and lanterns flank the open floor.
+    [42, 298].forEach((x) => {
+      px(ctx, x + 8, 94, 4, 72, PAL.wood);
+      px(ctx, x, 112, 20, 4, PAL.woodD);
+      box(ctx, x + 3, 80, 14, 16, PAL.woodL);
+    });
+    [52, 286].forEach((x, index) => lantern(ctx, x, 34, t + index * 300));
+  });
+}
+
+/** Franze's Gamer Cottage: a symmetrical night-game den around a CRT wall. */
+export function drawGamerCottageInterior(ctx: PixelCtx, t: number): void {
+  withSprite(ctx, 0, 0, () => {
+    for (let y = 0; y < COTTAGE_H; y += 16) {
+      stoneCourse(ctx, 0, y, COTTAGE_W, 16);
+      px(ctx, 8, y + 12, COTTAGE_W - 16, 1, PAL.woodD);
+    }
+    stoneCourse(ctx, 0, 0, COTTAGE_W, 12);
+    stoneCourse(ctx, 0, 0, 10, 250);
+    stoneCourse(ctx, COTTAGE_W - 10, 0, 10, 250);
+    px(ctx, 0, 250, COTTAGE_W, 20, PAL.woodD);
+    plankDoor(ctx, 155, 244, 40, 26);
+
+    // Symmetric shelving makes the CRT the deliberate focal point.
+    [22, 292].forEach((x) => {
+      box(ctx, x, 28, 36, 78, PAL.out);
+      box(ctx, x + 2, 30, 32, 74, PAL.woodD);
+      for (let y = 36; y < 96; y += 18) {
+        px(ctx, x + 5, y, 26, 2, PAL.woodL);
+        px(ctx, x + 7, y + 4, 5, 8, PAL.arcane);
+        px(ctx, x + 15, y + 4, 5, 8, PAL.goldD);
+        px(ctx, x + 23, y + 4, 4, 8, PAL.violetD);
+      }
+    });
+    // CRT setup, console, and animated scanline.
+    box(ctx, 112, 26, 126, 68, PAL.out);
+    box(ctx, 116, 30, 118, 58, PAL.steelX);
+    px(ctx, 120, 34, 110, 48, PAL.glassD);
+    try {
+      ctx.globalAlpha = 0.58 + 0.32 * Math.sin(t * 0.008);
+      px(ctx, 124, 38, 102, 40, PAL.arcane);
+      px(ctx, 128, 42 + (Math.floor(t / 80) % 16), 94, 2, PAL.glassL);
+    } finally { ctx.globalAlpha = 1; }
+    px(ctx, 148, 94, 54, 6, PAL.steel);
+    px(ctx, 156, 100, 38, 4, PAL.woodD);
+
+    // Lounge rug and two aligned couches leave a clear interaction route.
+    box(ctx, 114, 142, 122, 56, PAL.violetD);
+    px(ctx, 118, 146, 114, 48, PAL.violetL);
+    [70, 248].forEach((x) => {
+      box(ctx, x, 146, 48, 32, PAL.out);
+      box(ctx, x + 3, 149, 42, 26, PAL.woodD);
+      px(ctx, x + 6, 153, 36, 14, PAL.wallD);
+    });
+    // Controller stand is the interaction target.
+    box(ctx, 150, 116, 50, 18, PAL.out);
+    px(ctx, 154, 119, 42, 12, PAL.wood);
+    px(ctx, 164, 122, 10, 5, PAL.arcane);
+    px(ctx, 178, 122, 10, 5, PAL.gold);
   });
 }

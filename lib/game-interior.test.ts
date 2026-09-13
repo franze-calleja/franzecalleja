@@ -2,7 +2,10 @@ import { describe, it, expect } from "vitest";
 import { PAL } from "../components/game/game-palette";
 import {
   drawAzraSanctuaryInterior,
+  drawAcademyInterior,
+  drawCareerArchiveInterior,
   drawDevopsStationInterior,
+  drawGamerCottageInterior,
   drawGuildInterior,
   drawStationPedestal,
   drawVillagePostInterior,
@@ -220,5 +223,24 @@ describe("DevOps station interior", () => {
     drawDevopsStationInterior(first.ctx as never, 0);
     drawDevopsStationInterior(second.ctx as never, 240);
     expect(first.rects).not.toEqual(second.rects);
+  });
+});
+
+describe("career and academy interiors", () => {
+  it.each([
+    ["career archive", drawCareerArchiveInterior],
+    ["academy dojo", drawAcademyInterior],
+    ["gamer cottage", drawGamerCottageInterior],
+  ])("renders %s as palette-only integer pixel art", (_name, renderer) => {
+    const { ctx, rects, calls } = recorder();
+    renderer(ctx as never, 420);
+    expect(rects.length).toBeGreaterThan(100);
+    ["createLinearGradient", "createRadialGradient", "arc", "ellipse"]
+      .forEach((banned) => expect(calls).not.toContain(banned));
+    const allowed = new Set<string>(Object.values(PAL));
+    rects.forEach((rect) => {
+      expect(allowed.has(rect.color)).toBe(true);
+      expect(Number.isInteger(rect.x) && Number.isInteger(rect.y)).toBe(true);
+    });
   });
 });

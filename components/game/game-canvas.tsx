@@ -19,6 +19,12 @@ import {
   AZRA_SANCTUARY_INTERIOR_HEIGHT,
   DEVOPS_STATION_INTERIOR_WIDTH,
   DEVOPS_STATION_INTERIOR_HEIGHT,
+  CAREER_ARCHIVE_INTERIOR_WIDTH,
+  CAREER_ARCHIVE_INTERIOR_HEIGHT,
+  ACADEMY_INTERIOR_WIDTH,
+  ACADEMY_INTERIOR_HEIGHT,
+  GAMER_COTTAGE_INTERIOR_WIDTH,
+  GAMER_COTTAGE_INTERIOR_HEIGHT,
   GUILD_PROJECT_STATIONS,
   ProjectStation,
   DECORATIVE_TREES,
@@ -39,6 +45,9 @@ import {
 } from "./game-landmarks";
 import {
   drawAzraSanctuaryInterior,
+  drawAcademyInterior,
+  drawCareerArchiveInterior,
+  drawGamerCottageInterior,
   drawDevopsStationInterior,
   drawGuildInterior,
   drawVillagePostInterior,
@@ -93,7 +102,7 @@ interface Particle {
   alpha: number;
 }
 
-type GameScene = "overworld" | "projects-guild" | "village-post" | "azra-sanctuary" | "devops-station";
+type GameScene = "overworld" | "projects-guild" | "village-post" | "azra-sanctuary" | "devops-station" | "career-archive" | "academy" | "gamer-cottage";
 
 function sceneDimensions(scene: GameScene): { width: number; height: number } {
   if (scene === "projects-guild") {
@@ -108,6 +117,9 @@ function sceneDimensions(scene: GameScene): { width: number; height: number } {
   if (scene === "devops-station") {
     return { width: DEVOPS_STATION_INTERIOR_WIDTH, height: DEVOPS_STATION_INTERIOR_HEIGHT };
   }
+  if (scene === "career-archive") return { width: CAREER_ARCHIVE_INTERIOR_WIDTH, height: CAREER_ARCHIVE_INTERIOR_HEIGHT };
+  if (scene === "academy") return { width: ACADEMY_INTERIOR_WIDTH, height: ACADEMY_INTERIOR_HEIGHT };
+  if (scene === "gamer-cottage") return { width: GAMER_COTTAGE_INTERIOR_WIDTH, height: GAMER_COTTAGE_INTERIOR_HEIGHT };
   return { width: MAP_TOTAL_WIDTH, height: MAP_TOTAL_HEIGHT };
 }
 
@@ -501,6 +513,42 @@ function drawDevopsStationInteriorLabels(ctx: CanvasRenderingContext2D): void {
   ctx.fillText("▼ EXIT TO TOWN ▼", 350, 477);
 }
 
+function drawCareerArchiveInteriorLabels(ctx: CanvasRenderingContext2D): void {
+  ctx.fillStyle = PAL.woodD; ctx.fillRect(260, 38, 180, 18);
+  ctx.fillStyle = PAL.out; ctx.fillRect(263, 41, 174, 12);
+  ctx.fillStyle = PAL.goldL; ctx.font = "bold 8px monospace"; ctx.textAlign = "center";
+  ctx.fillText("CAREER ARCHIVES // TIMELINE ROOM", 350, 50);
+  ctx.fillStyle = PAL.woodD; ctx.fillRect(264, 310, 172, 20);
+  ctx.fillStyle = PAL.wallL; ctx.font = "bold 9px monospace";
+  ctx.fillText("[SPACE / E] VIEW CAREER TIMELINE", 350, 324);
+  ctx.fillStyle = PAL.woodD; ctx.fillRect(295, 466, 110, 16);
+  ctx.fillStyle = PAL.goldL; ctx.font = "bold 8px monospace"; ctx.fillText("▼ EXIT TO TOWN ▼", 350, 477);
+}
+
+function drawAcademyInteriorLabels(ctx: CanvasRenderingContext2D): void {
+  ctx.fillStyle = PAL.roofD; ctx.fillRect(264, 38, 172, 18);
+  ctx.fillStyle = PAL.out; ctx.fillRect(267, 41, 166, 12);
+  ctx.fillStyle = PAL.goldL; ctx.font = "bold 8px monospace"; ctx.textAlign = "center";
+  ctx.fillText("ACADEMY OF ENVERGA // HONORS DOJO", 350, 50);
+  ctx.fillStyle = PAL.roofD; ctx.fillRect(258, 146, 184, 20);
+  ctx.fillStyle = PAL.wallL; ctx.font = "bold 9px monospace";
+  ctx.fillText("[SPACE / E] VIEW ACADEMIC HONORS", 350, 160);
+  ctx.fillStyle = PAL.roofD; ctx.fillRect(295, 466, 110, 16);
+  ctx.fillStyle = PAL.goldL; ctx.font = "bold 8px monospace"; ctx.fillText("▼ EXIT TO TOWN ▼", 350, 477);
+}
+
+function drawGamerCottageInteriorLabels(ctx: CanvasRenderingContext2D): void {
+  ctx.fillStyle = PAL.violetD; ctx.fillRect(264, 38, 172, 18);
+  ctx.fillStyle = PAL.out; ctx.fillRect(267, 41, 166, 12);
+  ctx.fillStyle = PAL.glassL; ctx.font = "bold 8px monospace"; ctx.textAlign = "center";
+  ctx.fillText("GAMER COTTAGE // NIGHT GAME DEN", 350, 50);
+  ctx.fillStyle = PAL.violetD; ctx.fillRect(265, 276, 170, 20);
+  ctx.fillStyle = PAL.wallL; ctx.font = "bold 9px monospace";
+  ctx.fillText("[SPACE / E] OPEN GAME SHELF", 350, 290);
+  ctx.fillStyle = PAL.violetD; ctx.fillRect(295, 466, 110, 16);
+  ctx.fillStyle = PAL.glassL; ctx.font = "bold 8px monospace"; ctx.fillText("▼ EXIT TO TOWN ▼", 350, 477);
+}
+
 function drawParticles(ctx: CanvasRenderingContext2D, particles: Particle[]) {
   for (const pt of particles) {
     pt.x += pt.vx;
@@ -741,6 +789,24 @@ export default function GameCanvas() {
       return false;
     }
 
+    if (currentSceneRef.current === "career-archive" || currentSceneRef.current === "academy") {
+      if (pLeft < 60 || pRight > 640 || pTop < 112) return true;
+      if (pBottom > 480) return !(pLeft >= 305 && pRight <= 395);
+      if (currentSceneRef.current === "career-archive") {
+        if (pRight > 216 && pLeft < 488 && pBottom > 182 && pTop < 278) return true;
+        if ((pRight > 40 && pLeft < 124) || (pRight > 576 && pLeft < 660)) return pTop < 332;
+      } else if (pRight > 256 && pLeft < 444 && pBottom > 56 && pTop < 140) return true;
+      return false;
+    }
+
+    if (currentSceneRef.current === "gamer-cottage") {
+      if (pLeft < 60 || pRight > 640 || pTop < 112) return true;
+      if (pBottom > 480) return !(pLeft >= 305 && pRight <= 395);
+      if (pRight > 224 && pLeft < 476 && pBottom > 52 && pTop < 208) return true;
+      if ((pRight > 140 && pLeft < 236) || (pRight > 496 && pLeft < 592)) return pBottom > 292 && pTop < 356;
+      return false;
+    }
+
     // --- 5. OVERWORLD COLLISION ---
     // Bounds
     if (
@@ -760,7 +826,7 @@ export default function GameCanvas() {
       const objBottom = obj.y + obj.height;
 
       if (obj.type === "building" || obj.type === "azra") {
-        const doorCenterX = obj.id === "devops-plant" ? 160 : objLeft + obj.width / 2;
+        const doorCenterX = obj.id === "devops-plant" ? 160 : obj.id === "education-monument" ? 132 : obj.id === "gaming-lounge" ? 648 : objLeft + obj.width / 2;
         const doorLeft = doorCenterX - 18;
         const doorRight = doorCenterX + 18;
         const isNearDoor = pLeft >= doorLeft && pRight <= doorRight && pTop >= objBottom - 24;
@@ -893,8 +959,8 @@ export default function GameCanvas() {
       | "enter_azra_sanctuary"
       | "exit_azra_sanctuary"
       | "enter_devops_station"
-      | "exit_devops_station";
-    interiorAction?: "contact" | "azra" | "devops";
+      | "exit_devops_station" | "enter_career_archive" | "exit_career_archive" | "enter_academy" | "exit_academy" | "enter_gamer_cottage" | "exit_gamer_cottage";
+    interiorAction?: "contact" | "azra" | "devops" | "experience" | "education" | "gaming";
     doorName?: string;
   } | null => {
     const p = playerRef.current;
@@ -971,6 +1037,21 @@ export default function GameCanvas() {
       return null;
     }
 
+    if (currentSceneRef.current === "career-archive" || currentSceneRef.current === "academy") {
+      if (Math.hypot(centerX - 350, centerY - 475) < 40 || (p.y >= 455 && p.x >= 300 && p.x <= 400)) {
+        return { doorTransition: currentSceneRef.current === "career-archive" ? "exit_career_archive" : "exit_academy", doorName: "Exit to Franze Town" };
+      }
+      const actionY = currentSceneRef.current === "career-archive" ? 300 : 120;
+      if (Math.hypot(centerX - 350, centerY - actionY) < 76) return { interiorAction: currentSceneRef.current === "career-archive" ? "experience" : "education" };
+      return null;
+    }
+
+    if (currentSceneRef.current === "gamer-cottage") {
+      if (Math.hypot(centerX - 350, centerY - 475) < 40 || (p.y >= 455 && p.x >= 300 && p.x <= 400)) return { doorTransition: "exit_gamer_cottage", doorName: "Exit to Franze Town" };
+      if (Math.hypot(centerX - 350, centerY - 260) < 76) return { interiorAction: "gaming" };
+      return null;
+    }
+
     // --- 2. OVERWORLD INTERACTIONS ---
     // Check Projects Guild Entrance Doorway (x: 140, y: 170)
     if (
@@ -1002,6 +1083,15 @@ export default function GameCanvas() {
       (p.y <= 370 && p.x >= 142 && p.x <= 158 && p.y >= 330)
     ) {
       return { doorTransition: "enter_devops_station", doorName: "DevOps & Telemetry Power Station" };
+    }
+    if (Math.hypot(centerX - 820, centerY - 240) < 38 || (p.y <= 260 && p.x >= 802 && p.x <= 818 && p.y >= 220)) {
+      return { doorTransition: "enter_career_archive", doorName: "Career & Work Experience Archives" };
+    }
+    if (Math.hypot(centerX - 132, centerY - 662) < 38 || (p.y <= 680 && p.x >= 114 && p.x <= 130 && p.y >= 640)) {
+      return { doorTransition: "enter_academy", doorName: "Academy of Enverga Honors Dojo" };
+    }
+    if (Math.hypot(centerX - 648, centerY - 632) < 38 || (p.y <= 650 && p.x >= 630 && p.x <= 646 && p.y >= 610)) {
+      return { doorTransition: "enter_gamer_cottage", doorName: "Franze's Gamer Cottage" };
     }
 
     // Check Overworld NPCs
@@ -1136,6 +1226,43 @@ export default function GameCanvas() {
       return;
     }
 
+    if (nearby.doorTransition === "enter_career_archive" || nearby.doorTransition === "enter_academy") {
+      retroAudio.playDiscovery();
+      setCurrentScene(nearby.doorTransition === "enter_career_archive" ? "career-archive" : "academy");
+      leavesRef.current = [];
+      const p = playerRef.current;
+      p.x = 338; p.y = 430; p.direction = "up"; p.isMoving = false;
+      targetDestinationRef.current = null;
+      return;
+    }
+
+    if (nearby.doorTransition === "exit_career_archive" || nearby.doorTransition === "exit_academy") {
+      retroAudio.playInteract();
+      const isCareer = nearby.doorTransition === "exit_career_archive";
+      setCurrentScene("overworld");
+      const p = playerRef.current;
+      // Keep the return body immediately above the Archive flower bed.
+      p.x = isCareer ? 808 : 120; p.y = isCareer ? 260 : 680; p.direction = "down"; p.isMoving = false;
+      targetDestinationRef.current = null;
+      return;
+    }
+
+    if (nearby.doorTransition === "enter_gamer_cottage") {
+      retroAudio.playDiscovery(); setCurrentScene("gamer-cottage"); leavesRef.current = [];
+      const p = playerRef.current;
+      p.x = 338; p.y = 430; p.direction = "up"; p.isMoving = false;
+      targetDestinationRef.current = null;
+      return;
+    }
+
+    if (nearby.doorTransition === "exit_gamer_cottage") {
+      retroAudio.playInteract(); setCurrentScene("overworld");
+      const p = playerRef.current;
+      p.x = 636; p.y = 655; p.direction = "down"; p.isMoving = false;
+      targetDestinationRef.current = null;
+      return;
+    }
+
     if (nearby.interiorAction === "contact") {
       retroAudio.playInteract();
       setActiveModalType("contact");
@@ -1157,6 +1284,19 @@ export default function GameCanvas() {
       retroAudio.playInteract();
       setActiveModalType("devops");
       setDiscoveredLocations((prev) => new Set([...prev, "devops-ops-console"]));
+      return;
+    }
+
+    if (nearby.interiorAction === "experience" || nearby.interiorAction === "education") {
+      retroAudio.playInteract();
+      setActiveModalType(nearby.interiorAction);
+      setDiscoveredLocations((prev) => new Set([...prev, nearby.interiorAction === "experience" ? "career-timeline-desk" : "academy-honors-display"]));
+      return;
+    }
+
+    if (nearby.interiorAction === "gaming") {
+      retroAudio.playInteract(); setActiveModalType("gaming");
+      setDiscoveredLocations((prev) => new Set([...prev, "gamer-cottage-console"]));
       return;
     }
 
@@ -1428,6 +1568,21 @@ export default function GameCanvas() {
             p.isMoving = false;
             targetDestinationRef.current = null;
           }
+        } else if (scene === "career-archive" || scene === "academy") {
+          if (p.y >= 485 && p.x >= 305 && p.x <= 395) {
+            retroAudio.playInteract();
+            const isCareer = scene === "career-archive";
+            setCurrentScene("overworld");
+            p.x = isCareer ? 808 : 120; p.y = isCareer ? 260 : 680;
+            p.direction = "down"; p.isMoving = false;
+            targetDestinationRef.current = null;
+          }
+        } else if (scene === "gamer-cottage") {
+          if (p.y >= 485 && p.x >= 305 && p.x <= 395) {
+            retroAudio.playInteract(); setCurrentScene("overworld");
+            p.x = 636; p.y = 655; p.direction = "down"; p.isMoving = false;
+            targetDestinationRef.current = null;
+          }
         } else {
           // Stepping into Projects Guild Front Door
           if (p.y <= 165 && p.x >= 122 && p.x <= 158 && p.y >= 150) {
@@ -1472,6 +1627,18 @@ export default function GameCanvas() {
             p.direction = "up";
             p.isMoving = false;
             targetDestinationRef.current = null;
+          }
+          if (p.y <= 260 && p.x >= 802 && p.x <= 818 && p.y >= 220) {
+            retroAudio.playDiscovery(); setCurrentScene("career-archive"); leavesRef.current = [];
+            p.x = 338; p.y = 430; p.direction = "up"; p.isMoving = false; targetDestinationRef.current = null;
+          }
+          if (p.y <= 680 && p.x >= 114 && p.x <= 130 && p.y >= 640) {
+            retroAudio.playDiscovery(); setCurrentScene("academy"); leavesRef.current = [];
+            p.x = 338; p.y = 430; p.direction = "up"; p.isMoving = false; targetDestinationRef.current = null;
+          }
+          if (p.y <= 650 && p.x >= 630 && p.x <= 646 && p.y >= 610) {
+            retroAudio.playDiscovery(); setCurrentScene("gamer-cottage"); leavesRef.current = [];
+            p.x = 338; p.y = 430; p.direction = "up"; p.isMoving = false; targetDestinationRef.current = null;
           }
         }
 
@@ -1593,6 +1760,14 @@ export default function GameCanvas() {
             x: 350,
             y: 300,
           });
+        } else if (nearby.interiorAction === "experience" || nearby.interiorAction === "education") {
+          setInteractPrompt({
+            text: nearby.interiorAction === "experience" ? "[SPACE / E] View Career Timeline" : "[SPACE / E] View Academic Honors",
+            x: 350,
+            y: nearby.interiorAction === "experience" ? 300 : 120,
+          });
+        } else if (nearby.interiorAction === "gaming") {
+          setInteractPrompt({ text: "[SPACE / E] Open Game Shelf", x: 350, y: 260 });
         } else if (nearby.projectStation) {
           setInteractPrompt({
             text: `[SPACE / E] Inspect ${nearby.projectStation.shortTitle}`,
@@ -1711,6 +1886,18 @@ export default function GameCanvas() {
       } else if (scene === "devops-station") {
         drawDevopsStationInterior(ctx, time);
         drawDevopsStationInteriorLabels(ctx);
+        drawPlayer();
+      } else if (scene === "career-archive") {
+        drawCareerArchiveInterior(ctx, time);
+        drawCareerArchiveInteriorLabels(ctx);
+        drawPlayer();
+      } else if (scene === "academy") {
+        drawAcademyInterior(ctx, time);
+        drawAcademyInteriorLabels(ctx);
+        drawPlayer();
+      } else if (scene === "gamer-cottage") {
+        drawGamerCottageInterior(ctx, time);
+        drawGamerCottageInteriorLabels(ctx);
         drawPlayer();
       } else {
         // Render Overworld Scene
@@ -1883,6 +2070,12 @@ export default function GameCanvas() {
                 ? "AZRA SANCTUARY // ORACLE CORE"
                 : currentScene === "devops-station"
                 ? "DEVOPS STATION // OPS BAY"
+                : currentScene === "career-archive"
+                ? "CAREER ARCHIVES // TIMELINE ROOM"
+                : currentScene === "academy"
+                ? "ACADEMY OF ENVERGA // HONORS DOJO"
+                : currentScene === "gamer-cottage"
+                ? "GAMER COTTAGE // NIGHT GAME DEN"
                 : "FRANZE TOWN // DEV OVERWORLD"}
             </span>
           </div>

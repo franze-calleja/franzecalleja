@@ -1,6 +1,6 @@
 import { WORLD_OBJECTS, type WorldObject } from "./game-data";
 import {
-  px, box, dith, withSprite, pixelDisc, pixelRing, gableRoof, steppedRoof,
+  px, box, dith, withSprite, pixelDisc, pixelRing,
   type PixelCtx, type Drawable,
 } from "./game-pixel";
 import { PAL } from "./game-palette";
@@ -262,6 +262,7 @@ export function drawCentralFountain(ctx: CanvasRenderingContext2D, time: number)
 // --- Banners -----------------------------------------------------------------
 
 interface BannerTone { dark: string; mid: string; light: string; trim: string }
+type BannerCut = "swallowtail" | "pennant" | "notched" | "square" | "championship";
 
 /** Nearest opaque palette ramp per banner's original rgba scheme. Lebron's
  *  royal purple now maps to PAL.violetL/violetD (added for the Guild
@@ -278,49 +279,67 @@ const BANNER_TONE: Record<string, BannerTone> = {
   "banner-lebron": { dark: PAL.violetD, mid: PAL.violetD, light: PAL.violetL, trim: PAL.gold },
 };
 const DEFAULT_BANNER_TONE: BannerTone = { dark: PAL.roofX, mid: PAL.roofD, light: PAL.roof, trim: PAL.gold };
+const BANNER_CUT: Record<string, BannerCut> = {
+  "banner-mseuf": "square",
+  "banner-raones": "pennant",
+  "banner-ellipsense": "notched",
+  "banner-techbears": "swallowtail",
+  "banner-lebron": "championship",
+};
 
-const CLOTH_X0 = 5, CLOTH_W = 17, CLOTH_Y0 = 2, CLOTH_H = 19;
+const CLOTH_X0 = 4, CLOTH_W = 19, CLOTH_Y0 = 2, CLOTH_H = 18;
 
 function drawOneBanner(ctx: CanvasRenderingContext2D, time: number, banner: WorldObject): void {
   withSprite(ctx as unknown as PixelCtx, banner.x, banner.y, () => {
     const c = ctx as unknown as PixelCtx;
     const tone = BANNER_TONE[banner.id] ?? DEFAULT_BANNER_TONE;
+    const cut = BANNER_CUT[banner.id] ?? "swallowtail";
 
-    // Opaque stepped shadow at the pole's base.
-    px(c, 3, CLOTH_Y0 + CLOTH_H, 6, 1, PAL.grassX);
-    px(c, 2, CLOTH_Y0 + CLOTH_H + 1, 8, 1, PAL.grassX);
-    px(c, 3, CLOTH_Y0 + CLOTH_H + 2, 6, 1, PAL.grassX);
+    // A shared stone-and-brass podium makes this row feel like a career
+    // avenue of standards, rather than loose flags planted in grass.
+    px(c, 2, 26, 20, 2, PAL.grassX);
+    box(c, 5, 22, 13, 5, PAL.out);
+    px(c, 6, 23, 11, 2, PAL.stone);
+    px(c, 4, 27, 15, 2, PAL.stoneD);
+    px(c, 6, 27, 11, 1, PAL.stoneL);
 
-    // Turned hardwood flagpole with brass collar rings.
-    box(c, 2, -3, 4, CLOTH_H + 5, PAL.wood);
-    px(c, 2, -3, 1, CLOTH_H + 5, PAL.woodL);
-    px(c, 2, 5, 4, 1, PAL.gold);
-    px(c, 2, 15, 4, 1, PAL.gold);
+    // Framed ceremonial mount: pole, crossbar, and a deliberately visible
+    // hanging point. The bracket is shared; the cloth cut and crest vary.
+    box(c, 1, -4, 3, 27, PAL.wood);
+    px(c, 1, -4, 1, 27, PAL.woodL);
+    px(c, 1, 6, 3, 1, PAL.gold);
+    px(c, 1, 17, 3, 1, PAL.gold);
+    box(c, 2, 0, 22, 3, PAL.out);
+    px(c, 3, 1, 20, 1, tone.trim);
 
     // Spearhead finial — a monotonic taper (point to base), the same shape
     // family gableRoof already builds for a roof, hand-rolled here since it
     // is only 3 rows.
-    px(c, 3, -6, 1, 1, PAL.goldD);
-    px(c, 2, -5, 3, 1, PAL.gold);
-    px(c, 1, -4, 5, 1, PAL.goldD);
+    px(c, 1, -7, 2, 1, PAL.goldD);
+    px(c, 0, -6, 4, 1, PAL.gold);
+    px(c, -1, -5, 6, 1, PAL.goldD);
 
     // Hanging tassel cord — a short dithered strip, not a bezier.
     dith(c, 1, 1, 1, 4, PAL.gold, PAL.goldD);
     px(c, 0, 5, 2, 2, PAL.goldD);
 
-    // Cloth: vertical px strips, each column's y-offset a rounded sine wave
-    // so the free edge ripples — never a bezier. The trailing third forks
-    // into a swallowtail by leaving a gap in its middle rows.
+    // Cloth: vertical strips drift independently. The final columns are
+    // cut to each organisation's standard shape instead of one shared tail.
     const seamCol = Math.floor(CLOTH_W * 0.5);
     for (let col = 0; col < CLOTH_W; col++) {
       const x = CLOTH_X0 + col;
       const wy = Math.round(Math.sin(time * 0.005 + banner.x * 0.05 + col * 0.35) * 2);
       const fill = col < seamCol ? tone.mid : tone.light;
-      if (col > CLOTH_W * 0.72) {
-        const notchStart = Math.round(CLOTH_H * 0.35);
-        const notchEnd = Math.round(CLOTH_H * 0.65);
-        px(c, x, CLOTH_Y0 + wy, 1, notchStart, fill);
-        px(c, x, CLOTH_Y0 + wy + notchEnd, 1, CLOTH_H - notchEnd, fill);
+      const isTail = col > CLOTH_W * 0.72;
+      if (isTail && cut === "swallowtail") {
+        px(c, x, CLOTH_Y0 + wy, 1, 7, fill);
+        px(c, x, CLOTH_Y0 + wy + 12, 1, 6, fill);
+      } else if (isTail && cut === "notched") {
+        px(c, x, CLOTH_Y0 + wy, 1, col % 2 === 0 ? 14 : 18, fill);
+      } else if (isTail && cut === "pennant") {
+        px(c, x, CLOTH_Y0 + wy + Math.floor((col - 13) / 2), 1, CLOTH_H - Math.floor((col - 13) / 2) * 2, fill);
+      } else if (isTail && cut === "championship") {
+        px(c, x, CLOTH_Y0 + wy, 1, 16, fill);
       } else {
         px(c, x, CLOTH_Y0 + wy, 1, CLOTH_H, fill);
       }
@@ -328,9 +347,11 @@ function drawOneBanner(ctx: CanvasRenderingContext2D, time: number, banner: Worl
     const seamWy = Math.round(Math.sin(time * 0.005 + banner.x * 0.05 + seamCol * 0.35) * 2);
     dith(c, CLOTH_X0 + seamCol - 1, CLOTH_Y0 + seamWy, 2, CLOTH_H, tone.dark, tone.mid);
 
-    // Gold trim border along the hoist edge and top/bottom hems.
+    // Hem, hoist trim and a short inscription stripe give the standard a
+    // readable hierarchy even at native pixel scale.
     px(c, CLOTH_X0, CLOTH_Y0, 1, CLOTH_H, tone.trim);
     px(c, CLOTH_X0, CLOTH_Y0, CLOTH_W, 1, tone.trim);
+    px(c, CLOTH_X0 + 2, CLOTH_Y0 + 14, 10, 1, tone.dark);
 
     // Crest badge, distinct per org, using only the trim/dark tones.
     const cx = CLOTH_X0 + Math.round(CLOTH_W * 0.55);
@@ -396,24 +417,21 @@ export function drawBanners(ctx: CanvasRenderingContext2D, time: number): void {
 
 // --- Statues -----------------------------------------------------------------
 
-function drawStatuePlinth(c: PixelCtx): void {
-  // Opaque stepped shadow — no ellipse, no alpha.
-  px(c, 4, 32, 17, 1, PAL.grassX);
-  px(c, 2, 33, 21, 1, PAL.grassX);
-  px(c, 4, 34, 17, 1, PAL.grassX);
-
-  // Bottom masonry tier.
-  box(c, 2, 24, 21, 7, PAL.stone);
-  px(c, 2, 24, 21, 1, PAL.stoneL);
-  dith(c, 3, 25, 19, 5, PAL.stone, PAL.stoneD);
-
-  // Mid beveled tier.
-  box(c, 4, 19, 17, 6, PAL.stoneL);
-  dith(c, 5, 20, 15, 4, PAL.stoneL, PAL.stone);
-
-  // Moss accents.
-  px(c, 3, 27, 2, 2, PAL.leaf);
-  px(c, 19, 26, 2, 2, PAL.leaf);
+function drawStatuePlinth(c: PixelCtx, accent: string): void {
+  // A shared technical-reliquary base, with an inset rune instead of a
+  // generic stone block. This ties scattered artifacts to the same system.
+  px(c, 3, 32, 19, 1, PAL.grassX);
+  px(c, 1, 33, 23, 1, PAL.grassX);
+  box(c, 2, 25, 21, 7, PAL.out);
+  px(c, 3, 26, 19, 4, PAL.stone);
+  px(c, 3, 26, 19, 1, PAL.stoneL);
+  px(c, 4, 30, 17, 1, PAL.stoneD);
+  box(c, 5, 20, 15, 6, PAL.stoneD);
+  px(c, 6, 21, 13, 3, PAL.steel);
+  px(c, 10, 21, 4, 2, accent);
+  px(c, 11, 20, 2, 5, accent);
+  px(c, 3, 28, 2, 2, PAL.leaf);
+  px(c, 20, 27, 2, 2, PAL.leaf);
 }
 
 /** Faceted gem silhouette — a symmetric taper, exactly what `pixelDisc`
@@ -424,37 +442,35 @@ const GEM = [4, 10, 14, 10, 4] as const;
 const WHALE_BODY = [10, 16, 20, 14, 8] as const;
 
 function drawNextjsMotif(c: PixelCtx, time: number, float: number): void {
-  const topY = 2 + float;
-  const rows = gableRoof(2, 18, 0, 5, 12);
-  const shifted = rows.map(([x, y, w]) => [x, y + topY, w] as const);
-  steppedRoof(c, [...shifted], { l: PAL.glassL, m: PAL.glass, d: PAL.glassD, x: PAL.steelX });
-
-  // A single stepped orbit ring plus two sparkle motes chasing each other
-  // around it — the replacement for three tilted ctx.ellipse rings.
-  pixelRing(c, 12, 14 + float, [4, 14, 18, 14, 4], PAL.glass);
+  // Portal monolith: a dark frame around a bright server-rendered core.
+  box(c, 5, 3 + float, 14, 17, PAL.out);
+  box(c, 7, 5 + float, 10, 13, PAL.steelX);
+  px(c, 9, 7 + float, 6, 9, PAL.glassD);
+  px(c, 10, 8 + float, 4, 3, PAL.glassL);
+  pixelRing(c, 12, 13 + float, [4, 12, 16, 12, 4], PAL.arcane);
   const orbit = time * 0.003;
   px(c, 12 + Math.round(Math.cos(orbit) * 9), Math.round(15 + float + Math.sin(orbit) * 3), 1, 1, PAL.wallL);
   px(c, 12 - Math.round(Math.cos(orbit) * 9), Math.round(15 + float - Math.sin(orbit) * 3), 1, 1, PAL.glassL);
 }
 
 function drawTypescriptMotif(c: PixelCtx, float: number): void {
-  const topY = 4 + float;
-  const rows = gableRoof(6, 16, 0, 10, 12);
-  const shifted = rows.map(([x, y, w]) => [x, y + topY, w] as const);
-  steppedRoof(c, [...shifted], { l: PAL.glassL, m: PAL.glass, d: PAL.glassD, x: PAL.steelX });
-  // Gold pyramidion cap.
-  px(c, 10, topY - 3, 4, 3, PAL.gold);
-  px(c, 11, topY - 4, 2, 1, PAL.goldL);
-  // Type-check rune ring at the base.
-  pixelRing(c, 12, topY + 21, [8, 14, 8], PAL.glass);
+  // Inscribed systems obelisk, with an unmistakable T-rune face.
+  const topY = 3 + float;
+  px(c, 10, topY - 2, 4, 2, PAL.goldL);
+  box(c, 7, topY, 10, 19, PAL.out);
+  px(c, 8, topY + 1, 8, 17, PAL.arcaneD);
+  px(c, 9, topY + 4, 6, 2, PAL.glassL);
+  px(c, 11, topY + 6, 2, 8, PAL.glassL);
+  px(c, 9, topY + 16, 6, 1, PAL.arcane);
 }
 
 function drawPostgresMotif(c: PixelCtx, time: number, float: number): void {
-  const cx = 12, cy = 18 + float;
-  pixelDisc(c, cx, cy - 7, GEM, PAL.glass);
-  px(c, cx - 1, cy - 6, 2, 2, PAL.glassL); // facet gleam
-  px(c, cx - 3, cy - 1, 6, 1, PAL.wallL);
-  px(c, cx - 2, cy + 2, 4, 1, PAL.wallL);
+  const cx = 12, cy = 14 + float;
+  // Faceted data vault, not merely a floating gem.
+  pixelDisc(c, cx, cy, GEM, PAL.out);
+  pixelDisc(c, cx, cy, [2, 8, 12, 8, 2], PAL.violetD);
+  px(c, cx - 2, cy - 4, 4, 3, PAL.glassL);
+  px(c, cx - 5, cy + 1, 10, 1, PAL.steelL);
   // Orbiting binary data motes, replacing the "1"/"0" glyphs.
   const orbit = time * 0.005;
   px(c, cx + Math.round(Math.cos(orbit) * 8), cy + Math.round(Math.sin(orbit) * 4), 1, 1, PAL.glassL);
@@ -462,15 +478,15 @@ function drawPostgresMotif(c: PixelCtx, time: number, float: number): void {
 }
 
 function drawDockerMotif(c: PixelCtx, time: number, float: number): void {
-  const dx = 12, dy = 18 + float;
-  pixelDisc(c, dx, dy + 6, WHALE_BODY, PAL.steel);
-  px(c, dx - 8, dy + 8, 1, 1, PAL.glassL); // eye
-  px(c, dx - 10, dy + 6, 3, 3, PAL.steelD); // tail flipper
-
-  // Stacked shipping containers.
-  box(c, dx - 5, dy - 1, 4, 4, PAL.glass);
-  box(c, dx, dy - 1, 4, 4, PAL.gold);
-  box(c, dx - 3, dy - 5, 4, 4, PAL.bloom2); // top crate — pink reads against both the grass and the glass crate below it
+  const dx = 12, dy = 10 + float;
+  // Container totem: three sealed units carry a whale crest at the base.
+  [[dx - 8, dy + 7, PAL.arcaneD], [dx - 3, dy + 3, PAL.glassD], [dx + 2, dy + 7, PAL.goldD]].forEach(([x, y, tone]) => {
+    box(c, x as number, y as number, 5, 5, PAL.out);
+    px(c, x as number + 1, y as number + 1, 3, 3, tone as string);
+  });
+  pixelDisc(c, dx, dy + 15, WHALE_BODY, PAL.steel);
+  px(c, dx - 7, dy + 16, 1, 1, PAL.glassL);
+  px(c, dx - 10, dy + 14, 3, 3, PAL.steelD);
 
   // Blowhole droplets on a sine path — never an arc.
   const ph = (time * 0.004) % 1;
@@ -480,7 +496,8 @@ function drawDockerMotif(c: PixelCtx, time: number, float: number): void {
 function drawOneStatue(ctx: CanvasRenderingContext2D, time: number, statue: WorldObject): void {
   withSprite(ctx as unknown as PixelCtx, statue.x, statue.y, () => {
     const c = ctx as unknown as PixelCtx;
-    drawStatuePlinth(c);
+    const accent = statue.id === "statue-typescript" ? PAL.arcane : statue.id === "statue-postgres" ? PAL.violetL : statue.id === "statue-docker" ? PAL.glassL : PAL.arcane;
+    drawStatuePlinth(c, accent);
     const float = Math.round(Math.sin(time * 0.005 + statue.x) * 1.5);
 
     switch (statue.id) {

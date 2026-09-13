@@ -50,9 +50,21 @@ Blender, and none of the existing ~6,000 lines transfers. See [Rejected](#reject
 ## Non-goals
 
 - Redrawing `Characters_V3_Colour.png`. The character sprites are already correct sprite art and
-  set the pixel grid everything else conforms to.
+  set the pixel grid everything else conforms to. **Accepted exception (fix round 2 / review item
+  10):** the hand-drawn character furniture in `game-canvas.tsx` that rides along with those
+  sprites — the player/NPC drop shadow (`ctx.ellipse`), AZRA's and Allia's radial-gradient auras
+  (`ctx.createRadialGradient`), and `drawKissesTheDog` (drawn with `ctx.quadraticCurveTo`) — is
+  explicitly out of scope for the pixel contract and stays unchanged from base. This was always
+  the intent (that code isn't part of the world art this redesign touches), but until now it was
+  encoded only as a `.tsx`-extension filter in `lib/game-contract.test.ts`'s renderer discovery,
+  with no prose explaining the decision; both the test file and this doc now say so directly.
 - Changing map layout, building footprints, collision, NPC routes, dialogue, or modals. This is
-  art only. Building rects stay exactly where they are.
+  art only. Building rects stay exactly where they are. **Accepted exception (fix round 2 / review
+  item 4):** two decorative bushes were moved at the user's request after sitting with 0px
+  clearance from a path/tall-grass edge (`components/game/game-data.ts`'s `DECORATIVE_BUSHES`,
+  the white and blue flowering hedges — plus two more bushes a broadened clearance check then
+  caught in the same pass). Bushes carry a collision box in the overworld, so this did move two
+  small collision rects; it did not touch any building footprint, NPC route, dialogue, or modal.
 - Wild-encounter mechanics. Tall grass is decorative.
 - Adopting `Buildings_Colour2.png`. It is competent pixel art but a modern-American-town theme
   (diner, church, hotel) that clashes with the fantasy village.
@@ -84,10 +96,19 @@ comparable to Gen 5.
 
 ### 1. `components/game/game-palette.ts`
 
-Exports one frozen palette object, ~40 named colours grouped by material: `out`, roof
-(`roofL/roof/roofD/roofX`), wall, wood, stone, glass, door, metal/gold, foliage, grass, smoke.
-Every other module imports from here. No colour literal appears anywhere else in game code —
-that invariant is what stops the palette drifting back to ad-hoc Tailwind hexes.
+Exports one frozen palette object, grouped by material: `out`, roof (`roofL/roof/roofD/roofX`),
+wall, wood, stone, glass, door, metal/gold, steel, violet, foliage, grass, tall grass, paths,
+smoke/arcane effects. Every other module imports from here. No colour literal appears anywhere
+else in game code — that invariant is what stops the palette drifting back to ad-hoc Tailwind
+hexes.
+
+Originally ~40 named colours; it is now 54 (fix round 2 / review item 10). `lib/game-palette.test.ts`
+enforces a hard budget on `Object.keys(PAL).length`, raised from 48 to 56 partway through the
+project so each of the seven buildings could get its own {l,m,d,x} roof ramp (Task 14) instead of
+sharing one red tone — the roof colour was the single biggest at-a-glance legibility lever the
+buildings had, and giving each one a distinct ramp needed a steel family (DevOps) and a violet
+pair (the Guild interior's aem station) the original ~40-colour budget had no room for. 54 of the
+56-colour ceiling are in use today.
 
 ### 2. `components/game/game-pixel.ts`
 
@@ -186,7 +207,7 @@ live.
 
 ```
 components/game/
-  game-palette.ts     ~60   the ~40-colour world palette
+  game-palette.ts     ~60   the 54-colour world palette (ceiling raised 48->56, see below)
   game-pixel.ts      ~300   toolkit primitives
   game-terrain.ts    ~400   grass, paths, tall grass
   game-buildings.ts  ~900   7 buildings

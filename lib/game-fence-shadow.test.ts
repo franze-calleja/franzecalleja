@@ -74,10 +74,23 @@ describe("fence ground shadow (Task 15 / Task 10 follow-up)", () => {
     const shadowCols = rects.filter((r) => r.color === PAL.grassX);
     expect(shadowCols.length, "expected a shadow").toBeGreaterThanOrEqual(3);
 
+    // Assert each rect's own width, not just that 3 distinct x-keys exist —
+    // grouping by x and summing h (as this test used to) cannot see a column
+    // that is itself 2 world px wide (fix round 2 / review item 6: the
+    // middle column used to be drawn as one w=2 rect, doubling its own
+    // coverage to 4 columns total while still reporting 3 distinct x-keys).
+    shadowCols.forEach((r) =>
+      expect(r.w, `shadow rect at x=${r.x} is ${r.w} world px wide, expected exactly 1`).toBe(1)
+    );
+
     const byX = new Map<number, number>();
     shadowCols.forEach((r) => byX.set(r.x, (byX.get(r.x) ?? 0) + r.h));
     const xs = [...byX.keys()].sort((a, b) => a - b);
     expect(xs.length, "shadow should occupy 3 distinct columns").toBe(3);
+    // ...and that those 3 columns are contiguous (no gap, no overlap) —
+    // mirrors fenceRunHorizontal's 3 contiguous rows.
+    expect(xs[1]).toBe(xs[0] + 1);
+    expect(xs[2]).toBe(xs[1] + 1);
 
     const [left, mid, right] = xs.map((x) => byX.get(x)!);
     expect(mid, "the middle column must be the tallest (narrow-wide-narrow)").toBeGreaterThan(left);

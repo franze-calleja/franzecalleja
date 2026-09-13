@@ -28,7 +28,8 @@ import {
   collectFences, collectFlowerPots, collectBushes, collectFurniture, collectTrees,
 } from "./game-props";
 import {
-  collectStatues, collectBanners, drawCentralFountain, drawBasketballCourt, FOUNTAIN_BASELINE,
+  collectStatues, collectBanners, drawCentralFountain, drawBasketballCourt,
+  collectBasketballHoop, FOUNTAIN_BASELINE,
 } from "./game-landmarks";
 import { drawGuildInterior } from "./game-interior";
 import { PAL } from "./game-palette";
@@ -1290,8 +1291,10 @@ export default function GameCanvas() {
       } else {
         // Render Overworld Scene
         // 1. Ground band — always beneath everything else, unsorted: the
-        // cached terrain, tall-grass clump bases and the court are flat on
-        // the ground, so nothing should ever draw beneath them.
+        // cached terrain, tall-grass clump bases and the court surface are
+        // flat on the ground, so nothing should ever draw beneath them. The
+        // hoop is a standing object, not ground texture, so it lives in the
+        // sorted layer below instead (collectBasketballHoop).
         if (terrainCacheRef.current) {
           drawTerrain(ctx, terrainCacheRef.current);
         }
@@ -1373,6 +1376,7 @@ export default function GameCanvas() {
           ...collectBanners(ctx, time),
           ...collectBuildings(ctx, time),
           { baseline: FOUNTAIN_BASELINE, draw: () => drawCentralFountain(ctx, time) },
+          ...collectBasketballHoop(ctx, time),
           ...collectTrees(ctx, time),
           ...npcDrawables,
           ...collectTallGrassTips(ctx, time),

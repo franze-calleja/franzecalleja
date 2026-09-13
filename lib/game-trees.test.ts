@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { PAL } from "../components/game/game-palette";
-import { drawTrees, TREE_CANOPY, TREE_TONE, TREE_TRUNK } from "../components/game/game-props";
+import { drawTrees, collectTrees, TREE_CANOPY, TREE_TONE, TREE_TRUNK } from "../components/game/game-props";
 import { DECORATIVE_TREES } from "../components/game/game-data";
 
 function recorder() {
@@ -124,5 +124,66 @@ describe("per-species trunk (Task 15)", () => {
     const used = new Set(rects.map((r) => r.color));
     expect(used.has(PAL.woodL), "no lit trunk edge painted").toBe(true);
     expect(used.has(PAL.woodD) || used.has(PAL.woodX), "no shadowed trunk edge painted").toBe(true);
+  });
+});
+
+/**
+ * A recorder that honours save/restore/translate/scale, so rects come back
+ * in world space instead of the sprite's pre-transform logical space —
+ * needed to compare the drawn trunk's real bottom edge against
+ * `tree.y + tree.h` (the number the overworld's trunk collision band and
+ * y-sort baseline both key off). Mirrors lib/game-landmarks.test.ts's
+ * worldRecorder.
+ */
+function worldRecorder() {
+  const rects: { x: number; y: number; w: number; h: number; color: string }[] = [];
+  let fill = "";
+  let tx = 0, ty = 0, sx = 1, sy = 1;
+  const stack: Array<{ tx: number; ty: number; sx: number; sy: number }> = [];
+  const ctx = {
+    globalAlpha: 1,
+    get fillStyle() { return fill; },
+    set fillStyle(v: string) { fill = v; },
+    fillRect(x: number, y: number, w: number, h: number) {
+      rects.push({ x: tx + x * sx, y: ty + y * sy, w: w * sx, h: h * sy, color: fill });
+    },
+    save() { stack.push({ tx, ty, sx, sy }); },
+    restore() { const s = stack.pop(); if (s) ({ tx, ty, sx, sy } = s); },
+    translate(x: number, y: number) { tx += x * sx; ty += y * sy; },
+    scale(x: number, y: number) { sx *= x; sy *= y; },
+    imageSmoothingEnabled: true,
+  };
+  return { ctx, rects };
+}
+
+const WOOD_TONES = new Set<string>([PAL.wood, PAL.woodL, PAL.woodD, PAL.woodX]);
+
+describe("tree trunk bottom edge matches the collision/y-sort baseline (fix round 2)", () => {
+  // Regression: the trunk used to stop 16-36 world px short of tree.h for
+  // every species but pine — the trunk collision band (tree.y + h - 22 ..
+  // tree.y + h) sat over empty grass below the visibly drawn trunk, and the
+  // tree sorted nearer the camera than its actual painted position, so a
+  // player standing legally south of the trunk was painted behind it.
+  SPECIES.forEach((species) => {
+    it(`${species}: the drawn trunk (incl. its root flare) bottoms out at tree.y + tree.h`, () => {
+      const index = DECORATIVE_TREES.findIndex((t) => t.type === species);
+      expect(index, `no ${species} entry in DECORATIVE_TREES to sample`).toBeGreaterThanOrEqual(0);
+      const tree = DECORATIVE_TREES[index];
+
+      const { ctx, rects } = worldRecorder();
+      const drawable = collectTrees(ctx as never, 0)[index];
+      drawable.draw();
+
+      const trunkRects = rects.filter((r) => WOOD_TONES.has(r.color));
+      expect(trunkRects.length, `${species}: no trunk-coloured rects drawn`).toBeGreaterThan(0);
+      const drawnBottom = Math.max(...trunkRects.map((r) => r.y + r.h));
+      const expectedBottom = tree.y + tree.h;
+
+      expect(
+        Math.abs(drawnBottom - expectedBottom),
+        `${species}: trunk bottoms out at world y=${drawnBottom}, but tree.h implies the ` +
+          `collision box's bottom edge is at y=${expectedBottom} (tree.y=${tree.y}, tree.h=${tree.h})`
+      ).toBeLessThanOrEqual(2);
+    });
   });
 });

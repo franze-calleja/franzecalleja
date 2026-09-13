@@ -32,6 +32,18 @@ const NON_RENDERER_FILES = new Set([
  * React components (game-canvas.tsx and friends), not renderer modules, and
  * are excluded by extension; the remaining `.ts` files are filtered against
  * the explicit non-renderer exclusion list above.
+ *
+ * That `.tsx` extension filter is also where this project's one deliberate
+ * pixel-contract scope decision lives (design doc, "Non-goals" — review
+ * item 10): the hand-drawn character furniture in game-canvas.tsx — the
+ * player/NPC drop shadow (`ctx.ellipse`), AZRA's and Allia's radial-gradient
+ * auras (`ctx.createRadialGradient`), and `drawKissesTheDog` (drawn with
+ * `ctx.quadraticCurveTo`) — is out of scope for the contract and unchanged
+ * from base. `Characters_V3_Colour.png` and the code that composites it were
+ * always a non-goal for this redesign, and that hand-drawn furniture rides
+ * along with it. Before this comment, that exemption was encoded only as
+ * this filter with no prose explaining why `.tsx` gets a pass — this
+ * paragraph, and the design doc's now-explicit non-goal, are that record.
  */
 const RENDERERS = readdirSync(GAME_DIR)
   .filter((f) => f.endsWith(".ts") && !NON_RENDERER_FILES.has(f))
@@ -61,6 +73,15 @@ describe("project-wide pixel contract", () => {
     // Guards against every check below passing vacuously because the
     // directory read or the exclusion list swallowed everything.
     expect(RENDERERS.length).toBeGreaterThan(0);
+  });
+
+  // Split from the test above (review item 9): that one's name only covers
+  // "found at least one" — a much weaker claim than what its `toEqual` used
+  // to pin, the exact six-module set. This is the one that actually fails
+  // loudly if a renderer is added without registering it here (or removed
+  // without cleaning it up), the way game-landmarks.ts once would have gone
+  // unnoticed by a hard-coded list.
+  it("discovers exactly the six known renderer modules — not more, not fewer", () => {
     expect(RENDERERS).toEqual([
       "game-buildings.ts",
       "game-interior.ts",

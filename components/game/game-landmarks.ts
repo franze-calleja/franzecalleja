@@ -27,12 +27,18 @@ const THREE_PT_RING = [24, 34, 42, 46] as const; // upper half only — the arc 
 const CENTER_RING = [10, 16, 18] as const; // half-circle bulge at the court's own bottom edge
 
 /**
- * Flat on the ground, in the ground band with terrain and tall-grass bases
- * — never y-sorted, so it never needs a baseline. `time` is accepted so its
- * signature matches every other reconstructed renderer, and gives the ball
- * a small idle bounce instead of sitting dead still.
+ * The flat court surface only: apron, hardwood, key, circles, arcs and
+ * out-of-bounds lines. Flat on the ground, in the ground band with terrain
+ * and tall-grass bases — never y-sorted, so it never needs a baseline. The
+ * hoop (backboard, post, rim, net, ball) used to be drawn here too, but
+ * those are standing objects, not ground texture — see `drawBasketballHoop`
+ * / `collectBasketballHoop`, which now handle them as their own y-sorted
+ * Drawable (fix round 2 / review item 7). `time` is accepted so this
+ * function's signature matches every other reconstructed renderer, even
+ * though nothing here animates now that the ball has moved out.
  */
 export function drawBasketballCourt(ctx: CanvasRenderingContext2D, time: number): void {
+  void time;
   withSprite(ctx as unknown as PixelCtx, 730, 535, () => {
     const c = ctx as unknown as PixelCtx;
     // Top-left anchored, matching PATH_AREAS's { x: 730, y: 535, w: 90, h:
@@ -83,9 +89,26 @@ export function drawBasketballCourt(ctx: CanvasRenderingContext2D, time: number)
     px(c, 1, h - 2, w - 2, 1, PAL.pathL);
     px(c, 1, 1, 1, h - 2, PAL.pathL);
     px(c, w - 2, 1, 1, h - 2, PAL.pathL);
+  });
+}
 
-    // Hoop: padded stanchion base, straight support post, backboard, rim, net.
+/**
+ * The hoop: padded stanchion base, straight support post, backboard, rim,
+ * net, and the ball. Split out of drawBasketballCourt (fix round 2 / review
+ * item 7) because unlike the flat court surface, these are STANDING objects
+ * — the backboard alone sits at world y~519..531, well above the ground —
+ * so leaving them in the unsorted ground band meant a player walking north
+ * of the hoop was always painted over the backboard instead of behind it.
+ * Anchored at the same (730, 535) sprite origin and using the same
+ * `cx`/`hy` local coordinates as the court surface, so the hoop lines up
+ * with it pixel-for-pixel.
+ */
+function drawBasketballHoop(ctx: CanvasRenderingContext2D, time: number): void {
+  withSprite(ctx as unknown as PixelCtx, 730, 535, () => {
+    const c = ctx as unknown as PixelCtx;
+    const cx = 22;
     const hy = 2;
+
     box(c, cx - 3, hy - 2, 6, 4, PAL.steelX);
     px(c, cx - 2, hy - 1, 4, 2, PAL.steel);
     px(c, cx - 1, hy - 4, 2, 4, PAL.steelD); // straight support post — always was a line, not a curve
@@ -107,6 +130,17 @@ export function drawBasketballCourt(ctx: CanvasRenderingContext2D, time: number)
     px(c, bx, by, 1, 4, PAL.roofX); // seam
     px(c, bx - 2, by, 1, 1, PAL.roofL); // glint
   });
+}
+
+/**
+ * One Drawable for the hoop, baseline at the stanchion base's own bottom
+ * edge — `box(c, cx-3, hy-2, 6, 4, ...)` bottoms out at local y = hy+2 = 4,
+ * i.e. world y = 535 + 2*4 = 543 — so it takes part in the scene layer's
+ * y-sort instead of sitting in the unsorted ground band with the flat court
+ * surface.
+ */
+export function collectBasketballHoop(ctx: CanvasRenderingContext2D, time: number): Drawable[] {
+  return [{ baseline: 543, draw: () => drawBasketballHoop(ctx, time) }];
 }
 
 // --- Central fountain --------------------------------------------------------

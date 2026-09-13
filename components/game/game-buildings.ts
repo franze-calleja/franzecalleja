@@ -5,6 +5,27 @@ import {
   withSprite, type PixelCtx, type RoofTone, type Drawable,
 } from "./game-pixel";
 
+/**
+ * Two documented exceptions to pixel contract rule 5 ("every object gets a
+ * 1-logical-px outline"), recorded here the way game-terrain.ts's file
+ * header records its tall-grass no-outline exception, rather than left to
+ * silently disagree with the rule (review item 8):
+ *
+ * - `drawAzraSanctuary`'s corner piers (`px(ctx, 8, 34, 3, 24, PAL.stoneL)`
+ *   and the matching `PAL.stoneD` pier on the right) each overwrite the
+ *   wall's own `PAL.out` outline column for its full height.
+ * - `drawCareerArchives`'s alternating quoins (the `for (let qy = 16; ...)`
+ *   loop) punch ten 4-px holes in the left and right outline columns, one
+ *   per quoin.
+ *
+ * Both are deliberate: light-from-upper-left shading on a masonry corner
+ * reads as a bevelled pier/quoin only if it touches the silhouette edge
+ * directly, and insetting either by 1px to preserve the outline column
+ * would flatten that detail back into the wall's own dither. Neither is
+ * covered by a test — `lib/game-buildings.test.ts`'s "honours the pixel
+ * contract" checks only ban curve/gradient API calls, not per-pixel outline
+ * coverage, so this comment is the only record of the trade-off.
+ */
 export interface BuildingSpec {
   x: number;
   y: number;
@@ -44,12 +65,15 @@ export const ROOF_TONES: Record<string, RoofTone> = {
 };
 
 /**
- * Projects Showcase Guild. 70x55 logical (140x110 world) at 70,60.
- * Level 3: timber-framed stucco with a guild sign, chimney, lantern,
- * flower boxes and ivy. The chimney and hanging sign overhang above and
- * to the left of the footprint by design; the stone foundation course
- * also overhangs by 4px below it (stoneCourse at y=56,h=4 paints to y=60,
- * flush with the next building's row rather than the wall's own y=56 edge).
+ * Projects Showcase Guild. 70x55 logical (140x110 world) at 70,60 — that
+ * figure is the wall's own footprint, not this building's drawn extent
+ * (review item 9): the stone foundation course (`stoneCourse(ctx, 6, 56,
+ * 58, 4)`) paints logical y 56..60, i.e. world y 112..120, 10 world px past
+ * this building's own `height: 110` (BUILDINGS["projects-guild"].height,
+ * the number `collectBuildings` keys the y-sort baseline off). Level 3:
+ * timber-framed stucco with a guild sign, chimney, lantern, flower boxes
+ * and ivy. The chimney and hanging sign overhang above and to the left of
+ * the footprint by design too.
  */
 export function drawProjectsGuild(ctx: PixelCtx, t: number): void {
   // Chimney sits behind the roof, so it draws first.
@@ -99,9 +123,14 @@ export function drawProjectsGuild(ctx: PixelCtx, t: number): void {
 }
 
 /**
- * Village Post & Inquiries Lodge. 65x48 logical (130x95 world) at 350,55.
- * Stucco + timber post office: mailbox, notice board, a swinging bracket
- * bell and a roof-top weathervane. No chimney.
+ * Village Post & Inquiries Lodge. 65x48 logical (130x95 world) at 350,55 —
+ * the wall's own footprint, not this building's drawn extent (review item
+ * 9): the stone foundation course (`stoneCourse(ctx, 7, 50, 52, 4)`) paints
+ * logical y 50..54, i.e. world y 100..108, 13 world px past this building's
+ * own `height: 95`. The largest overhang of the seven buildings, since this
+ * one's declared logical height (48) was already rounded down from an
+ * exact 47.5 (95 / 2). Stucco + timber post office: mailbox, notice board,
+ * a swinging bracket bell and a roof-top weathervane. No chimney.
  */
 export function drawVillagePost(ctx: PixelCtx, t: number): void {
   // The body (box at x=9, w=48) is centred at x=33, not the gableRoof
@@ -162,6 +191,12 @@ export function drawVillagePost(ctx: PixelCtx, t: number): void {
  * their original positions — only the split between roof and wall moves.
  * Roof rows went 10 -> 13 (height 20 -> 26, +6); wall height shrank by the
  * same 6 (30 -> 24) so the overall box is unchanged, just taller-roofed.
+ *
+ * Review item 9: unlike the other six buildings, this one's stone
+ * foundation does NOT overhang past `height: 125` — its bottom edge (y=62
+ * logical = world y 124) actually falls 1 world px inside it, a rounding
+ * artefact of the declared "63 logical" (63*2=126, one more than 125) that
+ * is close enough to be invisible and not worth correcting either number.
  */
 export function drawAzraSanctuary(ctx: PixelCtx, t: number): void {
   // Body (box at x=8, w=54) is centred at x=35.
@@ -176,7 +211,9 @@ export function drawAzraSanctuary(ctx: PixelCtx, t: number): void {
   px(ctx, 50, 35, 6, 22, PAL.stoneD);
   dith(ctx, 48, 35, 3, 22, PAL.stone, PAL.stoneD);
 
-  // Corner piers — light from upper-left
+  // Corner piers — light from upper-left. Overwrites the wall's own
+  // PAL.out outline column for its full height — a documented contract
+  // rule 5 exception, see this file's header comment (review item 8).
   px(ctx, 8, 34, 3, 24, PAL.stoneL);
   px(ctx, 59, 34, 3, 24, PAL.stoneD);
 
@@ -228,6 +265,11 @@ export function drawAzraSanctuary(ctx: PixelCtx, t: number): void {
  * shrinks to a 10px flat cap — the freed 6px goes to the wall so the
  * building overall reads low, wide and slab-like. The wall's bottom edge
  * (y=50, where the foundation starts) is unchanged.
+ *
+ * Review item 9: the "70x53 logical" above is the wall's own footprint, not
+ * this building's drawn extent — the stone foundation course
+ * (`stoneCourse(ctx, 1, 50, 66, 4)`) paints logical y 50..54, i.e. world y
+ * 100..108, 3 world px past this building's own `height: 105`.
  */
 export function drawCareerArchives(ctx: PixelCtx, t: number): void {
   // Flat parapet cap — no gable, wide and low (institutional, not domestic).
@@ -242,7 +284,9 @@ export function drawCareerArchives(ctx: PixelCtx, t: number): void {
   px(ctx, 61, 17, 5, 32, PAL.stoneD);
   dith(ctx, 58, 17, 3, 32, PAL.stone, PAL.stoneD);
 
-  // Alternating quoins down both edges
+  // Alternating quoins down both edges — each one punches a 4-px hole in
+  // the wall's own PAL.out outline column. A documented contract rule 5
+  // exception, see this file's header comment (review item 8).
   for (let qy = 16; qy < 46; qy += 6) {
     px(ctx, 3, qy, 4, 4, PAL.stoneL);
     px(ctx, 63, qy, 4, 4, PAL.stoneL);
@@ -285,9 +329,14 @@ export function drawCareerArchives(ctx: PixelCtx, t: number): void {
 
 /**
  * DevOps & Telemetry Power Station. 70x55 logical (140x110 world) at
- * 60,260. Flat industrial roof (no gable), stone body with a metal-plate
- * seam, twin chimney stacks with offset smoke, a pipe run, 2 pressure
- * gauges and 3 status lamps blinking on a hash-offset phase.
+ * 60,260 — the wall's own footprint, not this building's drawn extent
+ * (review item 9): the stone foundation course (`stoneCourse(ctx, 6, 52,
+ * 58, 4)`) paints logical y 52..56, i.e. world y 104..112, 2 world px past
+ * this building's own `height: 110` — the smallest overhang of the six
+ * buildings that have one. Flat industrial roof (no gable), stone body
+ * with a metal-plate seam, twin chimney stacks with offset smoke, a pipe
+ * run, 2 pressure gauges and 3 status lamps blinking on a hash-offset
+ * phase.
  */
 export function drawDevopsStation(ctx: PixelCtx, t: number): void {
   // Chimneys sit behind the roof cap, so they draw first.
@@ -349,9 +398,12 @@ export function drawDevopsStation(ctx: PixelCtx, t: number): void {
 
 /**
  * Academy of Enverga (Honors Dojo). 70x55 logical (140x110 world) at
- * 60,560. Timber + plaster pagoda with a double-eave roof (two stacked
- * gableRoof calls), paired paper lanterns, a training dummy and a
- * vertical banner. No chimney.
+ * 60,560 — the wall's own footprint, not this building's drawn extent
+ * (review item 9): the stone foundation course (`stoneCourse(ctx, 6, 56,
+ * 58, 4)`) paints logical y 56..60, i.e. world y 112..120, 10 world px past
+ * this building's own `height: 110`. Timber + plaster pagoda with a
+ * double-eave roof (two stacked gableRoof calls), paired paper lanterns, a
+ * training dummy and a vertical banner. No chimney.
  */
 export function drawEnvergaDojo(ctx: PixelCtx, t: number): void {
   // Upper tier — narrow, both roofs share the body's centre at x=35.
@@ -393,10 +445,13 @@ export function drawEnvergaDojo(ctx: PixelCtx, t: number): void {
 }
 
 /**
- * Franze's Gamer Cottage. 70x55 logical (140x110 world) at 560,535.
- * Stucco + timber, mirrored from the Guild's chimney/sign side so it
- * doesn't read as the same building: a glowing CRT bay window, a
- * controller-glyph sign, and a doormat.
+ * Franze's Gamer Cottage. 70x55 logical (140x110 world) at 560,535 — the
+ * wall's own footprint, not this building's drawn extent (review item 9):
+ * the stone foundation course (`stoneCourse(ctx, 6, 56, 58, 4)`) paints
+ * logical y 56..60, i.e. world y 112..120, 10 world px past this
+ * building's own `height: 110`. Stucco + timber, mirrored from the Guild's
+ * chimney/sign side so it doesn't read as the same building: a glowing CRT
+ * bay window, a controller-glyph sign, and a doormat.
  */
 export function drawGamerCottage(ctx: PixelCtx, t: number): void {
   // Chimney on the RIGHT (Guild's is on the left) — draws before the roof.

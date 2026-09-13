@@ -116,16 +116,45 @@ export const BERRY_GOLD = "#facc15";
 export const DECORATIVE_BUSHES = [
   { x: 895, y: 270, type: "berry_bush" as const, berry: BERRY_RED },
   { x: 830, y: 370, type: "berry_bush" as const, berry: BERRY_SKY },
-  { x: 880, y: 530, type: "flowering_hedge" as const, berry: BERRY_PINK },
+  // Was (880,530): sat exactly flush (0px clearance) against the south-east
+  // TALL_GRASS_AREA below it. Not one of the two bushes the review named,
+  // but the same zero-clearance pattern the review flagged, only surfaced
+  // once the path/tall-grass clearance checks below were applied to every
+  // bush instead of one each (fix round 2 / review item 4) — left in place,
+  // it would have failed that broadened test. Moved up 30 world px; x
+  // unchanged.
+  { x: 880, y: 500, type: "flowering_hedge" as const, berry: BERRY_PINK },
   // Was (780,480): overlapped the Trail-to-Court PATH_AREA and sat only
-  // ~31 world px from the East Forest Grove chess table (Task 15).
-  { x: 820, y: 507, type: "flowering_hedge" as const, berry: BERRY_WHITE },
+  // ~31 world px from the East Forest Grove chess table (Task 15). Was then
+  // moved to (820,507) — which turned out to sit exactly flush (0px
+  // clearance) against both the Trail-to-Court and Basketball Court
+  // PATH_AREAS, and only 23px from the south-east tall-grass patch (Task
+  // 15's regression test only checked bushes against paths, never against
+  // tall grass, so this slipped through). Now north of the Trail-to-Court
+  // path, clear of every PATH_AREA and TALL_GRASS_AREA by >= 24 world px,
+  // the same margin required of furniture (fix round 2 / review item 4).
+  { x: 760, y: 410, type: "flowering_hedge" as const, berry: BERRY_WHITE },
   { x: 50, y: 130, type: "wild_shrub" as const, berry: BERRY_GOLD },
-  { x: 330, y: 60, type: "berry_bush" as const, berry: BERRY_GOLD },
+  // Was (330,60): overlapped the tall-grass patch between the Guild and
+  // Village Post outright (0px clearance — this bush sat partly inside it,
+  // not merely flush against it). Also another case the broadened
+  // path/tall-grass clearance check surfaced (fix round 2 / review item 4)
+  // rather than one the review named. The NW quadrant around that grass
+  // patch is tightly packed (the patch itself, the chess table, two paths,
+  // the Village Post building), with no 36x30-plus-margin gap to nudge into,
+  // so this one moved further: into the open west-edge corridor between the
+  // Projects Guild and DevOps Station, clear of every PATH_AREA,
+  // TALL_GRASS_AREA and furniture item by well over 24 world px.
+  { x: 20, y: 220, type: "berry_bush" as const, berry: BERRY_GOLD },
   { x: 50, y: 530, type: "wild_shrub" as const, berry: BERRY_RED },
   // Was (490,540): overlapped the tall-grass patch south of the plaza
-  // approach, right beside the Gamer Cottage's bench-se (Task 15).
-  { x: 574, y: 660, type: "flowering_hedge" as const, berry: BERRY_SKY },
+  // approach, right beside the Gamer Cottage's bench-se (Task 15). Was then
+  // moved to (574,660) — flush (0px clearance) against the SE-Trail-to-
+  // Cottage PATH_AREA and only 22px from the south-of-plaza tall-grass
+  // patch. Now south of the Gamer Cottage and its approach trail, clear of
+  // every PATH_AREA and TALL_GRASS_AREA by >= 24 world px (fix round 2 /
+  // review item 4).
+  { x: 580, y: 690, type: "flowering_hedge" as const, berry: BERRY_SKY },
 ];
 
 // Rich 3D Village Outdoor Furniture

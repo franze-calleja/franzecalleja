@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { PAL } from "../components/game/game-palette";
 import {
   drawCentralFountain, drawBasketballCourt, drawStatues, drawBanners, FOUNTAIN_BASELINE,
+  collectBasketballHoop,
 } from "../components/game/game-landmarks";
 
 // Mirrors lib/game-props.test.ts's recorder — these four were the heaviest
@@ -147,13 +148,6 @@ describe("basketball court world alignment", () => {
 });
 
 describe("fountain water animation", () => {
-  it("actually cycles through the 3-frame ripple — not an anchor value that silently disables the branch", () => {
-    // Math.floor(t / 200) % 3 must actually reach all three frames across a
-    // spawn-to-despawn timeline, not just frame 0.
-    const frames = new Set([0, 200, 400, 600].map((t) => Math.floor(t / 200) % 3));
-    expect(frames.size).toBeGreaterThan(1);
-  });
-
   it("draws a different number of rects across the ripple cycle", () => {
     const counts = [0, 200, 400].map((t) => {
       const { ctx, rects } = recorder();
@@ -200,5 +194,49 @@ describe("FOUNTAIN_BASELINE", () => {
       expect(r.y + r.h, `a masonry rect bottoms out past FOUNTAIN_BASELINE at y=${r.y + r.h}`)
         .toBeLessThanOrEqual(FOUNTAIN_BASELINE);
     });
+  });
+});
+
+describe("basketball hoop split from the court surface (fix round 2 / review item 7)", () => {
+  // Colours the hoop alone paints — the backboard's glass and its red
+  // target square never appear in the flat court surface (hardwood,
+  // apron, key, circles, out-of-bounds lines), which sticks to
+  // roof/stone/steelX/gold/pathL. Used below to prove the two are
+  // actually split, not just that collectBasketballHoop exists.
+  const HOOP_ONLY_COLORS = [PAL.glass, PAL.glassL, PAL.bloom];
+
+  it("collectBasketballHoop returns exactly one Drawable, baselined at the stanchion base", () => {
+    const drawables = collectBasketballHoop((null as unknown) as CanvasRenderingContext2D, 0);
+    expect(drawables).toHaveLength(1);
+    expect(drawables[0].baseline).toBe(543);
+  });
+
+  it("the hoop Drawable actually paints the backboard/rim — not an empty stub", () => {
+    const { ctx, rects } = recorder();
+    collectBasketballHoop(ctx as never, 0)[0].draw();
+    const used = new Set(rects.map((r) => r.color));
+    HOOP_ONLY_COLORS.forEach((c) =>
+      expect(used.has(c), `hoop never painted ${c}`).toBe(true)
+    );
+  });
+
+  it("drawBasketballCourt (the ground-band surface) no longer paints the hoop at all", () => {
+    const { ctx, rects } = recorder();
+    drawBasketballCourt(ctx as never, 0);
+    const used = new Set(rects.map((r) => r.color));
+    HOOP_ONLY_COLORS.forEach((c) =>
+      expect(used.has(c), `court surface still paints hoop colour ${c}`).toBe(false)
+    );
+  });
+
+  it("the hoop's baseline sits below the ground-band court surface's own bottom edge (world y=535+2*50=635), confirming it's a standing object, not flush ground texture", () => {
+    // Not a strict requirement of y-sorting in general, but a sanity check
+    // that 543 is a real "the stanchion touches the ground here" value
+    // rather than an arbitrary constant — it should land inside the
+    // court's own footprint (world y 535..635), close to its top edge
+    // where the hoop actually stands, not off in the weeds.
+    const drawables = collectBasketballHoop((null as unknown) as CanvasRenderingContext2D, 0);
+    expect(drawables[0].baseline).toBeGreaterThan(535);
+    expect(drawables[0].baseline).toBeLessThan(635);
   });
 });

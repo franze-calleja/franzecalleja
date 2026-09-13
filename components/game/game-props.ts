@@ -45,11 +45,15 @@ export function fenceRunHorizontal(c: PixelCtx, length: number): void {
 export function fenceRunVertical(c: PixelCtx, length: number): void {
   const THICK = 8;
   // Opaque stepped shadow — the same narrow-wide-narrow ellipse, rotated:
-  // 3 columns instead of 3 rows, scaled to the run's own length.
+  // 3 columns instead of 3 rows, scaled to the run's own length. Each
+  // column is 1 world px wide (matching fenceRunHorizontal's rows, each
+  // 1 world px tall) — fix round 2 (review item 6): this used to draw
+  // THICK+2 two columns wide, doubling the middle band to 4 columns of
+  // total coverage instead of 3.
   const narrow = Math.max(0, length - 4);
   px(c, THICK + 1, 2, 1, narrow, PAL.grassX);
-  px(c, THICK + 2, 0, 2, length, PAL.grassX);
-  px(c, THICK + 4, 2, 1, narrow, PAL.grassX);
+  px(c, THICK + 2, 0, 1, length, PAL.grassX);
+  px(c, THICK + 3, 2, 1, narrow, PAL.grassX);
 
   px(c, -1, -1, THICK + 2, length + 2, PAL.out);
   px(c, 0, 0, THICK, length, PAL.wood);
@@ -449,30 +453,60 @@ type TreeType = (typeof DECORATIVE_TREES)[number]["type"];
 type CanopyRow = readonly [w: number, o: number];
 interface FoliageTone { l: string; m: string; d: string; x: string }
 
-/** Broad, round, many-lobed crown — the biggest silhouette of the four. */
+/**
+ * Broad, round, many-lobed crown — the biggest silhouette of the four.
+ *
+ * Rows 11-20 are a second, taller belly (a repeat of the original rows
+ * 3-9 lobes, offsets varied so it doesn't read as a copy-paste) inserted
+ * before the original narrowing tail (rows 0-10 and the final 3 rows are
+ * otherwise unchanged from the pre-fix-round-2 table) — see the geometry
+ * comment on TREE_TRUNK for why: this canopy has to be taller so the trunk
+ * beneath it can reach tree.h without the trunk itself growing absurdly long.
+ */
 const OAK_CANOPY: readonly CanopyRow[] = [
   [8, 0], [14, 1], [18, -1], [24, 1], [20, -2], [28, 1], [30, 0],
-  [26, -1], [24, 2], [28, -1], [20, 1], [18, -2], [12, 0], [6, 0],
+  [26, -1], [24, 2], [28, -1], [20, 1],
+  [24, -1], [28, 1], [30, 0], [26, -1], [24, 2], [28, -1], [22, 1], [26, -2], [28, 0], [24, 1],
+  [18, -2], [12, 0], [6, 0],
 ] as const;
 
-/** Three narrowing branch tiers, each resetting narrower at its own top —
- *  the classic layered-conifer notch between whorls. */
+/**
+ * Four narrowing branch tiers, each resetting narrower at its own top — the
+ * classic layered-conifer notch between whorls. A third whorl (8 rows) was
+ * inserted between the original 2nd and 3rd tiers so pine keeps its "tallest
+ * silhouette of the four" identity now that grand_oak/maple/sakura's
+ * canopies grew too (see OAK_CANOPY's comment) — pine's own extra height
+ * goes entirely into the canopy rather than the trunk, since it was already
+ * the tallest-trunked species and a taller trunk still wouldn't have kept it
+ * the tallest canopy by row count.
+ */
 const PINE_CANOPY: readonly CanopyRow[] = [
   [2, 0], [6, 0], [8, -1], [10, 1], [8, 0], [14, 0],
   [8, 0], [12, 1], [14, -1], [16, 0], [14, 1], [20, 0],
+  [10, 0], [14, -1], [16, 1], [18, 0], [16, -1], [20, 1], [18, 0], [22, 0],
   [12, 0], [16, -1], [18, 1], [20, 0], [18, -1], [24, 0],
 ] as const;
 
-/** Upright vase shape, bulging in the upper-middle. */
+/**
+ * Upright vase shape, bulging in the upper-middle. Rows 9-16 are an inserted
+ * taller belly (see OAK_CANOPY's comment for why); rows 0-8 and the final 3
+ * rows are unchanged from the pre-fix-round-2 table.
+ */
 const MAPLE_CANOPY: readonly CanopyRow[] = [
-  [8, 0], [16, 1], [20, -1], [26, 1], [28, 0], [24, -1],
-  [26, 1], [22, -2], [20, 1], [16, 0], [10, -1], [6, 0],
+  [8, 0], [16, 1], [20, -1], [26, 1], [28, 0], [24, -1], [26, 1], [22, -2], [20, 1],
+  [24, -1], [26, 1], [22, -2], [24, 1], [20, -1], [22, 1], [18, -1], [16, 1],
+  [16, 0], [10, -1], [6, 0],
 ] as const;
 
-/** Fluffier, more frequent bumps — reads as clustered blossom puffs. */
+/**
+ * Fluffier, more frequent bumps — reads as clustered blossom puffs. Rows
+ * 9-16 are an inserted taller belly (see OAK_CANOPY's comment for why); rows
+ * 0-8 and the final 3 rows are unchanged from the pre-fix-round-2 table.
+ */
 const SAKURA_CANOPY: readonly CanopyRow[] = [
-  [6, 0], [14, 1], [10, -2], [18, 1], [14, -1], [22, 0],
-  [16, 2], [20, -1], [14, 1], [18, -2], [10, 0], [6, 0],
+  [6, 0], [14, 1], [10, -2], [18, 1], [14, -1], [22, 0], [16, 2], [20, -1], [14, 1],
+  [20, 0], [16, -2], [22, 1], [18, -1], [20, 2], [16, -1], [18, 1], [14, -2],
+  [18, -2], [10, 0], [6, 0],
 ] as const;
 
 /** Per-species canopy silhouette. */
@@ -496,12 +530,34 @@ export const TREE_TONE: Record<TreeType, FoliageTone> = {
   sakura: BLOSSOM_TONE,
 };
 
-/** [centreX, width, height] trunk footprint per species, all logical px. */
+/**
+ * [centreX, width, height] trunk footprint per species, all logical px.
+ *
+ * Fix round 2 (review item 1): the pre-existing heights here left the drawn
+ * trunk 16-36 world px short of `tree.h` (DECORATIVE_TREES's declared
+ * footprint, which the overworld's trunk collision band and y-sort baseline
+ * both key off) — the player could walk through the visible trunk, and the
+ * tree sorted nearer the camera than it should. The fix is geometric, not a
+ * baseline rewrite: grand_oak/maple/sakura's trunks grew by a uniform +8 (a
+ * taller trunk under the same canopy, restoring some of the visual mass the
+ * pre-branch art had) and also gained extra canopy rows (see each CANOPY
+ * table's own comment) to make up the rest; pine's whole shortfall instead
+ * went into extra canopy rows, keeping its trunk unchanged (see PINE_CANOPY's
+ * comment for why) — together these make
+ * `2 * (TREE_CANOPY[type].length - 3 + TREE_TRUNK[type][2])`
+ * land exactly on that species' `tree.h` for every species in
+ * DECORATIVE_TREES. `lib/game-trees.test.ts` renders each species and
+ * asserts the drawn trunk bottoms out at `tree.y + tree.h`, so this can't
+ * silently drift out of sync again. Pine is the exception to the uniform
+ * +8: it was already the tallest-trunked species and needed its whole +8
+ * made up in canopy rows instead (see PINE_CANOPY's comment), so its trunk
+ * height here is unchanged from before this fix.
+ */
 export const TREE_TRUNK: Record<TreeType, readonly [cx: number, w: number, h: number]> = {
-  grand_oak: [16, 7, 11],
+  grand_oak: [16, 7, 19],
   pine: [12, 5, 16],
-  maple: [14, 6, 12],
-  sakura: [14, 5, 12],
+  maple: [14, 6, 20],
+  sakura: [14, 5, 20],
 };
 
 /**
@@ -620,8 +676,12 @@ function drawOneTree(
     const trunkBottom = trunkTop + th;
 
     // Opaque stepped shadow — no ellipse, no alpha — drawn first so the
-    // trunk and canopy paint over any overlap.
-    const sw = tw + 10;
+    // trunk and canopy paint over any overlap. `tw + 10` is odd whenever
+    // `tw` itself is odd (grand_oak/pine/sakura), landing `cx - sw / 2` on
+    // an x.5 logical pixel — off the 2-world-px sprite grid (contract rule
+    // 1), the exact hazard pixelDisc's own doc comment warns about. Bump to
+    // the next even width instead of leaving it fractional.
+    const sw = tw + (tw % 2 ? 11 : 10);
     px(c, cx - sw / 2 + 2, trunkBottom, sw - 4, 1, PAL.grassX);
     px(c, cx - sw / 2, trunkBottom + 1, sw, 1, PAL.grassX);
     px(c, cx - sw / 2 + 2, trunkBottom + 2, sw - 4, 1, PAL.grassX);

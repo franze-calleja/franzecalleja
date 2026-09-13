@@ -1,6 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { PAL } from "../components/game/game-palette";
-import { drawGuildInterior, drawStationPedestal } from "../components/game/game-interior";
+import {
+  drawAzraSanctuaryInterior,
+  drawDevopsStationInterior,
+  drawGuildInterior,
+  drawStationPedestal,
+  drawVillagePostInterior,
+} from "../components/game/game-interior";
 import { GUILD_PROJECT_STATIONS } from "../components/game/game-data";
 
 // Mirrors lib/game-landmarks.test.ts's recorder — captures x/y/w/h so the
@@ -122,5 +128,97 @@ describe("guild interior", () => {
       return rects.length;
     };
     expect(run(400)).toBe(run(400));
+  });
+});
+
+describe("village post interior", () => {
+  it("honours the pixel contract and paints only palette colours", () => {
+    const { ctx, rects, calls } = recorder();
+    drawVillagePostInterior(ctx as never, 700);
+
+    expect(rects.length).toBeGreaterThan(100);
+    ["createLinearGradient", "createRadialGradient", "arc", "ellipse"]
+      .forEach((banned) => expect(calls, `used ${banned}`).not.toContain(banned));
+
+    const allowed = new Set<string>(Object.values(PAL));
+    rects.forEach((r) => expect(allowed.has(r.color), `${r.color} not in palette`).toBe(true));
+  });
+
+  it("renders deterministically with integer-coordinate pixel art", () => {
+    const render = () => {
+      const { ctx, rects } = recorder();
+      drawVillagePostInterior(ctx as never, 400);
+      return rects;
+    };
+    const first = render();
+    const second = render();
+
+    expect(first).toEqual(second);
+    first.forEach((rect) => {
+      expect(Number.isInteger(rect.x)).toBe(true);
+      expect(Number.isInteger(rect.y)).toBe(true);
+      expect(Number.isInteger(rect.w)).toBe(true);
+      expect(Number.isInteger(rect.h)).toBe(true);
+    });
+  });
+});
+
+describe("AZRA sanctuary interior", () => {
+  it("honours the pixel contract and restores its Oracle Core pulse", () => {
+    const { ctx, rects, calls, alphaLog } = recorder();
+    drawAzraSanctuaryInterior(ctx as never, 700);
+
+    expect(rects.length).toBeGreaterThan(100);
+    ["createLinearGradient", "createRadialGradient", "arc", "ellipse"]
+      .forEach((banned) => expect(calls, `used ${banned}`).not.toContain(banned));
+    expect(alphaLog.some((value) => value !== 1)).toBe(true);
+    expect(ctx.globalAlpha).toBe(1);
+
+    const allowed = new Set<string>(Object.values(PAL));
+    rects.forEach((rect) => {
+      expect(allowed.has(rect.color), `${rect.color} not in palette`).toBe(true);
+      expect(Number.isInteger(rect.x)).toBe(true);
+      expect(Number.isInteger(rect.y)).toBe(true);
+      expect(Number.isInteger(rect.w)).toBe(true);
+      expect(Number.isInteger(rect.h)).toBe(true);
+    });
+  });
+
+  it("animates the Oracle Core and data motes", () => {
+    const first = recorder();
+    const second = recorder();
+    drawAzraSanctuaryInterior(first.ctx as never, 0);
+    drawAzraSanctuaryInterior(second.ctx as never, 180);
+    expect(first.rects).not.toEqual(second.rects);
+  });
+});
+
+describe("DevOps station interior", () => {
+  it("honours the pixel contract and restores its console pulse", () => {
+    const { ctx, rects, calls, alphaLog } = recorder();
+    drawDevopsStationInterior(ctx as never, 700);
+
+    expect(rects.length).toBeGreaterThan(100);
+    ["createLinearGradient", "createRadialGradient", "arc", "ellipse"]
+      .forEach((banned) => expect(calls, `used ${banned}`).not.toContain(banned));
+    expect(alphaLog.some((value) => value !== 1)).toBe(true);
+    expect(ctx.globalAlpha).toBe(1);
+
+    const allowed = new Set<string>(Object.values(PAL));
+    rects.forEach((rect) => {
+      expect(allowed.has(rect.color), `${rect.color} not in palette`).toBe(true);
+      expect(Number.isInteger(rect.x)).toBe(true);
+      expect(Number.isInteger(rect.y)).toBe(true);
+      expect(Number.isInteger(rect.w)).toBe(true);
+      expect(Number.isInteger(rect.h)).toBe(true);
+    });
+  });
+
+  it("animates the station status indicators", () => {
+    const first = recorder();
+    const second = recorder();
+    drawDevopsStationInterior(first.ctx as never, 0);
+    drawDevopsStationInterior(second.ctx as never, 240);
+    expect(first.rects).not.toEqual(second.rects);
   });
 });

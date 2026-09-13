@@ -6,6 +6,9 @@ import {
 } from "./game-pixel";
 import {
   GUILD_INTERIOR_WIDTH, GUILD_INTERIOR_HEIGHT, GUILD_PROJECT_STATIONS,
+  VILLAGE_POST_INTERIOR_WIDTH, VILLAGE_POST_INTERIOR_HEIGHT,
+  AZRA_SANCTUARY_INTERIOR_WIDTH, AZRA_SANCTUARY_INTERIOR_HEIGHT,
+  DEVOPS_STATION_INTERIOR_WIDTH, DEVOPS_STATION_INTERIOR_HEIGHT,
   type ProjectStation,
 } from "./game-data";
 
@@ -42,6 +45,12 @@ import {
 // file automatically.
 const W = GUILD_INTERIOR_WIDTH / UNIT; // 350 logical
 const H = GUILD_INTERIOR_HEIGHT / UNIT; // 270 logical
+const POST_W = VILLAGE_POST_INTERIOR_WIDTH / UNIT;
+const POST_H = VILLAGE_POST_INTERIOR_HEIGHT / UNIT;
+const SANCTUARY_W = AZRA_SANCTUARY_INTERIOR_WIDTH / UNIT;
+const SANCTUARY_H = AZRA_SANCTUARY_INTERIOR_HEIGHT / UNIT;
+const DEVOPS_W = DEVOPS_STATION_INTERIOR_WIDTH / UNIT;
+const DEVOPS_H = DEVOPS_STATION_INTERIOR_HEIGHT / UNIT;
 
 // Book-spine colours for the west shelf — a fixed rotation through PAL, not
 // each project's own accent (station.color is a hex literal outside PAL,
@@ -221,4 +230,197 @@ export function drawGuildInterior(
   });
 
   void charactersImage; // Architect Astro at the desk is drawn by the caller.
+}
+
+/**
+ * Village Post interior: a working courier lodge built around one clear
+ * service counter. Mail slots, pinned dispatches, parcels and brass lamps
+ * make the room specific to contact and correspondence rather than another
+ * generic exhibition space.
+ */
+export function drawVillagePostInterior(ctx: PixelCtx, t: number): void {
+  withSprite(ctx, 0, 0, () => {
+    // Oak plank floor with a central postal-red runner.
+    for (let y = 0; y < POST_H; y += 6) {
+      px(ctx, 0, y, POST_W, 5, (y / 6) % 2 === 0 ? PAL.woodL : PAL.wood);
+      px(ctx, 0, y + 5, POST_W, 1, PAL.woodD);
+    }
+    box(ctx, 151, 72, 48, 174, PAL.roofD);
+    px(ctx, 154, 74, 42, 170, PAL.roof);
+    dith(ctx, 155, 75, 40, 168, PAL.roof, PAL.roofD);
+
+    // Stone-and-timber room shell with a south exit.
+    stoneCourse(ctx, 0, 0, POST_W, 9);
+    px(ctx, 0, 9, POST_W, 11, PAL.wall);
+    px(ctx, 0, 19, POST_W, 2, PAL.woodD);
+    stoneCourse(ctx, 0, 0, 10, 250);
+    stoneCourse(ctx, POST_W - 10, 0, 10, 250);
+    px(ctx, 0, 250, POST_W, 20, PAL.stoneX);
+    px(ctx, 0, 249, POST_W, 1, PAL.stone);
+    plankDoor(ctx, 155, 244, 40, 26);
+
+    // Pigeonhole sorting wall: 18 readable mail compartments.
+    box(ctx, 28, 27, 104, 40, PAL.woodD);
+    px(ctx, 31, 30, 98, 34, PAL.woodX);
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 6; col++) {
+        const x = 33 + col * 16;
+        const y = 32 + row * 10;
+        box(ctx, x, y, 13, 7, PAL.wood);
+        px(ctx, x + 2, y + 2, 8, 3, (row + col) % 2 === 0 ? PAL.wallL : PAL.goldL);
+      }
+    }
+
+    // Dispatch notice board with pinned letters and route slips.
+    box(ctx, 230, 28, 86, 39, PAL.wood);
+    px(ctx, 234, 32, 78, 31, PAL.woodD);
+    box(ctx, 240, 36, 18, 18, PAL.wallL);
+    box(ctx, 264, 34, 36, 10, PAL.goldL);
+    box(ctx, 268, 48, 28, 11, PAL.glassL);
+    px(ctx, 247, 35, 2, 2, PAL.bloom);
+    px(ctx, 280, 33, 2, 2, PAL.bloom);
+
+    // Brass-lit service counter, the room's interaction focal point.
+    lantern(ctx, 142, 37, t);
+    lantern(ctx, 201, 37, t + 300);
+    box(ctx, 105, 82, 140, 42, PAL.woodD);
+    px(ctx, 109, 86, 132, 34, PAL.wood);
+    dith(ctx, 111, 88, 128, 30, PAL.wood, PAL.woodL);
+    px(ctx, 102, 80, 146, 7, PAL.goldD);
+    px(ctx, 104, 80, 142, 3, PAL.goldL);
+    // Envelopes waiting on the counter.
+    box(ctx, 126, 72, 25, 10, PAL.wallL);
+    px(ctx, 128, 74, 21, 1, PAL.goldD);
+    box(ctx, 198, 74, 22, 8, PAL.glassL);
+
+    // Parcel stacks frame the room without crowding the walking lane.
+    box(ctx, 34, 86, 42, 28, PAL.wood);
+    px(ctx, 52, 87, 4, 26, PAL.goldD);
+    box(ctx, 42, 69, 29, 17, PAL.woodL);
+    px(ctx, 54, 70, 3, 15, PAL.goldD);
+    box(ctx, 278, 88, 38, 26, PAL.wood);
+    px(ctx, 294, 89, 4, 24, PAL.goldD);
+  });
+}
+
+/** AZRA's observatory: a stone chamber focused on one animated Oracle Core. */
+export function drawAzraSanctuaryInterior(ctx: PixelCtx, t: number): void {
+  withSprite(ctx, 0, 0, () => {
+    // Dark stone tiles with a cyan rune path leading from the door.
+    for (let y = 0; y < SANCTUARY_H; y += 12) {
+      stoneCourse(ctx, 0, y, SANCTUARY_W, 12);
+    }
+    px(ctx, 169, 64, 12, 182, PAL.arcaneD);
+    dith(ctx, 171, 66, 8, 178, PAL.arcaneD, PAL.glassD);
+
+    // Chamber shell and south exit.
+    stoneCourse(ctx, 0, 0, SANCTUARY_W, 12);
+    stoneCourse(ctx, 0, 0, 10, 250);
+    stoneCourse(ctx, SANCTUARY_W - 10, 0, 10, 250);
+    px(ctx, 0, 250, SANCTUARY_W, 20, PAL.stoneX);
+    px(ctx, 0, 249, SANCTUARY_W, 1, PAL.arcane);
+    plankDoor(ctx, 155, 244, 40, 26);
+
+    // Crystal archive shelves across the north wall.
+    box(ctx, 24, 24, 94, 34, PAL.stoneD);
+    box(ctx, 232, 24, 94, 34, PAL.stoneD);
+    for (let i = 0; i < 6; i++) {
+      const leftX = 29 + i * 14;
+      const rightX = 237 + i * 14;
+      box(ctx, leftX, 30, 8, 20, i % 2 === 0 ? PAL.glassD : PAL.violetD);
+      px(ctx, leftX + 2, 27, 4, 4, i % 2 === 0 ? PAL.glassL : PAL.violetL);
+      box(ctx, rightX, 30, 8, 20, i % 2 === 0 ? PAL.violetD : PAL.glassD);
+      px(ctx, rightX + 2, 27, 4, 4, i % 2 === 0 ? PAL.violetL : PAL.glassL);
+    }
+
+    // Four rune pylons frame the core and mark its collision footprint.
+    const pylons = [[118, 88], [216, 88], [118, 147], [216, 147]] as const;
+    pylons.forEach(([x, y], index) => {
+      box(ctx, x, y, 16, 34, PAL.stoneD);
+      px(ctx, x + 3, y + 3, 10, 25, PAL.stone);
+      const lit = Math.floor(t / 260 + index) % 2 === 0;
+      px(ctx, x + 6, y + 8, 4, 12, lit ? PAL.arcane : PAL.violetL);
+      px(ctx, x + 5, y + 30, 6, 2, PAL.goldD);
+    });
+
+    // Oracle Core: one controlled pulse, surrounded by stepped rune rings.
+    pixelDisc(ctx, 175, 118, [18, 30, 38, 44, 48, 48, 44, 38, 30, 18], PAL.goldD);
+    pixelDisc(ctx, 175, 120, [14, 24, 30, 34, 34, 30, 24, 14], PAL.violetD, false);
+    try {
+      ctx.globalAlpha = 0.58 + 0.42 * Math.sin(t * 0.005);
+      pixelDisc(ctx, 175, 112, [8, 14, 18, 20, 18, 14, 8], PAL.arcane);
+      px(ctx, 172, 109, 6, 6, PAL.glassL);
+    } finally {
+      ctx.globalAlpha = 1;
+    }
+
+    // Sparse orbiting data motes make the pulse legible without visual noise.
+    const phase = Math.floor(t / 180) % 4;
+    const motes = [[151, 110], [174, 91], [198, 110], [174, 137]] as const;
+    motes.forEach(([x, y], index) => {
+      px(ctx, x, y, 3, 3, index === phase ? PAL.wallL : PAL.arcaneD);
+    });
+  });
+}
+
+/** DevOps operations bay: racks, power storage and a live telemetry console. */
+export function drawDevopsStationInterior(ctx: PixelCtx, t: number): void {
+  withSprite(ctx, 0, 0, () => {
+    // Industrial floor plates with a central cable trench.
+    for (let y = 0; y < DEVOPS_H; y += 12) {
+      stoneCourse(ctx, 0, y, DEVOPS_W, 12);
+      px(ctx, 0, y + 10, DEVOPS_W, 1, PAL.steelD);
+    }
+    px(ctx, 168, 62, 14, 184, PAL.out);
+    px(ctx, 171, 62, 8, 184, PAL.steelX);
+    for (let y = 68; y < 240; y += 18) px(ctx, 172, y, 6, 2, PAL.arcaneD);
+
+    // Reinforced room shell and south exit.
+    stoneCourse(ctx, 0, 0, DEVOPS_W, 12);
+    stoneCourse(ctx, 0, 0, 10, 250);
+    stoneCourse(ctx, DEVOPS_W - 10, 0, 10, 250);
+    px(ctx, 0, 250, DEVOPS_W, 20, PAL.steelX);
+    px(ctx, 0, 249, DEVOPS_W, 1, PAL.glassD);
+    plankDoor(ctx, 155, 244, 40, 26);
+
+    // North-wall server racks: indicator clusters make them read as live systems.
+    const racks = [26, 72, 252, 298] as const;
+    racks.forEach((x, index) => {
+      box(ctx, x, 24, 36, 58, PAL.out);
+      box(ctx, x + 2, 26, 32, 54, PAL.steelD);
+      for (let row = 0; row < 5; row++) {
+        const y = 29 + row * 10;
+        px(ctx, x + 5, y, 26, 6, PAL.steel);
+        px(ctx, x + 7, y + 2, 3, 2, (Math.floor(t / 220) + row + index) % 3 === 0 ? PAL.grassL : PAL.arcane);
+        px(ctx, x + 13, y + 2, 2, 2, PAL.glassL);
+        px(ctx, x + 18, y + 2, 8, 1, PAL.steelL);
+      }
+    });
+
+    // Battery cabinets frame the room without closing the central route.
+    [[38, 104], [284, 104]].forEach(([x, y]) => {
+      box(ctx, x, y, 30, 54, PAL.out);
+      box(ctx, x + 2, y + 2, 26, 50, PAL.steelD);
+      px(ctx, x + 7, y + 8, 16, 24, PAL.grassD);
+      px(ctx, x + 10, y + 11, 10, 15, PAL.grassL);
+      px(ctx, x + 8, y + 38, 14, 4, PAL.goldD);
+    });
+
+    // The live operations console is the room's focal point and interaction target.
+    box(ctx, 111, 88, 128, 44, PAL.out);
+    box(ctx, 114, 91, 122, 38, PAL.steelD);
+    px(ctx, 118, 95, 54, 24, PAL.glassD);
+    try {
+      ctx.globalAlpha = 0.62 + 0.38 * Math.sin(t * 0.006);
+      px(ctx, 121, 98, 48, 18, PAL.arcane);
+      px(ctx, 178, 98, 50, 18, PAL.grassD);
+      px(ctx, 181, 101, 44, 3, PAL.grassL);
+    } finally {
+      ctx.globalAlpha = 1;
+    }
+    px(ctx, 118, 121, 112, 4, PAL.steel);
+    for (let x = 122; x < 228; x += 13) px(ctx, x, 122, 7, 2, PAL.goldD);
+    px(ctx, 106, 130, 138, 7, PAL.steelX);
+    px(ctx, 110, 130, 130, 2, PAL.steelL);
+  });
 }

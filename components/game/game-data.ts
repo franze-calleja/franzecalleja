@@ -82,9 +82,9 @@ export const DECORATIVE_TREES = [
   { x: 15, y: 410, w: 48, h: 78, type: "pine" as const },
 ];
 
-// Flower pot positions (strictly inside grass fields and garden pens)
+// Flower pot positions (kept clear of paths and building doorways)
 export const FLOWER_POTS = [
-  // 1. Right Side Fenced Garden Pen (Safely below Career Archives building at y: 275..343)
+  // 1. Career Archives flower bed
   { x: 810, y: 288, type: "rose" as const },
   { x: 844, y: 288, type: "sunflower" as const },
   { x: 810, y: 318, type: "lily" as const },
@@ -219,8 +219,7 @@ export const PATHWAY_FENCES = [
   { x: 900, y: 260, w: 18, h: 80 },
   { x: 900, y: 370, w: 18, h: 90 },
 
-  // 6. Enclosed Garden Pens
-  { x: 800, y: 275, w: 68, h: 68 },
+  // 6. North-West Projects garden pen
   { x: 58, y: 46, w: 58, h: 62 },
 ];
 
@@ -514,11 +513,12 @@ export const NPCS: NPC[] = [
     id: "npc-azra",
     name: "AZRA (AI Companion)",
     nameTag: "AZRA [AI Agent]",
-    x: 630,
+    x: 700,
     y: 185,
-    anchorX: 630,
+    anchorX: 700,
     anchorY: 185,
-    wanderRadius: 32,
+    // Keep the Sanctuary doorway clear for players returning from inside.
+    wanderRadius: 16,
     direction: "down",
     spriteRow: 14,
     spriteType: "azra",
@@ -534,11 +534,12 @@ export const NPCS: NPC[] = [
     id: "npc-engineer",
     name: "Lead Architect Astro",
     nameTag: "Architect Astro 🛠️",
-    x: 140,
+    x: 184,
     y: 185,
-    anchorX: 140,
+    anchorX: 184,
     anchorY: 185,
-    wanderRadius: 36,
+    // Keep the Guild doorway clear so players can return at its natural exit.
+    wanderRadius: 16,
     direction: "down",
     spriteRow: 0,
     spriteType: "engineer",
@@ -553,11 +554,12 @@ export const NPCS: NPC[] = [
     id: "npc-devops",
     name: "SRE Node",
     nameTag: "SRE Node ⚡",
-    x: 130,
+    x: 216,
     y: 385,
-    anchorX: 130,
+    anchorX: 216,
     anchorY: 385,
-    wanderRadius: 36,
+    // Keep the Power Station doorway clear for players returning from inside.
+    wanderRadius: 16,
     direction: "down",
     spriteRow: 11,
     spriteType: "scholar",
@@ -760,6 +762,12 @@ export const CHARACTER_SKINS: CharacterSkin[] = [
 
 export const GUILD_INTERIOR_WIDTH = 700;
 export const GUILD_INTERIOR_HEIGHT = 540;
+export const VILLAGE_POST_INTERIOR_WIDTH = 700;
+export const VILLAGE_POST_INTERIOR_HEIGHT = 540;
+export const AZRA_SANCTUARY_INTERIOR_WIDTH = 700;
+export const AZRA_SANCTUARY_INTERIOR_HEIGHT = 540;
+export const DEVOPS_STATION_INTERIOR_WIDTH = 700;
+export const DEVOPS_STATION_INTERIOR_HEIGHT = 540;
 
 export interface ProjectStation {
   id: string;

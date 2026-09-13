@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import {
   X,
   ExternalLink,
@@ -15,7 +15,6 @@ import {
   Activity,
   Flame,
   Crown,
-  ShieldCheck,
   Briefcase,
   Mail,
   FileText,
@@ -51,10 +50,10 @@ export default function GameModal({ type, onClose }: GameModalProps) {
 
   const isProjectsModal = type === "projects" || type.startsWith("project_");
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     retroAudio.playCancel();
     onClose();
-  };
+  }, [onClose]);
 
   const handleCopyEmail = () => {
     retroAudio.playInteract();
@@ -88,22 +87,27 @@ export default function GameModal({ type, onClose }: GameModalProps) {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [type, isProjectsModal]);
+  }, [type, isProjectsModal, handleClose]);
 
   return (
     <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/85 p-2 sm:p-3 backdrop-blur-sm">
       <div
-        className="relative flex max-h-[96%] w-[96%] max-w-2xl flex-col justify-between overflow-hidden rounded-xl border-3 sm:border-4 border-amber-600/90 bg-slate-950 p-3 sm:p-4 font-mono text-slate-100 shadow-2xl"
-        style={{
-          boxShadow: "0 0 0 2px #0f172a, 0 10px 30px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.8)",
-          backgroundImage: "radial-gradient(circle at 50% 0%, rgba(30, 41, 59, 0.5) 0%, rgba(15, 23, 42, 0.95) 100%)",
-        }}
+        data-game-modal
+        role="dialog"
+        aria-modal="true"
+        aria-label="Game information"
+        className="game-info-modal relative flex max-h-[96%] w-[96%] max-w-2xl flex-col justify-between overflow-hidden rounded-sm border-2 border-emerald-400/70 bg-zinc-950 p-3 pt-5 sm:p-4 sm:pt-6 font-mono text-stone-100"
       >
-        {/* Ornate Retro Corner Screws */}
-        <div className="absolute top-2 left-2 h-2 w-2 rounded-full border border-amber-400 bg-amber-600 shadow-inner" />
-        <div className="absolute top-2 right-2 h-2 w-2 rounded-full border border-amber-400 bg-amber-600 shadow-inner" />
-        <div className="absolute bottom-2 left-2 h-2 w-2 rounded-full border border-amber-400 bg-amber-600 shadow-inner" />
-        <div className="absolute bottom-2 right-2 h-2 w-2 rounded-full border border-amber-400 bg-amber-600 shadow-inner" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-emerald-400" />
+        <div className="pointer-events-none absolute left-0 top-1 h-10 w-1 bg-violet-400" />
+        <button
+          type="button"
+          onClick={handleClose}
+          aria-label="Close information"
+          className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center border border-emerald-400/60 bg-zinc-900 text-emerald-200 hover:bg-emerald-950 active:translate-y-px"
+        >
+          <X className="h-4 w-4" />
+        </button>
 
         {/* =========================================================================
             1. PROJECTS GUILD SHOWCASE // RESPONSIVE RETRO SPRITE CAROUSEL

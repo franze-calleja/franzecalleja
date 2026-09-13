@@ -13,6 +13,12 @@ import {
   CHARACTER_SKINS,
   GUILD_INTERIOR_WIDTH,
   GUILD_INTERIOR_HEIGHT,
+  VILLAGE_POST_INTERIOR_WIDTH,
+  VILLAGE_POST_INTERIOR_HEIGHT,
+  AZRA_SANCTUARY_INTERIOR_WIDTH,
+  AZRA_SANCTUARY_INTERIOR_HEIGHT,
+  DEVOPS_STATION_INTERIOR_WIDTH,
+  DEVOPS_STATION_INTERIOR_HEIGHT,
   GUILD_PROJECT_STATIONS,
   ProjectStation,
   DECORATIVE_TREES,
@@ -31,7 +37,12 @@ import {
   collectStatues, collectBanners, drawCentralFountain, drawBasketballCourt,
   collectBasketballHoop, FOUNTAIN_BASELINE,
 } from "./game-landmarks";
-import { drawGuildInterior } from "./game-interior";
+import {
+  drawAzraSanctuaryInterior,
+  drawDevopsStationInterior,
+  drawGuildInterior,
+  drawVillagePostInterior,
+} from "./game-interior";
 import { PAL } from "./game-palette";
 import {
   renderTerrainToCache,
@@ -80,6 +91,24 @@ interface Particle {
   size: number;
   color: string;
   alpha: number;
+}
+
+type GameScene = "overworld" | "projects-guild" | "village-post" | "azra-sanctuary" | "devops-station";
+
+function sceneDimensions(scene: GameScene): { width: number; height: number } {
+  if (scene === "projects-guild") {
+    return { width: GUILD_INTERIOR_WIDTH, height: GUILD_INTERIOR_HEIGHT };
+  }
+  if (scene === "village-post") {
+    return { width: VILLAGE_POST_INTERIOR_WIDTH, height: VILLAGE_POST_INTERIOR_HEIGHT };
+  }
+  if (scene === "azra-sanctuary") {
+    return { width: AZRA_SANCTUARY_INTERIOR_WIDTH, height: AZRA_SANCTUARY_INTERIOR_HEIGHT };
+  }
+  if (scene === "devops-station") {
+    return { width: DEVOPS_STATION_INTERIOR_WIDTH, height: DEVOPS_STATION_INTERIOR_HEIGHT };
+  }
+  return { width: MAP_TOTAL_WIDTH, height: MAP_TOTAL_HEIGHT };
 }
 
 // --- SPRITESHEET CHARACTER RENDERER ---
@@ -403,6 +432,75 @@ function drawGuildInteriorLabels(ctx: CanvasRenderingContext2D): void {
   ctx.fillText("▼ EXIT TO TOWN ▼", 350, 477);
 }
 
+function drawVillagePostInteriorLabels(ctx: CanvasRenderingContext2D): void {
+  ctx.fillStyle = PAL.goldD;
+  ctx.fillRect(280, 38, 140, 18);
+  ctx.fillStyle = PAL.out;
+  ctx.fillRect(283, 41, 134, 12);
+  ctx.fillStyle = PAL.goldL;
+  ctx.font = "bold 8px monospace";
+  ctx.textAlign = "center";
+  ctx.fillText("VILLAGE POST // DISPATCH", 350, 50);
+
+  ctx.fillStyle = PAL.roofD;
+  ctx.fillRect(272, 282, 156, 20);
+  ctx.fillStyle = PAL.wallL;
+  ctx.font = "bold 9px monospace";
+  ctx.fillText("[SPACE / E] SEND INQUIRY", 350, 296);
+
+  ctx.fillStyle = PAL.roofD;
+  ctx.fillRect(295, 466, 110, 16);
+  ctx.fillStyle = PAL.goldL;
+  ctx.font = "bold 8px monospace";
+  ctx.fillText("▼ EXIT TO TOWN ▼", 350, 477);
+}
+
+function drawAzraSanctuaryInteriorLabels(ctx: CanvasRenderingContext2D): void {
+  ctx.fillStyle = PAL.violetD;
+  ctx.fillRect(270, 38, 160, 18);
+  ctx.fillStyle = PAL.out;
+  ctx.fillRect(273, 41, 154, 12);
+  ctx.fillStyle = PAL.glassL;
+  ctx.font = "bold 8px monospace";
+  ctx.textAlign = "center";
+  ctx.fillText("AZRA SANCTUARY // ORACLE", 350, 50);
+
+  ctx.fillStyle = PAL.arcaneD;
+  ctx.fillRect(278, 304, 144, 20);
+  ctx.fillStyle = PAL.wallL;
+  ctx.font = "bold 9px monospace";
+  ctx.fillText("[SPACE / E] ASK AZRA", 350, 318);
+
+  ctx.fillStyle = PAL.violetD;
+  ctx.fillRect(295, 466, 110, 16);
+  ctx.fillStyle = PAL.glassL;
+  ctx.font = "bold 8px monospace";
+  ctx.fillText("▼ EXIT TO TOWN ▼", 350, 477);
+}
+
+function drawDevopsStationInteriorLabels(ctx: CanvasRenderingContext2D): void {
+  ctx.fillStyle = PAL.steelD;
+  ctx.fillRect(262, 38, 176, 18);
+  ctx.fillStyle = PAL.out;
+  ctx.fillRect(265, 41, 170, 12);
+  ctx.fillStyle = PAL.grassL;
+  ctx.font = "bold 8px monospace";
+  ctx.textAlign = "center";
+  ctx.fillText("OPS BAY // ALL SYSTEMS NOMINAL", 350, 50);
+
+  ctx.fillStyle = PAL.steelX;
+  ctx.fillRect(270, 310, 160, 20);
+  ctx.fillStyle = PAL.glassL;
+  ctx.font = "bold 9px monospace";
+  ctx.fillText("[SPACE / E] OPEN OPS CONSOLE", 350, 324);
+
+  ctx.fillStyle = PAL.steelD;
+  ctx.fillRect(295, 466, 110, 16);
+  ctx.fillStyle = PAL.grassL;
+  ctx.font = "bold 8px monospace";
+  ctx.fillText("▼ EXIT TO TOWN ▼", 350, 477);
+}
+
 function drawParticles(ctx: CanvasRenderingContext2D, particles: Particle[]) {
   for (const pt of particles) {
     pt.x += pt.vx;
@@ -435,8 +533,8 @@ export default function GameCanvas() {
   } | null>(null);
 
   // Scene Management (Overworld vs Building Interiors)
-  const [currentScene, setCurrentScene] = useState<"overworld" | "projects-guild">("overworld");
-  const currentSceneRef = useRef<"overworld" | "projects-guild">("overworld");
+  const [currentScene, setCurrentScene] = useState<GameScene>("overworld");
+  const currentSceneRef = useRef<GameScene>("overworld");
   useEffect(() => {
     currentSceneRef.current = currentScene;
   }, [currentScene]);
@@ -584,7 +682,66 @@ export default function GameCanvas() {
       return false;
     }
 
-    // --- 2. OVERWORLD COLLISION ---
+    // --- 2. VILLAGE POST INTERIOR SCENE COLLISION ---
+    if (currentSceneRef.current === "village-post") {
+      if (
+        pLeft < 60 ||
+        pRight > VILLAGE_POST_INTERIOR_WIDTH - 60 ||
+        pTop < 112
+      ) {
+        return true;
+      }
+      if (pBottom > VILLAGE_POST_INTERIOR_HEIGHT - 60) {
+        if (pLeft >= 305 && pRight <= 395) return false;
+        return true;
+      }
+
+      // Service counter and parcel stacks.
+      if (pRight > 204 && pLeft < 496 && pBottom > 154 && pTop < 252) return true;
+      if (pRight > 64 && pLeft < 156 && pBottom > 134 && pTop < 232) return true;
+      if (pRight > 550 && pLeft < 638 && pBottom > 168 && pTop < 232) return true;
+      return false;
+    }
+
+    // --- 3. AZRA SANCTUARY INTERIOR SCENE COLLISION ---
+    if (currentSceneRef.current === "azra-sanctuary") {
+      if (
+        pLeft < 60 ||
+        pRight > AZRA_SANCTUARY_INTERIOR_WIDTH - 60 ||
+        pTop < 112
+      ) {
+        return true;
+      }
+      if (pBottom > AZRA_SANCTUARY_INTERIOR_HEIGHT - 60) {
+        if (pLeft >= 305 && pRight <= 395) return false;
+        return true;
+      }
+
+      // Oracle Core and its four framing pylons.
+      if (pRight > 292 && pLeft < 408 && pBottom > 176 && pTop < 292) return true;
+      if (pRight > 228 && pLeft < 276 && pBottom > 170 && pTop < 370) return true;
+      if (pRight > 424 && pLeft < 472 && pBottom > 170 && pTop < 370) return true;
+      return false;
+    }
+
+    // --- 4. DEVOPS STATION INTERIOR SCENE COLLISION ---
+    if (currentSceneRef.current === "devops-station") {
+      if (pLeft < 60 || pRight > DEVOPS_STATION_INTERIOR_WIDTH - 60 || pTop < 112) {
+        return true;
+      }
+      if (pBottom > DEVOPS_STATION_INTERIOR_HEIGHT - 60) {
+        if (pLeft >= 305 && pRight <= 395) return false;
+        return true;
+      }
+
+      // Operations console and the two battery cabinets.
+      if (pRight > 212 && pLeft < 488 && pBottom > 176 && pTop < 274) return true;
+      if (pRight > 72 && pLeft < 140 && pBottom > 208 && pTop < 330) return true;
+      if (pRight > 560 && pLeft < 628 && pBottom > 208 && pTop < 330) return true;
+      return false;
+    }
+
+    // --- 5. OVERWORLD COLLISION ---
     // Bounds
     if (
       pLeft < 24 ||
@@ -603,8 +760,9 @@ export default function GameCanvas() {
       const objBottom = obj.y + obj.height;
 
       if (obj.type === "building" || obj.type === "azra") {
-        const doorLeft = objLeft + obj.width / 2 - 18;
-        const doorRight = objLeft + obj.width / 2 + 18;
+        const doorCenterX = obj.id === "devops-plant" ? 160 : objLeft + obj.width / 2;
+        const doorLeft = doorCenterX - 18;
+        const doorRight = doorCenterX + 18;
         const isNearDoor = pLeft >= doorLeft && pRight <= doorRight && pTop >= objBottom - 24;
         if (isNearDoor) continue;
       }
@@ -727,7 +885,16 @@ export default function GameCanvas() {
     npc?: NPC;
     worldObject?: WorldObject;
     projectStation?: ProjectStation;
-    doorTransition?: "enter_projects_guild" | "exit_guild";
+    doorTransition?:
+      | "enter_projects_guild"
+      | "exit_guild"
+      | "enter_village_post"
+      | "exit_village_post"
+      | "enter_azra_sanctuary"
+      | "exit_azra_sanctuary"
+      | "enter_devops_station"
+      | "exit_devops_station";
+    interiorAction?: "contact" | "azra" | "devops";
     doorName?: string;
   } | null => {
     const p = playerRef.current;
@@ -762,6 +929,48 @@ export default function GameCanvas() {
       return null;
     }
 
+    if (currentSceneRef.current === "village-post") {
+      if (
+        Math.hypot(centerX - 350, centerY - 475) < 40 ||
+        (p.y >= 455 && p.x >= 300 && p.x <= 400)
+      ) {
+        return { doorTransition: "exit_village_post", doorName: "Exit to Franze Town" };
+      }
+
+      if (Math.hypot(centerX - 350, centerY - 270) < 76) {
+        return { interiorAction: "contact" };
+      }
+      return null;
+    }
+
+    if (currentSceneRef.current === "azra-sanctuary") {
+      if (
+        Math.hypot(centerX - 350, centerY - 475) < 40 ||
+        (p.y >= 455 && p.x >= 300 && p.x <= 400)
+      ) {
+        return { doorTransition: "exit_azra_sanctuary", doorName: "Exit to Franze Town" };
+      }
+
+      if (Math.hypot(centerX - 350, centerY - 315) < 72) {
+        return { interiorAction: "azra" };
+      }
+      return null;
+    }
+
+    if (currentSceneRef.current === "devops-station") {
+      if (
+        Math.hypot(centerX - 350, centerY - 475) < 40 ||
+        (p.y >= 455 && p.x >= 300 && p.x <= 400)
+      ) {
+        return { doorTransition: "exit_devops_station", doorName: "Exit to Franze Town" };
+      }
+
+      if (Math.hypot(centerX - 350, centerY - 300) < 74) {
+        return { interiorAction: "devops" };
+      }
+      return null;
+    }
+
     // --- 2. OVERWORLD INTERACTIONS ---
     // Check Projects Guild Entrance Doorway (x: 140, y: 170)
     if (
@@ -769,6 +978,30 @@ export default function GameCanvas() {
       (p.y <= 174 && p.x >= 122 && p.x <= 158 && p.y >= 152)
     ) {
       return { doorTransition: "enter_projects_guild", doorName: "Projects Showcase Guild" };
+    }
+
+    // Village Post doorway (exterior art spans x:410..434, y:131..155).
+    if (
+      Math.hypot(centerX - 422, centerY - 150) < 38 ||
+      (p.y <= 160 && p.x >= 404 && p.x <= 424 && p.y >= 130)
+    ) {
+      return { doorTransition: "enter_village_post", doorName: "Village Post & Courier Lodge" };
+    }
+
+    // AZRA Sanctuary doorway (exterior art spans x:620..644, y:137..161).
+    if (
+      Math.hypot(centerX - 632, centerY - 160) < 40 ||
+      (p.y <= 170 && p.x >= 614 && p.x <= 634 && p.y >= 140)
+    ) {
+      return { doorTransition: "enter_azra_sanctuary", doorName: "AZRA's AI Arcane Sanctuary" };
+    }
+
+    // Power Station doorway (exterior art door spans x:148..172, y:336..364).
+    if (
+      Math.hypot(centerX - 160, centerY - 350) < 38 ||
+      (p.y <= 370 && p.x >= 142 && p.x <= 158 && p.y >= 330)
+    ) {
+      return { doorTransition: "enter_devops_station", doorName: "DevOps & Telemetry Power Station" };
     }
 
     // Check Overworld NPCs
@@ -828,6 +1061,105 @@ export default function GameCanvas() {
       return;
     }
 
+    if (nearby.doorTransition === "enter_village_post") {
+      retroAudio.playDiscovery();
+      setCurrentScene("village-post");
+      leavesRef.current = [];
+      const p = playerRef.current;
+      p.x = 338;
+      p.y = 430;
+      p.direction = "up";
+      p.isMoving = false;
+      targetDestinationRef.current = null;
+      return;
+    }
+
+    if (nearby.doorTransition === "exit_village_post") {
+      retroAudio.playInteract();
+      setCurrentScene("overworld");
+      const p = playerRef.current;
+      p.x = 410;
+      p.y = 160;
+      p.direction = "down";
+      p.isMoving = false;
+      targetDestinationRef.current = null;
+      return;
+    }
+
+    if (nearby.doorTransition === "enter_azra_sanctuary") {
+      retroAudio.playDiscovery();
+      setCurrentScene("azra-sanctuary");
+      leavesRef.current = [];
+      const p = playerRef.current;
+      p.x = 338;
+      p.y = 430;
+      p.direction = "up";
+      p.isMoving = false;
+      targetDestinationRef.current = null;
+      return;
+    }
+
+    if (nearby.doorTransition === "exit_azra_sanctuary") {
+      retroAudio.playInteract();
+      setCurrentScene("overworld");
+      const p = playerRef.current;
+      p.x = 620;
+      p.y = 180;
+      p.direction = "down";
+      p.isMoving = false;
+      targetDestinationRef.current = null;
+      return;
+    }
+
+    if (nearby.doorTransition === "enter_devops_station") {
+      retroAudio.playDiscovery();
+      setCurrentScene("devops-station");
+      leavesRef.current = [];
+      const p = playerRef.current;
+      p.x = 338;
+      p.y = 430;
+      p.direction = "up";
+      p.isMoving = false;
+      targetDestinationRef.current = null;
+      return;
+    }
+
+    if (nearby.doorTransition === "exit_devops_station") {
+      retroAudio.playInteract();
+      setCurrentScene("overworld");
+      const p = playerRef.current;
+      p.x = 148;
+      p.y = 380;
+      p.direction = "down";
+      p.isMoving = false;
+      targetDestinationRef.current = null;
+      return;
+    }
+
+    if (nearby.interiorAction === "contact") {
+      retroAudio.playInteract();
+      setActiveModalType("contact");
+      setDiscoveredLocations((prev) => new Set([...prev, "village-post-counter"]));
+      return;
+    }
+
+    if (nearby.interiorAction === "azra") {
+      retroAudio.playInteract();
+      const sanctuary = WORLD_OBJECTS.find((obj) => obj.id === "azra-sanctuary");
+      if (sanctuary) {
+        setActiveWorldObject(sanctuary);
+        setDiscoveredLocations((prev) => new Set([...prev, "azra-oracle-core"]));
+      }
+      return;
+    }
+
+    if (nearby.interiorAction === "devops") {
+      retroAudio.playInteract();
+      setActiveModalType("devops");
+      setDiscoveredLocations((prev) => new Set([...prev, "devops-ops-console"]));
+      return;
+    }
+
     if (nearby.projectStation) {
       retroAudio.playInteract();
       const modalKey =
@@ -876,9 +1208,8 @@ export default function GameCanvas() {
     const clickScreenY = (e.clientY - rect.top) * scaleY;
 
     const p = playerRef.current;
-    const isInterior = currentSceneRef.current === "projects-guild";
-    const currentMapW = isInterior ? GUILD_INTERIOR_WIDTH : MAP_TOTAL_WIDTH;
-    const currentMapH = isInterior ? GUILD_INTERIOR_HEIGHT : MAP_TOTAL_HEIGHT;
+    const scene = currentSceneRef.current;
+    const { width: currentMapW, height: currentMapH } = sceneDimensions(scene);
 
     const camX = Math.max(
       0,
@@ -993,7 +1324,8 @@ export default function GameCanvas() {
       const mobileDir = mobileDirRef.current;
       const targetDest = targetDestinationRef.current;
       const isPaused = Boolean(activeNpc || activeWorldObject || activeModalType);
-      const isInterior = currentSceneRef.current === "projects-guild";
+      const scene = currentSceneRef.current;
+      const isInterior = scene !== "overworld";
 
       // --- 1. PLAYER MOVEMENT UPDATE ---
       let dx = 0;
@@ -1056,12 +1388,42 @@ export default function GameCanvas() {
         }
 
         // Automatic seamless door triggers when stepping across door thresholds
-        if (isInterior) {
+        if (scene === "projects-guild") {
           if (p.y >= 485 && p.x >= 305 && p.x <= 395) {
             retroAudio.playInteract();
             setCurrentScene("overworld");
             p.x = 128;
             p.y = 182;
+            p.direction = "down";
+            p.isMoving = false;
+            targetDestinationRef.current = null;
+          }
+        } else if (scene === "village-post") {
+          if (p.y >= 485 && p.x >= 305 && p.x <= 395) {
+            retroAudio.playInteract();
+            setCurrentScene("overworld");
+            p.x = 410;
+            p.y = 160;
+            p.direction = "down";
+            p.isMoving = false;
+            targetDestinationRef.current = null;
+          }
+        } else if (scene === "azra-sanctuary") {
+          if (p.y >= 485 && p.x >= 305 && p.x <= 395) {
+            retroAudio.playInteract();
+            setCurrentScene("overworld");
+            p.x = 620;
+            p.y = 180;
+            p.direction = "down";
+            p.isMoving = false;
+            targetDestinationRef.current = null;
+          }
+        } else if (scene === "devops-station") {
+          if (p.y >= 485 && p.x >= 305 && p.x <= 395) {
+            retroAudio.playInteract();
+            setCurrentScene("overworld");
+            p.x = 148;
+            p.y = 380;
             p.direction = "down";
             p.isMoving = false;
             targetDestinationRef.current = null;
@@ -1072,6 +1434,39 @@ export default function GameCanvas() {
             retroAudio.playDiscovery();
             setCurrentScene("projects-guild");
             leavesRef.current = []; // overworld-space leaves must not follow indoors
+            p.x = 338;
+            p.y = 430;
+            p.direction = "up";
+            p.isMoving = false;
+            targetDestinationRef.current = null;
+          }
+          // Stepping into the Village Post front door.
+          if (p.y <= 148 && p.x >= 404 && p.x <= 424 && p.y >= 130) {
+            retroAudio.playDiscovery();
+            setCurrentScene("village-post");
+            leavesRef.current = [];
+            p.x = 338;
+            p.y = 430;
+            p.direction = "up";
+            p.isMoving = false;
+            targetDestinationRef.current = null;
+          }
+          // Stepping into AZRA's Sanctuary front door.
+          if (p.y <= 160 && p.x >= 614 && p.x <= 634 && p.y >= 140) {
+            retroAudio.playDiscovery();
+            setCurrentScene("azra-sanctuary");
+            leavesRef.current = [];
+            p.x = 338;
+            p.y = 430;
+            p.direction = "up";
+            p.isMoving = false;
+            targetDestinationRef.current = null;
+          }
+          // Stepping into the Power Station front door.
+          if (p.y <= 370 && p.x >= 142 && p.x <= 158 && p.y >= 330) {
+            retroAudio.playDiscovery();
+            setCurrentScene("devops-station");
+            leavesRef.current = [];
             p.x = 338;
             p.y = 430;
             p.direction = "up";
@@ -1180,6 +1575,24 @@ export default function GameCanvas() {
             x: p.x + 12,
             y: p.y - 12,
           });
+        } else if (nearby.interiorAction === "contact") {
+          setInteractPrompt({
+            text: "[SPACE / E] Send an Inquiry",
+            x: 350,
+            y: 270,
+          });
+        } else if (nearby.interiorAction === "azra") {
+          setInteractPrompt({
+            text: "[SPACE / E] Ask AZRA",
+            x: 350,
+            y: 315,
+          });
+        } else if (nearby.interiorAction === "devops") {
+          setInteractPrompt({
+            text: "[SPACE / E] Open Ops Console",
+            x: 350,
+            y: 300,
+          });
         } else if (nearby.projectStation) {
           setInteractPrompt({
             text: `[SPACE / E] Inspect ${nearby.projectStation.shortTitle}`,
@@ -1209,8 +1622,7 @@ export default function GameCanvas() {
       // --- 4. VIEWPORT CAMERA TRACKING ---
       const viewWidth = canvas.width;
       const viewHeight = canvas.height;
-      const currentMapW = isInterior ? GUILD_INTERIOR_WIDTH : MAP_TOTAL_WIDTH;
-      const currentMapH = isInterior ? GUILD_INTERIOR_HEIGHT : MAP_TOTAL_HEIGHT;
+      const { width: currentMapW, height: currentMapH } = sceneDimensions(scene);
 
       const camX = Math.max(
         0,
@@ -1254,7 +1666,7 @@ export default function GameCanvas() {
         }
       };
 
-      if (isInterior) {
+      if (scene === "projects-guild") {
         // Render Projects Guild Interior Scene — a separate, unsorted
         // branch (Task 16 is render-order only for the overworld). Still
         // not y-sorted with the player after this task's conversion: the
@@ -1287,6 +1699,18 @@ export default function GameCanvas() {
         ctx.font = "bold 7.5px monospace";
         ctx.textAlign = "center";
         ctx.fillText("Architect Astro 🛠️", astroDeskX + 42, astroDeskY + 15);
+        drawPlayer();
+      } else if (scene === "village-post") {
+        drawVillagePostInterior(ctx, time);
+        drawVillagePostInteriorLabels(ctx);
+        drawPlayer();
+      } else if (scene === "azra-sanctuary") {
+        drawAzraSanctuaryInterior(ctx, time);
+        drawAzraSanctuaryInteriorLabels(ctx);
+        drawPlayer();
+      } else if (scene === "devops-station") {
+        drawDevopsStationInterior(ctx, time);
+        drawDevopsStationInteriorLabels(ctx);
         drawPlayer();
       } else {
         // Render Overworld Scene
@@ -1449,10 +1873,16 @@ export default function GameCanvas() {
         {/* Top Game Bar */}
         <div className="flex items-center justify-between border-b-2 border-foreground bg-foreground px-3 py-1.5 font-mono text-xs font-bold text-background">
           <div className="flex items-center gap-2">
-            <span className={`h-2 w-2 rounded-full ${currentScene === "projects-guild" ? "bg-amber-400" : "bg-red-500"} animate-pulse`} />
+            <span className={`h-2 w-2 rounded-full ${currentScene === "overworld" ? "bg-red-500" : "bg-amber-400"} animate-pulse`} />
             <span className="tracking-wider uppercase">
               {currentScene === "projects-guild"
                 ? "PROJECTS GUILD // EXHIBITION HALL"
+                : currentScene === "village-post"
+                ? "VILLAGE POST // COURIER DESK"
+                : currentScene === "azra-sanctuary"
+                ? "AZRA SANCTUARY // ORACLE CORE"
+                : currentScene === "devops-station"
+                ? "DEVOPS STATION // OPS BAY"
                 : "FRANZE TOWN // DEV OVERWORLD"}
             </span>
           </div>

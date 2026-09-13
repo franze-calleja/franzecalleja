@@ -35,6 +35,194 @@ export interface NPC {
 export const MAP_TOTAL_WIDTH = 960;
 export const MAP_TOTAL_HEIGHT = 760;
 
+export interface Rect { x: number; y: number; w: number; h: number }
+
+/** Pathway bounding boxes. Moved from game-canvas.tsx so terrain data lives
+ *  with the rest of the map data. Values are unchanged. */
+export const PATH_AREAS: Rect[] = [
+  { x: 340, y: 300, w: 160, h: 160 }, // Central Plaza
+  { x: 370, y: 440, w: 90, h: 280 },  // South Entrance
+  { x: 375, y: 140, w: 80, h: 170 },  // North Trail to Village Post
+  { x: 110, y: 150, w: 80, h: 120 },  // NW Trail
+  { x: 110, y: 240, w: 260, h: 80 },  // West Trail
+  { x: 470, y: 150, w: 100, h: 160 }, // NE Trail
+  { x: 550, y: 150, w: 150, h: 80 },  // East Trail to Sanctuary
+  { x: 690, y: 160, w: 90, h: 70 },   // East Trail to Career Archives
+  { x: 120, y: 480, w: 270, h: 70 },  // SW Trail
+  { x: 120, y: 530, w: 80, h: 120 },  // SW Trail to Dojo
+  { x: 440, y: 470, w: 260, h: 70 },  // SE Trail
+  { x: 560, y: 520, w: 120, h: 140 }, // SE Trail to Cottage
+  { x: 660, y: 470, w: 160, h: 60 },  // Trail to Court
+  { x: 730, y: 535, w: 90, h: 100 },  // Basketball Court
+];
+
+/**
+ * Hand-placed tall-grass patches, sited in the open field pockets between
+ * buildings and trails. Deliberately placed rather than scattered so nothing
+ * important gets covered and NPC walk routes stay clear.
+ */
+export const TALL_GRASS_AREAS: Rect[] = [
+  { x: 286, y: 48,  w: 58,  h: 88 },  // between Guild and Village Post
+  { x: 236, y: 326, w: 98,  h: 146 }, // west of the plaza
+  { x: 216, y: 570, w: 136, h: 130 }, // south-west field
+  { x: 470, y: 566, w: 82,  h: 150 }, // south of the plaza approach
+  { x: 704, y: 292, w: 86,  h: 80 },  // east, below the Archives
+  { x: 832, y: 560, w: 92,  h: 156 }, // south-east corner
+];
+
+// Multi-species big trees (Grand Oak, Pine, Autumn Maple, Sakura). Moved
+// from game-canvas.tsx so scenery data lives with the rest of the map data.
+export const DECORATIVE_TREES = [
+  { x: 860, y: 110, w: 64, h: 80, type: "grand_oak" as const },
+  { x: 900, y: 220, w: 48, h: 78, type: "pine" as const },
+  { x: 850, y: 310, w: 58, h: 74, type: "maple" as const },
+  { x: 890, y: 440, w: 58, h: 74, type: "sakura" as const },
+  { x: 840, y: 550, w: 64, h: 80, type: "grand_oak" as const },
+  { x: 230, y: 140, w: 58, h: 74, type: "sakura" as const },
+  { x: 15, y: 410, w: 48, h: 78, type: "pine" as const },
+];
+
+// Flower pot positions (kept clear of paths and building doorways)
+export const FLOWER_POTS = [
+  // 1. Career Archives flower bed
+  { x: 810, y: 288, type: "rose" as const },
+  { x: 844, y: 288, type: "sunflower" as const },
+  { x: 810, y: 318, type: "lily" as const },
+  { x: 844, y: 318, type: "orchid" as const },
+
+  // 2. North-West Projects Fenced Garden Pen (Shifted into dedicated left garden pen)
+  { x: 68, y: 56, type: "sunflower" as const },
+  { x: 96, y: 56, type: "rose" as const },
+  { x: 68, y: 84, type: "orchid" as const },
+  { x: 96, y: 84, type: "lily" as const },
+
+  // 3. Central Plaza Garden Planter Pots (Planted neatly beside the avenue)
+  { x: 305, y: 280, type: "rose" as const },
+  { x: 650, y: 280, type: "orchid" as const },
+];
+
+// Original web-colour tags for each bush's berries/blossoms. These predate
+// the pixel contract (they were once literal CSS colours) and now survive
+// only as identifiers game-props.ts's berryTone() maps to a PAL tone — kept
+// as named constants, rather than inlined, so no renderer module needs to
+// spell out a hex literal to read this field.
+export const BERRY_RED = "#ef4444";
+export const BERRY_SKY = "#38bdf8";
+export const BERRY_PINK = "#f472b6";
+export const BERRY_WHITE = "#ffffff";
+export const BERRY_GOLD = "#facc15";
+
+// Multi-species bushes (Berry Bush, Flowering Hedge, Wild Shrub)
+export const DECORATIVE_BUSHES = [
+  { x: 895, y: 270, type: "berry_bush" as const, berry: BERRY_RED },
+  { x: 830, y: 370, type: "berry_bush" as const, berry: BERRY_SKY },
+  // Was (880,530): sat exactly flush (0px clearance) against the south-east
+  // TALL_GRASS_AREA below it. Not one of the two bushes the review named,
+  // but the same zero-clearance pattern the review flagged, only surfaced
+  // once the path/tall-grass clearance checks below were applied to every
+  // bush instead of one each (fix round 2 / review item 4) — left in place,
+  // it would have failed that broadened test. Moved up 30 world px; x
+  // unchanged.
+  { x: 880, y: 500, type: "flowering_hedge" as const, berry: BERRY_PINK },
+  // Was (780,480): overlapped the Trail-to-Court PATH_AREA and sat only
+  // ~31 world px from the East Forest Grove chess table (Task 15). Was then
+  // moved to (820,507) — which turned out to sit exactly flush (0px
+  // clearance) against both the Trail-to-Court and Basketball Court
+  // PATH_AREAS, and only 23px from the south-east tall-grass patch (Task
+  // 15's regression test only checked bushes against paths, never against
+  // tall grass, so this slipped through). Now north of the Trail-to-Court
+  // path, clear of every PATH_AREA and TALL_GRASS_AREA by >= 24 world px,
+  // the same margin required of furniture (fix round 2 / review item 4).
+  { x: 760, y: 410, type: "flowering_hedge" as const, berry: BERRY_WHITE },
+  { x: 50, y: 130, type: "wild_shrub" as const, berry: BERRY_GOLD },
+  // Was (330,60): overlapped the tall-grass patch between the Guild and
+  // Village Post outright (0px clearance — this bush sat partly inside it,
+  // not merely flush against it). Also another case the broadened
+  // path/tall-grass clearance check surfaced (fix round 2 / review item 4)
+  // rather than one the review named. The NW quadrant around that grass
+  // patch is tightly packed (the patch itself, the chess table, two paths,
+  // the Village Post building), with no 36x30-plus-margin gap to nudge into,
+  // so this one moved further: into the open west-edge corridor between the
+  // Projects Guild and DevOps Station, clear of every PATH_AREA,
+  // TALL_GRASS_AREA and furniture item by well over 24 world px.
+  { x: 20, y: 220, type: "berry_bush" as const, berry: BERRY_GOLD },
+  { x: 50, y: 530, type: "wild_shrub" as const, berry: BERRY_RED },
+  // Was (490,540): overlapped the tall-grass patch south of the plaza
+  // approach, right beside the Gamer Cottage's bench-se (Task 15). Was then
+  // moved to (574,660) — flush (0px clearance) against the SE-Trail-to-
+  // Cottage PATH_AREA and only 22px from the south-of-plaza tall-grass
+  // patch. Now south of the Gamer Cottage and its approach trail, clear of
+  // every PATH_AREA and TALL_GRASS_AREA by >= 24 world px (fix round 2 /
+  // review item 4).
+  { x: 580, y: 690, type: "flowering_hedge" as const, berry: BERRY_SKY },
+];
+
+// Rich 3D Village Outdoor Furniture
+export interface VillageFurniture {
+  id: string;
+  type: "bench" | "chess_table" | "wishing_well" | "birdbath" | "streetlamp" | "barrel_stack";
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+export const VILLAGE_FURNITURE: VillageFurniture[] = [
+  // 1. Cozy Park Benches (Oak Slats + Cast Iron Scrollwork)
+  { id: "bench-nw", type: "bench", x: 195, y: 55, w: 42, h: 24 },
+  { id: "bench-plaza-left", type: "bench", x: 260, y: 345, w: 42, h: 24 },
+  { id: "bench-plaza-right", type: "bench", x: 650, y: 345, w: 42, h: 24 },
+  { id: "bench-sw", type: "bench", x: 220, y: 630, w: 42, h: 24 },
+  { id: "bench-se", type: "bench", x: 500, y: 610, w: 42, h: 24 },
+
+  // 2. Carved Stone Chess / Picnic Tables with Stools
+  { id: "chess-nw", type: "chess_table", x: 280, y: 145, w: 46, h: 32 },
+  { id: "chess-east", type: "chess_table", x: 840, y: 435, w: 46, h: 32 },
+
+  // 3. Ancient Village Wishing Well (North-East Grove near Sanctuary)
+  { id: "well-ne", type: "wishing_well", x: 725, y: 70, w: 50, h: 56 },
+
+  // 4. Carved Limestone Birdbaths with Bluebird
+  { id: "birdbath-left", type: "birdbath", x: 240, y: 475, w: 30, h: 30 },
+  { id: "birdbath-right", type: "birdbath", x: 700, y: 330, w: 30, h: 30 },
+
+  // 5. Classic Wrought Iron Streetlamps (Warm Glowing Lanterns)
+  { id: "lamp-nw", type: "streetlamp", x: 335, y: 190, w: 22, h: 48 },
+  { id: "lamp-ne", type: "streetlamp", x: 625, y: 190, w: 22, h: 48 },
+  { id: "lamp-sw", type: "streetlamp", x: 335, y: 450, w: 22, h: 48 },
+  { id: "lamp-se", type: "streetlamp", x: 625, y: 450, w: 22, h: 48 },
+
+  // 6. Rustic Harvest Oak Barrels & Fruit Crates
+  { id: "barrels-sw", type: "barrel_stack", x: 275, y: 545, w: 40, h: 30 },
+  { id: "barrels-se", type: "barrel_stack", x: 870, y: 595, w: 40, h: 30 },
+];
+
+// Pathway & Garden Fences with Dedicated Entrance Openings
+export const PATHWAY_FENCES = [
+  // 1. North-West Projects Border Fences (leaves x: 106..194 open for entrance)
+  { x: 60, y: 170, w: 46, h: 18 },
+  { x: 194, y: 170, w: 120, h: 18 },
+
+  // 2. North-East AI Sanctuary Border Fences (leaves x: 546..660 open for entrance)
+  { x: 470, y: 150, w: 76, h: 18 },
+  { x: 700, y: 150, w: 45, h: 18 },
+
+  // 3. South-West Academy Dojo Border Fences (leaves x: 116..200 open for entrance)
+  { x: 60, y: 480, w: 56, h: 18 },
+  { x: 200, y: 480, w: 136, h: 18 },
+
+  // 4. South-East Gamer Cottage Border Fences (leaves x: 586..664 open for entrance)
+  { x: 470, y: 470, w: 116, h: 18 },
+  { x: 750, y: 470, w: 80, h: 18 },
+
+  // 5. East Forest Grove Border Fences (leaves y: 340..370 open for entrance)
+  { x: 900, y: 260, w: 18, h: 80 },
+  { x: 900, y: 370, w: 18, h: 90 },
+
+  // 6. North-West Projects garden pen
+  { x: 58, y: 46, w: 58, h: 62 },
+];
+
 // Player spawn in the open central fountain plaza
 export const PLAYER_SPAWN_X = 408;
 export const PLAYER_SPAWN_Y = 448;
@@ -325,11 +513,12 @@ export const NPCS: NPC[] = [
     id: "npc-azra",
     name: "AZRA (AI Companion)",
     nameTag: "AZRA [AI Agent]",
-    x: 630,
+    x: 700,
     y: 185,
-    anchorX: 630,
+    anchorX: 700,
     anchorY: 185,
-    wanderRadius: 32,
+    // Keep the Sanctuary doorway clear for players returning from inside.
+    wanderRadius: 16,
     direction: "down",
     spriteRow: 14,
     spriteType: "azra",
@@ -345,11 +534,12 @@ export const NPCS: NPC[] = [
     id: "npc-engineer",
     name: "Lead Architect Astro",
     nameTag: "Architect Astro 🛠️",
-    x: 140,
+    x: 184,
     y: 185,
-    anchorX: 140,
+    anchorX: 184,
     anchorY: 185,
-    wanderRadius: 36,
+    // Keep the Guild doorway clear so players can return at its natural exit.
+    wanderRadius: 16,
     direction: "down",
     spriteRow: 0,
     spriteType: "engineer",
@@ -364,11 +554,12 @@ export const NPCS: NPC[] = [
     id: "npc-devops",
     name: "SRE Node",
     nameTag: "SRE Node ⚡",
-    x: 130,
+    x: 216,
     y: 385,
-    anchorX: 130,
+    anchorX: 216,
     anchorY: 385,
-    wanderRadius: 36,
+    // Keep the Power Station doorway clear for players returning from inside.
+    wanderRadius: 16,
     direction: "down",
     spriteRow: 11,
     spriteType: "scholar",
@@ -571,6 +762,18 @@ export const CHARACTER_SKINS: CharacterSkin[] = [
 
 export const GUILD_INTERIOR_WIDTH = 700;
 export const GUILD_INTERIOR_HEIGHT = 540;
+export const VILLAGE_POST_INTERIOR_WIDTH = 700;
+export const VILLAGE_POST_INTERIOR_HEIGHT = 540;
+export const AZRA_SANCTUARY_INTERIOR_WIDTH = 700;
+export const AZRA_SANCTUARY_INTERIOR_HEIGHT = 540;
+export const DEVOPS_STATION_INTERIOR_WIDTH = 700;
+export const DEVOPS_STATION_INTERIOR_HEIGHT = 540;
+export const CAREER_ARCHIVE_INTERIOR_WIDTH = 700;
+export const CAREER_ARCHIVE_INTERIOR_HEIGHT = 540;
+export const ACADEMY_INTERIOR_WIDTH = 700;
+export const ACADEMY_INTERIOR_HEIGHT = 540;
+export const GAMER_COTTAGE_INTERIOR_WIDTH = 700;
+export const GAMER_COTTAGE_INTERIOR_HEIGHT = 540;
 
 export interface ProjectStation {
   id: string;

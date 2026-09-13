@@ -11,13 +11,57 @@ import {
   WorldObject,
   NPC,
   CHARACTER_SKINS,
-  CharacterSkin,
   GUILD_INTERIOR_WIDTH,
   GUILD_INTERIOR_HEIGHT,
+  VILLAGE_POST_INTERIOR_WIDTH,
+  VILLAGE_POST_INTERIOR_HEIGHT,
+  AZRA_SANCTUARY_INTERIOR_WIDTH,
+  AZRA_SANCTUARY_INTERIOR_HEIGHT,
+  DEVOPS_STATION_INTERIOR_WIDTH,
+  DEVOPS_STATION_INTERIOR_HEIGHT,
+  CAREER_ARCHIVE_INTERIOR_WIDTH,
+  CAREER_ARCHIVE_INTERIOR_HEIGHT,
+  ACADEMY_INTERIOR_WIDTH,
+  ACADEMY_INTERIOR_HEIGHT,
+  GAMER_COTTAGE_INTERIOR_WIDTH,
+  GAMER_COTTAGE_INTERIOR_HEIGHT,
   GUILD_PROJECT_STATIONS,
   ProjectStation,
+  DECORATIVE_TREES,
+  FLOWER_POTS,
+  DECORATIVE_BUSHES,
+  VILLAGE_FURNITURE,
+  PATHWAY_FENCES,
 } from "./game-data";
 import { retroAudio } from "./game-audio";
+import { sortByBaseline, type Drawable } from "./game-pixel";
+import { collectBuildings } from "./game-buildings";
+import {
+  collectFences, collectFlowerPots, collectBushes, collectFurniture, collectTrees,
+} from "./game-props";
+import {
+  collectStatues, collectBanners, drawCentralFountain, drawBasketballCourt,
+  collectBasketballHoop, FOUNTAIN_BASELINE,
+} from "./game-landmarks";
+import {
+  drawAzraSanctuaryInterior,
+  drawAcademyInterior,
+  drawCareerArchiveInterior,
+  drawGamerCottageInterior,
+  drawDevopsStationInterior,
+  drawGuildInterior,
+  drawVillagePostInterior,
+} from "./game-interior";
+import { PAL } from "./game-palette";
+import {
+  renderTerrainToCache,
+  drawTerrain,
+  drawTallGrassBases,
+  collectTallGrassTips,
+  isInTallGrass,
+  spawnLeaves,
+  type Leaf,
+} from "./game-terrain";
 import GameDialogue from "./game-dialogue";
 import GameModal from "./game-modals";
 import GameControls from "./game-controls";
@@ -58,145 +102,25 @@ interface Particle {
   alpha: number;
 }
 
-// Multi-species big trees (Grand Oak, Pine, Autumn Maple, Sakura)
-const DECORATIVE_TREES = [
-  { x: 860, y: 110, w: 64, h: 80, type: "grand_oak" as const },
-  { x: 900, y: 220, w: 48, h: 78, type: "pine" as const },
-  { x: 850, y: 310, w: 58, h: 74, type: "maple" as const },
-  { x: 890, y: 440, w: 58, h: 74, type: "sakura" as const },
-  { x: 840, y: 550, w: 64, h: 80, type: "grand_oak" as const },
-  { x: 230, y: 140, w: 58, h: 74, type: "sakura" as const },
-  { x: 15, y: 410, w: 48, h: 78, type: "pine" as const },
-];
+type GameScene = "overworld" | "projects-guild" | "village-post" | "azra-sanctuary" | "devops-station" | "career-archive" | "academy" | "gamer-cottage";
 
-// Flower pot positions (strictly inside grass fields and garden pens)
-const FLOWER_POTS = [
-  // 1. Right Side Fenced Garden Pen (Safely below Career Archives building at y: 275..343)
-  { x: 810, y: 288, type: "rose" as const },
-  { x: 844, y: 288, type: "sunflower" as const },
-  { x: 810, y: 318, type: "lily" as const },
-  { x: 844, y: 318, type: "orchid" as const },
-
-  // 2. North-West Projects Fenced Garden Pen (Shifted into dedicated left garden pen)
-  { x: 68, y: 56, type: "sunflower" as const },
-  { x: 96, y: 56, type: "rose" as const },
-  { x: 68, y: 84, type: "orchid" as const },
-  { x: 96, y: 84, type: "lily" as const },
-
-  // 3. Central Plaza Garden Planter Pots (Planted neatly beside the avenue)
-  { x: 305, y: 280, type: "rose" as const },
-  { x: 650, y: 280, type: "orchid" as const },
-];
-
-// Multi-species bushes (Berry Bush, Flowering Hedge, Wild Shrub)
-const DECORATIVE_BUSHES = [
-  { x: 895, y: 270, type: "berry_bush" as const, berry: "#ef4444" },
-  { x: 830, y: 370, type: "berry_bush" as const, berry: "#38bdf8" },
-  { x: 880, y: 530, type: "flowering_hedge" as const, berry: "#f472b6" },
-  { x: 780, y: 480, type: "flowering_hedge" as const, berry: "#ffffff" },
-  { x: 50, y: 130, type: "wild_shrub" as const, berry: "#facc15" },
-  { x: 330, y: 60, type: "berry_bush" as const, berry: "#facc15" },
-  { x: 50, y: 530, type: "wild_shrub" as const, berry: "#ef4444" },
-  { x: 490, y: 540, type: "flowering_hedge" as const, berry: "#38bdf8" },
-];
-
-// Rich 3D Village Outdoor Furniture
-export interface VillageFurniture {
-  id: string;
-  type: "bench" | "chess_table" | "wishing_well" | "birdbath" | "streetlamp" | "barrel_stack";
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
-
-const VILLAGE_FURNITURE: VillageFurniture[] = [
-  // 1. Cozy Park Benches (Oak Slats + Cast Iron Scrollwork)
-  { id: "bench-nw", type: "bench", x: 195, y: 55, w: 42, h: 24 },
-  { id: "bench-plaza-left", type: "bench", x: 260, y: 345, w: 42, h: 24 },
-  { id: "bench-plaza-right", type: "bench", x: 650, y: 345, w: 42, h: 24 },
-  { id: "bench-sw", type: "bench", x: 220, y: 630, w: 42, h: 24 },
-  { id: "bench-se", type: "bench", x: 500, y: 610, w: 42, h: 24 },
-
-  // 2. Carved Stone Chess / Picnic Tables with Stools
-  { id: "chess-nw", type: "chess_table", x: 280, y: 145, w: 46, h: 32 },
-  { id: "chess-east", type: "chess_table", x: 840, y: 435, w: 46, h: 32 },
-
-  // 3. Ancient Village Wishing Well (North-East Grove near Sanctuary)
-  { id: "well-ne", type: "wishing_well", x: 725, y: 70, w: 50, h: 56 },
-
-  // 4. Carved Limestone Birdbaths with Bluebird
-  { id: "birdbath-left", type: "birdbath", x: 240, y: 475, w: 30, h: 30 },
-  { id: "birdbath-right", type: "birdbath", x: 700, y: 330, w: 30, h: 30 },
-
-  // 5. Classic Wrought Iron Streetlamps (Warm Glowing Lanterns)
-  { id: "lamp-nw", type: "streetlamp", x: 335, y: 190, w: 22, h: 48 },
-  { id: "lamp-ne", type: "streetlamp", x: 625, y: 190, w: 22, h: 48 },
-  { id: "lamp-sw", type: "streetlamp", x: 335, y: 450, w: 22, h: 48 },
-  { id: "lamp-se", type: "streetlamp", x: 625, y: 450, w: 22, h: 48 },
-
-  // 6. Rustic Harvest Oak Barrels & Fruit Crates
-  { id: "barrels-sw", type: "barrel_stack", x: 275, y: 545, w: 40, h: 30 },
-  { id: "barrels-se", type: "barrel_stack", x: 870, y: 595, w: 40, h: 30 },
-];
-
-// Pathway & Garden Fences with Dedicated Entrance Openings
-const PATHWAY_FENCES = [
-  // 1. North-West Projects Border Fences (leaves x: 106..194 open for entrance)
-  { x: 60, y: 170, w: 46, h: 18 },
-  { x: 194, y: 170, w: 120, h: 18 },
-
-  // 2. North-East AI Sanctuary Border Fences (leaves x: 546..660 open for entrance)
-  { x: 470, y: 150, w: 76, h: 18 },
-  { x: 700, y: 150, w: 45, h: 18 },
-
-  // 3. South-West Academy Dojo Border Fences (leaves x: 116..200 open for entrance)
-  { x: 60, y: 480, w: 56, h: 18 },
-  { x: 200, y: 480, w: 136, h: 18 },
-
-  // 4. South-East Gamer Cottage Border Fences (leaves x: 586..664 open for entrance)
-  { x: 470, y: 470, w: 116, h: 18 },
-  { x: 750, y: 470, w: 80, h: 18 },
-
-  // 5. East Forest Grove Border Fences (leaves y: 340..370 open for entrance)
-  { x: 900, y: 260, w: 18, h: 80 },
-  { x: 900, y: 370, w: 18, h: 90 },
-
-  // 6. Enclosed Garden Pens
-  { x: 800, y: 275, w: 68, h: 68 },
-  { x: 58, y: 46, w: 58, h: 62 },
-];
-
-// Pathway bounding boxes to ensure flowers only grow on genuine grass
-const PATH_AREAS = [
-  { x: 340, y: 300, w: 160, h: 160 }, // Central Plaza
-  { x: 370, y: 440, w: 90, h: 280 },  // South Entrance
-  { x: 375, y: 140, w: 80, h: 170 },  // North Trail to Village Post
-  { x: 110, y: 150, w: 80, h: 120 },  // NW Trail
-  { x: 110, y: 240, w: 260, h: 80 },  // West Trail
-  { x: 470, y: 150, w: 100, h: 160 }, // NE Trail
-  { x: 550, y: 150, w: 150, h: 80 },  // East Trail to Sanctuary
-  { x: 690, y: 160, w: 90, h: 70 },   // East Trail to Career Archives
-  { x: 120, y: 480, w: 270, h: 70 },  // SW Trail
-  { x: 120, y: 530, w: 80, h: 120 },  // SW Trail to Dojo
-  { x: 440, y: 470, w: 260, h: 70 },  // SE Trail
-  { x: 560, y: 520, w: 120, h: 140 }, // SE Trail to Cottage
-  { x: 660, y: 470, w: 160, h: 60 },  // Trail to Court
-  { x: 730, y: 535, w: 90, h: 100 },  // Basketball Court
-];
-
-function isInsidePathOrBuilding(x: number, y: number): boolean {
-  for (const pa of PATH_AREAS) {
-    if (x + 28 >= pa.x && x <= pa.x + pa.w + 4 && y + 28 >= pa.y && y <= pa.y + pa.h + 4) {
-      return true;
-    }
+function sceneDimensions(scene: GameScene): { width: number; height: number } {
+  if (scene === "projects-guild") {
+    return { width: GUILD_INTERIOR_WIDTH, height: GUILD_INTERIOR_HEIGHT };
   }
-  for (const obj of WORLD_OBJECTS) {
-    if (x + 32 >= obj.x && x <= obj.x + obj.width + 8 && y + 32 >= obj.y && y <= obj.y + obj.height + 8) {
-      return true;
-    }
+  if (scene === "village-post") {
+    return { width: VILLAGE_POST_INTERIOR_WIDTH, height: VILLAGE_POST_INTERIOR_HEIGHT };
   }
-  return false;
+  if (scene === "azra-sanctuary") {
+    return { width: AZRA_SANCTUARY_INTERIOR_WIDTH, height: AZRA_SANCTUARY_INTERIOR_HEIGHT };
+  }
+  if (scene === "devops-station") {
+    return { width: DEVOPS_STATION_INTERIOR_WIDTH, height: DEVOPS_STATION_INTERIOR_HEIGHT };
+  }
+  if (scene === "career-archive") return { width: CAREER_ARCHIVE_INTERIOR_WIDTH, height: CAREER_ARCHIVE_INTERIOR_HEIGHT };
+  if (scene === "academy") return { width: ACADEMY_INTERIOR_WIDTH, height: ACADEMY_INTERIOR_HEIGHT };
+  if (scene === "gamer-cottage") return { width: GAMER_COTTAGE_INTERIOR_WIDTH, height: GAMER_COTTAGE_INTERIOR_HEIGHT };
+  return { width: MAP_TOTAL_WIDTH, height: MAP_TOTAL_HEIGHT };
 }
 
 // --- SPRITESHEET CHARACTER RENDERER ---
@@ -486,3648 +410,143 @@ function drawKissesTheDog(
   ctx.restore();
 }
 
-// --- RICH POKÉMON STRIPED TERRAIN & REALISTIC 3D COBBLESTONE PATHWAYS ---
-
-function drawOrganicGround(ctx: CanvasRenderingContext2D) {
-  const tileSize = 32;
-  const cols = Math.ceil(MAP_TOTAL_WIDTH / tileSize);
-  const rows = Math.ceil(MAP_TOTAL_HEIGHT / tileSize);
-
-  // 1. POKÉMON STRIPED LAWN WITH RICH MULTI-TONE PIXEL BLADES
-  for (let c = 0; c < cols; c++) {
-    const isStripeLight = c % 2 === 0;
-    const baseGreen = isStripeLight ? "#6ec957" : "#54b23f";
-    const darkAccent = isStripeLight ? "#5ab545" : "#449c32";
-    const lightHighlight = isStripeLight ? "#8cee73" : "#68be51";
-    const sunlitGlint = isStripeLight ? "#bef264" : "#78cf42";
-    const deepShadow = isStripeLight ? "#368026" : "#22541d";
-
-    for (let r = 0; r < rows; r++) {
-      const x = c * tileSize;
-      const y = r * tileSize;
-      const isPerimeter = c === 0 || r === 0 || c === cols - 1 || r === rows - 1;
-
-      if (isPerimeter) {
-        ctx.fillStyle = "#14491e";
-        ctx.fillRect(x, y, tileSize, tileSize);
-        ctx.fillStyle = "#1e6b30";
-        ctx.fillRect(x + 3, y + 3, tileSize - 6, tileSize - 6);
-        ctx.fillStyle = "#28873d";
-        ctx.fillRect(x + 7, y + 7, tileSize - 14, tileSize - 14);
-      } else {
-        // Base grass lawn fill
-        ctx.fillStyle = baseGreen;
-        ctx.fillRect(x, y, tileSize, tileSize);
-
-        // Horizontal mowing stripe
-        ctx.fillStyle = darkAccent;
-        ctx.fillRect(x, y + 14, tileSize, 3);
-        ctx.fillRect(x, y + 28, tileSize, 2);
-
-        // Multi-tone 3D pixel grass blade clusters
-        // Clump 1 (Top-Left)
-        ctx.fillStyle = deepShadow;
-        ctx.fillRect(x + 5, y + 9, 4, 2);
-        ctx.fillStyle = lightHighlight;
-        ctx.fillRect(x + 4, y + 4, 2, 5);
-        ctx.fillRect(x + 7, y + 2, 2, 7);
-        ctx.fillStyle = sunlitGlint;
-        ctx.fillRect(x + 5, y + 3, 1, 2);
-        ctx.fillRect(x + 8, y + 1, 1, 2);
-
-        // Clump 2 (Bottom-Right)
-        ctx.fillStyle = deepShadow;
-        ctx.fillRect(x + 19, y + 24, 4, 2);
-        ctx.fillStyle = lightHighlight;
-        ctx.fillRect(x + 18, y + 18, 2, 6);
-        ctx.fillRect(x + 21, y + 16, 2, 8);
-        ctx.fillStyle = sunlitGlint;
-        ctx.fillRect(x + 19, y + 17, 1, 2);
-        ctx.fillRect(x + 22, y + 15, 1, 2);
-
-        // Clump 3 (Mid Accent)
-        if ((c + r) % 3 === 0) {
-          ctx.fillStyle = lightHighlight;
-          ctx.fillRect(x + 13, y + 10, 2, 4);
-          ctx.fillStyle = sunlitGlint;
-          ctx.fillRect(x + 14, y + 9, 1, 2);
-        }
-
-        // Flowers, Clovers & Dandelions ONLY inside actual grass fields
-        if (!isInsidePathOrBuilding(x, y)) {
-          const hash = (c * 59 + r * 83) % 31;
-          if (hash === 1) {
-            // Yellow Buttercups with calyx stem
-            ctx.fillStyle = "#15803d";
-            ctx.fillRect(x + 10, y + 13, 2, 3);
-            ctx.fillStyle = "#fde047";
-            ctx.fillRect(x + 8, y + 8, 6, 6);
-            ctx.fillStyle = "#ffffff";
-            ctx.fillRect(x + 10, y + 10, 2, 2);
-            ctx.fillStyle = "#eab308";
-            ctx.fillRect(x + 9, y + 9, 1, 1);
-          } else if (hash === 2) {
-            // Red Rosebuds with stem
-            ctx.fillStyle = "#15803d";
-            ctx.fillRect(x + 22, y + 17, 2, 3);
-            ctx.fillStyle = "#ef4444";
-            ctx.fillRect(x + 20, y + 12, 6, 6);
-            ctx.fillStyle = "#fca5a5";
-            ctx.fillRect(x + 21, y + 13, 2, 2);
-            ctx.fillStyle = "#991b1b";
-            ctx.fillRect(x + 23, y + 15, 2, 2);
-          } else if (hash === 3) {
-            // Blue Oran Flowers
-            ctx.fillStyle = "#15803d";
-            ctx.fillRect(x + 14, y + 25, 2, 3);
-            ctx.fillStyle = "#38bdf8";
-            ctx.fillRect(x + 12, y + 20, 6, 6);
-            ctx.fillStyle = "#ffffff";
-            ctx.fillRect(x + 14, y + 22, 2, 2);
-          } else if (hash === 4) {
-            // 4-leaf lucky clover
-            ctx.fillStyle = "#16a34a";
-            ctx.fillRect(x + 16, y + 8, 7, 7);
-            ctx.fillStyle = "#4ade80";
-            ctx.fillRect(x + 17, y + 9, 2, 2);
-            ctx.fillRect(x + 20, y + 9, 2, 2);
-            ctx.fillRect(x + 17, y + 12, 2, 2);
-            ctx.fillRect(x + 20, y + 12, 2, 2);
-            ctx.fillStyle = "#15803d";
-            ctx.fillRect(x + 19, y + 11, 1, 1);
-          } else if (hash === 5) {
-            // White Clover Blossom Puff
-            ctx.fillStyle = "#15803d";
-            ctx.fillRect(x + 8, y + 26, 2, 3);
-            ctx.fillStyle = "#ffffff";
-            ctx.fillRect(x + 6, y + 21, 6, 6);
-            ctx.fillStyle = "#fef08a";
-            ctx.fillRect(x + 8, y + 23, 2, 2);
-          } else if (hash === 6) {
-            // Wild Purple Violet
-            ctx.fillStyle = "#c084fc";
-            ctx.fillRect(x + 24, y + 6, 5, 5);
-            ctx.fillStyle = "#fef08a";
-            ctx.fillRect(x + 26, y + 8, 2, 2);
-          }
-        }
-      }
-    }
-  }
-
-  // 2. ORGANIC WINDING COBBLESTONE & SAND PATHWAYS
-  ctx.fillStyle = "#f5eed4";
-
-  // Branch 1: South-to-Center Main Plaza Avenue
-  ctx.fillRect(340, 300, 160, 160);
-  ctx.fillRect(370, 440, 90, 280);
-  ctx.fillRect(375, 140, 80, 170); // North Trail to Village Post
-
-  // Branch 2: North-West Trail to Projects Showcase Guild
-  ctx.fillRect(110, 150, 80, 120);
-  ctx.fillRect(110, 240, 260, 80);
-
-  // Branch 3: North-East Trail meandering to AZRA's AI Sanctuary & Career Archives
-  ctx.fillRect(470, 150, 100, 160);
-  ctx.fillRect(550, 150, 150, 80);
-  ctx.fillRect(690, 160, 90, 70); // East Trail to Career Archives
-
-  // Branch 4: South-West Trail to Academy of Enverga Dojo
-  ctx.fillRect(120, 480, 270, 70);
-  ctx.fillRect(120, 530, 80, 120);
-
-  // Branch 5: South-East Trail to Franze's Gamer Cottage & Basketball Court
-  ctx.fillRect(440, 470, 260, 70);
-  ctx.fillRect(560, 520, 120, 140);
-  ctx.fillRect(660, 470, 160, 60);
-
-  // 3. REALISTIC 3D BEVELED COBBLESTONE PAVERS & OVERHANGING GRASS FRINGES
-  const renderPavers = (startX: number, startY: number, w: number, h: number) => {
-    // Outer Curb Edging Line
-    ctx.strokeStyle = "#c5b382";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(startX + 1, startY + 1, w - 2, h - 2);
-
-    for (let px = startX + 2; px < startX + w - 12; px += 16) {
-      for (let py = startY + 2; py < startY + h - 12; py += 16) {
-        // Paver Mortar Shadow Bottom-Right
-        ctx.fillStyle = "#c5b382";
-        ctx.fillRect(px, py, 16, 16);
-
-        // Paver Top-Left Bevel Highlight
-        ctx.fillStyle = "#fefbf0";
-        ctx.fillRect(px, py, 15, 15);
-
-        // Paver Main Stone Body
-        const isAlt = (px + py) % 32 === 0;
-        ctx.fillStyle = isAlt ? "#ede3c2" : "#fbf7ea";
-        ctx.fillRect(px + 1, py + 1, 13, 13);
-
-        // Speckled Pebble Grain on Random Pavers
-        if ((px * 37 + py * 71) % 11 === 0) {
-          ctx.fillStyle = "#d8c79c";
-          ctx.fillRect(px + 4, py + 4, 2, 2);
-          ctx.fillRect(px + 9, py + 8, 2, 1);
-        }
-      }
-    }
-
-    // Natural Grass Overhang Fringe Tuft along Path Borders
-    ctx.fillStyle = "#54b23f";
-    for (let gx = startX + 4; gx < startX + w - 8; gx += 12) {
-      // Top border fringe
-      ctx.fillRect(gx, startY - 2, 3, 4);
-      ctx.fillRect(gx + 1, startY + 2, 2, 2);
-      // Bottom border fringe
-      ctx.fillRect(gx + 4, startY + h - 2, 3, 4);
-    }
-  };
-
-  renderPavers(340, 300, 160, 160);
-  renderPavers(370, 440, 90, 280);
-  renderPavers(375, 140, 80, 170);
-  renderPavers(110, 150, 80, 120);
-  renderPavers(110, 240, 260, 80);
-  renderPavers(470, 150, 100, 160);
-  renderPavers(550, 150, 150, 80);
-  renderPavers(690, 160, 90, 70);
-  renderPavers(120, 480, 270, 70);
-  renderPavers(120, 530, 80, 120);
-  renderPavers(440, 470, 260, 70);
-  renderPavers(560, 520, 120, 140);
-  renderPavers(660, 470, 160, 60);
-}
-
-// --- 3D TURNED TIMBER FENCES WITH BRASS PINS, CROSS-BRACES & ENTRANCE GAPS ---
-
-function drawTexturedFences(ctx: CanvasRenderingContext2D) {
-  PATHWAY_FENCES.forEach((fence) => {
-    const { x, y, w, h } = fence;
-
-    // 1. 3D Angled Soft Drop Shadow
-    ctx.fillStyle = "rgba(0, 0, 0, 0.32)";
-    ctx.beginPath();
-    ctx.ellipse(x + w / 2 + 2, y + h + 2, w / 2 + 2, 4, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // 2. Double Interlocking Horizontal Cross-Rails
-    // Upper Rail (3D Bevel with Top Highlight & Bottom Shadow)
-    ctx.fillStyle = "#451a03"; // Underside Shadow
-    ctx.fillRect(x, y + 7, w, 2);
-    ctx.fillStyle = "#78350f"; // Rail Body
-    ctx.fillRect(x, y + 4, w, 4);
-    ctx.fillStyle = "#b45309"; // Top Sunlit Highlight
-    ctx.fillRect(x, y + 4, w, 1);
-    ctx.fillStyle = "#d97706"; // Edge Gleam
-    ctx.fillRect(x, y + 5, w, 1);
-
-    // Lower Rail (3D Bevel)
-    ctx.fillStyle = "#451a03"; // Underside Shadow
-    ctx.fillRect(x, y + 15, w, 2);
-    ctx.fillStyle = "#78350f"; // Rail Body
-    ctx.fillRect(x, y + 12, w, 4);
-    ctx.fillStyle = "#b45309"; // Top Sunlit Highlight
-    ctx.fillRect(x, y + 12, w, 1);
-    ctx.fillStyle = "#d97706"; // Edge Gleam
-    ctx.fillRect(x, y + 13, w, 1);
-
-    // 3. Diagonal Cross-Buck Braces between posts
-    const postSpacing = 22;
-    ctx.strokeStyle = "#78350f";
-    ctx.lineWidth = 2;
-    for (let bx = x; bx + postSpacing <= x + w; bx += postSpacing) {
-      ctx.beginPath();
-      ctx.moveTo(bx + 4, y + 5);
-      ctx.lineTo(bx + postSpacing - 4, y + 15);
-      ctx.moveTo(bx + postSpacing - 4, y + 5);
-      ctx.lineTo(bx + 4, y + 15);
-      ctx.stroke();
-    }
-
-    // 4. Vertical Heavy Turned Timber Posts with Pyramidion Caps
-    for (let px = x; px <= x + w; px += postSpacing) {
-      // Post Drop Shadow
-      ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
-      ctx.beginPath();
-      ctx.ellipse(px, y + 19, 5, 2.5, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Post Shadow Right-Side
-      ctx.fillStyle = "#451a03";
-      ctx.fillRect(px - 4, y - 2, 8, 21);
-
-      // Post Main Timber Body
-      ctx.fillStyle = "#78350f";
-      ctx.fillRect(px - 3, y - 2, 6, 20);
-
-      // Post Left-Side Sunlit Chamfer Highlight
-      ctx.fillStyle = "#b45309";
-      ctx.fillRect(px - 3, y - 2, 2, 20);
-      ctx.fillStyle = "#d97706";
-      ctx.fillRect(px - 2, y, 1, 16);
-
-      // 3D Pointed Pyramidion Post Cap Top
-      ctx.fillStyle = "#a16207";
-      ctx.beginPath();
-      ctx.moveTo(px - 4, y - 2);
-      ctx.lineTo(px, y - 6);
-      ctx.lineTo(px + 4, y - 2);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = "#facc15"; // Top apex glint
-      ctx.fillRect(px - 1, y - 5, 2, 2);
-
-      // Gold Brass Carriage Bolt Studs with 3D Bevel
-      const drawBrassPin = (bx: number, by: number) => {
-        ctx.fillStyle = "#ca8a04";
-        ctx.fillRect(bx - 1.5, by - 1.5, 3, 3);
-        ctx.fillStyle = "#facc15";
-        ctx.fillRect(bx - 1, by - 1, 2, 2);
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(bx - 1, by - 1, 1, 1);
-      };
-      drawBrassPin(px, y + 6);
-      drawBrassPin(px, y + 14);
-
-      // Moss & Lichen Tufts at Post Base
-      ctx.fillStyle = "#15803d";
-      ctx.fillRect(px - 3, y + 16, 2, 3);
-      ctx.fillStyle = "#4ade80";
-      ctx.fillRect(px - 3, y + 16, 1, 1);
-    }
-  });
-}
-
-// --- SPRITE-STYLE PIXEL FLOWER POTS ---
-
-function drawSpriteFlowerPots(ctx: CanvasRenderingContext2D, time: number) {
-  const sway = Math.sin(time * 0.004) * 1.5;
-
-  FLOWER_POTS.forEach((pot) => {
-    const px = pot.x;
-    const py = pot.y;
-
-    // 1. 3D Drop Shadow on Grass
-    ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
-    ctx.beginPath();
-    ctx.ellipse(px + 9, py + 20, 10, 4, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // 2. Terracotta Ceramic Urn Planter (3D Beveled Pot)
-    // Dark Shadow Outline & Base Pedestal Ring
-    ctx.fillStyle = "#270803";
-    ctx.fillRect(px, py + 7, 18, 13);
-    ctx.fillRect(px + 2, py + 19, 14, 3);
-    ctx.fillRect(px + 4, py + 21, 10, 2);
-
-    // Terracotta Clay Gradient Shading
-    ctx.fillStyle = "#9a3412"; // Deep Clay Shadow
-    ctx.fillRect(px + 1, py + 8, 16, 11);
-    ctx.fillRect(px + 3, py + 18, 12, 2);
-
-    ctx.fillStyle = "#c2410c"; // Main Body
-    ctx.fillRect(px + 2, py + 8, 12, 10);
-    ctx.fillRect(px + 4, py + 18, 9, 2);
-
-    ctx.fillStyle = "#ea580c"; // Sunny Highlight Left
-    ctx.fillRect(px + 2, py + 8, 4, 10);
-    ctx.fillStyle = "#fb923c"; // Specular Glint
-    ctx.fillRect(px + 3, py + 9, 2, 7);
-
-    // Fluted Pot Rim with Beveled Lip
-    ctx.fillStyle = "#431407";
-    ctx.fillRect(px - 1, py + 6, 20, 3);
-    ctx.fillStyle = "#fdba74";
-    ctx.fillRect(px, py + 6, 18, 2);
-    ctx.fillStyle = "#fed7aa";
-    ctx.fillRect(px + 2, py + 6, 6, 1);
-
-    // Rich Dark Potting Soil with Grains
-    ctx.fillStyle = "#1c0f07";
-    ctx.fillRect(px + 2, py + 8, 14, 3);
-    ctx.fillStyle = "#451a03";
-    ctx.fillRect(px + 4, py + 9, 3, 1);
-    ctx.fillRect(px + 10, py + 9, 3, 1);
-
-    // 3. Branching Foliage Stems & Serrated Green Leaves
-    ctx.fillStyle = "#14532d";
-    ctx.fillRect(px + 2, py + 3, 5, 5);
-    ctx.fillRect(px + 11, py + 3, 5, 5);
-    ctx.fillRect(px + 6, py + 1, 6, 6);
-
-    ctx.fillStyle = "#16a34a"; // Leaf Highlights
-    ctx.fillRect(px + 3, py + 2, 3, 3);
-    ctx.fillRect(px + 12, py + 2, 3, 3);
-    ctx.fillStyle = "#4ade80";
-    ctx.fillRect(px + 4, py + 1, 2, 2);
-    ctx.fillRect(px + 13, py + 1, 2, 2);
-
-    // 4. Lush Multi-Layered Botanical Blooms (3D Layered Petals)
-    const fx = px + 6 + sway;
-    const fy = py - 3;
-
-    if (pot.type === "rose") {
-      // Velvet Crimson Rose with Rosette Petals & Dewdrop
-      ctx.fillStyle = "#450a0a"; // Shadow Cup
-      ctx.fillRect(fx - 2, fy, 10, 9);
-      ctx.fillStyle = "#991b1b"; // Deep Ruby
-      ctx.fillRect(fx - 1, fy + 1, 8, 7);
-      ctx.fillStyle = "#dc2626"; // Vibrant Mid Petals
-      ctx.fillRect(fx, fy + 1, 6, 5);
-      ctx.fillStyle = "#ef4444"; // Upper Rosette
-      ctx.fillRect(fx + 1, fy + 2, 4, 3);
-      ctx.fillStyle = "#fca5a5"; // Petal Edge Gleam
-      ctx.fillRect(fx + 2, fy + 2, 2, 1);
-      // Golden Pollen Core & Dewdrop
-      ctx.fillStyle = "#fbbf24";
-      ctx.fillRect(fx + 2, fy + 3, 2, 2);
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(fx + 5, fy + 1, 1, 1);
-    } else if (pot.type === "sunflower") {
-      // Radiant Golden Sunflower with Textured Seed Disk
-      ctx.fillStyle = "#a16207"; // Dark Ray Petals
-      ctx.fillRect(fx - 3, fy - 2, 12, 11);
-      ctx.fillStyle = "#ca8a04";
-      ctx.fillRect(fx - 2, fy - 1, 10, 9);
-      ctx.fillStyle = "#eab308"; // Golden Yellow Flakes
-      ctx.fillRect(fx - 2, fy, 10, 7);
-      ctx.fillStyle = "#fde047"; // Highlight Petal Tips
-      ctx.fillRect(fx - 1, fy - 1, 2, 2);
-      ctx.fillRect(fx + 5, fy - 1, 2, 2);
-      ctx.fillRect(fx - 2, fy + 3, 2, 2);
-      ctx.fillRect(fx + 6, fy + 3, 2, 2);
-
-      // Dark Chocolate Center Seed Disk with Micro Grid
-      ctx.fillStyle = "#451a03";
-      ctx.fillRect(fx, fy + 1, 6, 5);
-      ctx.fillStyle = "#78350f";
-      ctx.fillRect(fx + 1, fy + 2, 4, 3);
-      ctx.fillStyle = "#92400e";
-      ctx.fillRect(fx + 2, fy + 3, 2, 1);
-    } else if (pot.type === "lily") {
-      // Azure Star Lily with Glowing Cyan Stamen
-      ctx.fillStyle = "#0c4a6e";
-      ctx.fillRect(fx - 2, fy - 1, 10, 10);
-      ctx.fillStyle = "#0284c7";
-      ctx.fillRect(fx - 1, fy, 8, 8);
-      ctx.fillStyle = "#38bdf8"; // Light Blue Petals
-      ctx.fillRect(fx, fy + 1, 6, 6);
-      ctx.fillStyle = "#7dd3fc";
-      ctx.fillRect(fx + 1, fy + 2, 4, 4);
-      ctx.fillStyle = "#ffffff"; // Diamond Tip
-      ctx.fillRect(fx + 2, fy + 2, 2, 2);
-      ctx.fillStyle = "#38bdf8";
-      ctx.fillRect(fx - 1, fy - 2, 2, 2);
-      ctx.fillRect(fx + 5, fy - 2, 2, 2);
-    } else {
-      // Royal Twilight Orchid with Lavender Wing Petals
-      ctx.fillStyle = "#581c87";
-      ctx.fillRect(fx - 2, fy - 2, 10, 10);
-      ctx.fillStyle = "#7e22ce";
-      ctx.fillRect(fx - 1, fy - 1, 8, 8);
-      ctx.fillStyle = "#a855f7";
-      ctx.fillRect(fx, fy, 6, 6);
-      ctx.fillStyle = "#c084fc"; // Wing Highlights
-      ctx.fillRect(fx - 2, fy + 1, 3, 3);
-      ctx.fillRect(fx + 5, fy + 1, 3, 3);
-      ctx.fillStyle = "#f3e8ff"; // Lip Center
-      ctx.fillRect(fx + 1, fy + 1, 4, 3);
-      ctx.fillStyle = "#facc15"; // Golden Throat
-      ctx.fillRect(fx + 2, fy + 2, 2, 2);
-    }
-  });
-}
-
-// --- SPRITE-STYLE PIXEL BUSHES & SHRUBS ---
-
-function drawSpriteBushes(ctx: CanvasRenderingContext2D) {
-  DECORATIVE_BUSHES.forEach((b) => {
-    // 1. Multi-Tone Volumetric Ground Shadow
-    ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
-    ctx.beginPath();
-    ctx.ellipse(b.x + 18, b.y + 22, 19, 7, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    if (b.type === "berry_bush") {
-      // Volumetric Multi-Lobed Dense Berry Shrub (36x26)
-      // Root Base Twigs
-      ctx.fillStyle = "#451a03";
-      ctx.fillRect(b.x + 14, b.y + 18, 8, 5);
-
-      // Deep Shadow Under-Canopy
-      ctx.fillStyle = "#052e16";
-      ctx.fillRect(b.x + 2, b.y + 5, 32, 18);
-      ctx.fillRect(b.x + 5, b.y + 2, 26, 22);
-
-      // Mid-Depth Foliage Mass
-      ctx.fillStyle = "#14532d";
-      ctx.fillRect(b.x + 4, b.y + 6, 28, 16);
-      ctx.fillRect(b.x + 7, b.y + 3, 22, 20);
-
-      // Lush Emerald Front Leaves (Tri-Lobe Foliage)
-      ctx.fillStyle = "#15803d";
-      ctx.fillRect(b.x + 5, b.y + 5, 12, 12);
-      ctx.fillRect(b.x + 19, b.y + 5, 12, 12);
-      ctx.fillRect(b.x + 10, b.y + 2, 16, 14);
-
-      // Sunny Highlights on Upper Leaves
-      ctx.fillStyle = "#22c55e";
-      ctx.fillRect(b.x + 7, b.y + 4, 7, 6);
-      ctx.fillRect(b.x + 21, b.y + 4, 7, 6);
-      ctx.fillRect(b.x + 13, b.y + 2, 9, 8);
-
-      // Specular Top Leaf Tips
-      ctx.fillStyle = "#86efac";
-      ctx.fillRect(b.x + 8, b.y + 3, 4, 2);
-      ctx.fillRect(b.x + 22, b.y + 3, 4, 2);
-      ctx.fillRect(b.x + 15, b.y + 1, 5, 2);
-
-      // Plump 3D Berry Clusters with Specular Sheen
-      ctx.fillStyle = b.berry;
-      ctx.fillRect(b.x + 6, b.y + 10, 5, 5);
-      ctx.fillRect(b.x + 24, b.y + 9, 5, 5);
-      ctx.fillRect(b.x + 15, b.y + 14, 5, 5);
-      ctx.fillRect(b.x + 10, b.y + 16, 4, 4);
-
-      // Berry Glint Highlights
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(b.x + 7, b.y + 10, 2, 1);
-      ctx.fillRect(b.x + 25, b.y + 9, 2, 1);
-      ctx.fillRect(b.x + 16, b.y + 14, 2, 1);
-    } else if (b.type === "flowering_hedge") {
-      // Manicured Flowering Jasmine & Azalea Hedge (38x26)
-      ctx.fillStyle = "#022c22"; // Deep Under-Shadow
-      ctx.fillRect(b.x + 2, b.y + 6, 34, 18);
-      ctx.fillRect(b.x + 6, b.y + 2, 26, 22);
-
-      ctx.fillStyle = "#064e3b";
-      ctx.fillRect(b.x + 4, b.y + 7, 30, 16);
-      ctx.fillRect(b.x + 8, b.y + 3, 22, 20);
-
-      ctx.fillStyle = "#047857";
-      ctx.fillRect(b.x + 6, b.y + 4, 11, 11);
-      ctx.fillRect(b.x + 20, b.y + 4, 11, 11);
-      ctx.fillRect(b.x + 11, b.y + 7, 15, 11);
-
-      ctx.fillStyle = "#10b981"; // Upper Foliage
-      ctx.fillRect(b.x + 7, b.y + 3, 8, 8);
-      ctx.fillRect(b.x + 21, b.y + 3, 8, 8);
-      ctx.fillRect(b.x + 13, b.y + 4, 10, 8);
-
-      ctx.fillStyle = "#6ee7b7"; // Sunlit Leaves
-      ctx.fillRect(b.x + 8, b.y + 3, 5, 2);
-      ctx.fillRect(b.x + 22, b.y + 3, 5, 2);
-      ctx.fillRect(b.x + 15, b.y + 2, 6, 2);
-
-      // 5-Petal Blossoms with Golden Center Pollen
-      ctx.fillStyle = b.berry;
-      ctx.fillRect(b.x + 6, b.y + 8, 6, 6);
-      ctx.fillRect(b.x + 24, b.y + 7, 6, 6);
-      ctx.fillRect(b.x + 15, b.y + 13, 6, 6);
-      ctx.fillRect(b.x + 28, b.y + 15, 5, 5);
-
-      ctx.fillStyle = "#fef08a"; // Yellow Flower Core
-      ctx.fillRect(b.x + 8, b.y + 10, 2, 2);
-      ctx.fillRect(b.x + 26, b.y + 9, 2, 2);
-      ctx.fillRect(b.x + 17, b.y + 15, 2, 2);
-      ctx.fillRect(b.x + 30, b.y + 17, 1, 1);
-    } else {
-      // Jagged Organic Wild Route Shrub (34x24)
-      ctx.fillStyle = "#052e16";
-      ctx.fillRect(b.x + 2, b.y + 4, 30, 18);
-      ctx.fillRect(b.x + 6, b.y + 1, 20, 22);
-
-      ctx.fillStyle = "#14532d";
-      ctx.fillRect(b.x + 4, b.y + 5, 26, 16);
-      ctx.fillRect(b.x + 8, b.y + 2, 16, 20);
-
-      ctx.fillStyle = "#16a34a"; // Dense Center
-      ctx.fillRect(b.x + 6, b.y + 3, 20, 14);
-
-      // Jagged Multi-Direction Leaf Notches
-      ctx.fillStyle = "#4ade80";
-      ctx.fillRect(b.x + 3, b.y + 2, 5, 5);
-      ctx.fillRect(b.x + 24, b.y + 2, 5, 5);
-      ctx.fillRect(b.x + 13, b.y + 1, 6, 5);
-      ctx.fillRect(b.x + 8, b.y + 7, 8, 7);
-      ctx.fillRect(b.x + 18, b.y + 7, 8, 7);
-
-      ctx.fillStyle = "#86efac"; // Bright Crown Tips
-      ctx.fillRect(b.x + 5, b.y + 1, 3, 2);
-      ctx.fillRect(b.x + 25, b.y + 1, 3, 2);
-      ctx.fillRect(b.x + 15, b.y, 4, 2);
-    }
-  });
-}
-
-// --- RICH 3D RETRO OUTDOOR VILLAGE FURNITURE ---
-
-function drawVillageFurniture(ctx: CanvasRenderingContext2D, time: number) {
-  VILLAGE_FURNITURE.forEach((f) => {
-    const fx = f.x;
-    const fy = f.y;
-
-    if (f.type === "bench") {
-      // =====================================================================
-      // 🪑 1. POLISHED OAK & CAST IRON PARK BENCH (42x24)
-      // =====================================================================
-      // 3D Drop Shadow
-      ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
-      ctx.beginPath();
-      ctx.ellipse(fx + 21, fy + 22, 22, 5, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Wrought Iron Legs with Scroll Feet
-      ctx.fillStyle = "#0f172a";
-      ctx.fillRect(fx + 3, fy + 8, 4, 14);
-      ctx.fillRect(fx + 35, fy + 8, 4, 14);
-      ctx.fillRect(fx + 1, fy + 19, 7, 3);
-      ctx.fillRect(fx + 34, fy + 19, 7, 3);
-
-      // Polished Oak Slatted Backrest (3 Wooden Slats)
-      ctx.fillStyle = "#451a03"; // Outline
-      ctx.fillRect(fx + 4, fy + 1, 34, 10);
-
-      ctx.fillStyle = "#b45309"; // Main Honey Wood
-      ctx.fillRect(fx + 5, fy + 2, 32, 8);
-
-      // Slat Highlights & Divider Grooves
-      ctx.fillStyle = "#fde68a"; // Top Slat Gleam
-      ctx.fillRect(fx + 5, fy + 2, 32, 1.5);
-      ctx.fillStyle = "#78350f"; // Horizontal Slit 1
-      ctx.fillRect(fx + 5, fy + 4.5, 32, 1);
-      ctx.fillStyle = "#fde68a";
-      ctx.fillRect(fx + 5, fy + 5.5, 32, 1);
-      ctx.fillStyle = "#78350f"; // Horizontal Slit 2
-      ctx.fillRect(fx + 5, fy + 7.5, 32, 1);
-
-      // Brass Rivet Caps on Backrest
-      ctx.fillStyle = "#fbbf24";
-      ctx.fillRect(fx + 6, fy + 3, 2, 2);
-      ctx.fillRect(fx + 34, fy + 3, 2, 2);
-      ctx.fillRect(fx + 6, fy + 6, 2, 2);
-      ctx.fillRect(fx + 34, fy + 6, 2, 2);
-
-      // Wide Polished Oak Seat Planks
-      ctx.fillStyle = "#78350f";
-      ctx.fillRect(fx + 2, fy + 11, 38, 7);
-      ctx.fillStyle = "#d97706";
-      ctx.fillRect(fx + 3, fy + 11, 36, 5);
-      ctx.fillStyle = "#fef08a"; // Seat Top Highlight
-      ctx.fillRect(fx + 3, fy + 11, 36, 1.5);
-
-      // Ornate Wrought Iron Scrolled Armrests
-      ctx.fillStyle = "#334155";
-      ctx.fillRect(fx + 2, fy + 6, 5, 3);
-      ctx.fillRect(fx + 35, fy + 6, 5, 3);
-      ctx.fillStyle = "#64748b";
-      ctx.fillRect(fx + 2, fy + 6, 5, 1);
-      ctx.fillRect(fx + 35, fy + 6, 5, 1);
-    } else if (f.type === "chess_table") {
-      // =====================================================================
-      // ♟️ 2. CARVED STONE CHESS TABLE WITH VELVET STOOLS (46x32)
-      // =====================================================================
-      // Drop Shadow
-      ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
-      ctx.beginPath();
-      ctx.ellipse(fx + 23, fy + 28, 24, 6, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Left Stool with Royal Crimson Velvet Cushion
-      ctx.fillStyle = "#1e293b";
-      ctx.fillRect(fx, fy + 16, 9, 13);
-      ctx.fillStyle = "#475569";
-      ctx.fillRect(fx + 1, fy + 17, 7, 11);
-      // Crimson Cushion
-      ctx.fillStyle = "#991b1b";
-      ctx.fillRect(fx + 1, fy + 14, 7, 4);
-      ctx.fillStyle = "#ef4444";
-      ctx.fillRect(fx + 2, fy + 14, 5, 2);
-
-      // Right Stool with Royal Crimson Velvet Cushion
-      ctx.fillStyle = "#1e293b";
-      ctx.fillRect(fx + 37, fy + 16, 9, 13);
-      ctx.fillStyle = "#475569";
-      ctx.fillRect(fx + 38, fy + 17, 7, 11);
-      // Crimson Cushion
-      ctx.fillStyle = "#991b1b";
-      ctx.fillRect(fx + 38, fy + 14, 7, 4);
-      ctx.fillStyle = "#ef4444";
-      ctx.fillRect(fx + 39, fy + 14, 5, 2);
-
-      // Carved Stone Pedestal Column (Center)
-      ctx.fillStyle = "#1e293b";
-      ctx.fillRect(fx + 17, fy + 14, 12, 15);
-      ctx.fillStyle = "#475569";
-      ctx.fillRect(fx + 19, fy + 14, 8, 14);
-      ctx.fillStyle = "#64748b";
-      ctx.fillRect(fx + 20, fy + 14, 4, 14);
-
-      // Round Beveled Limestone Tabletop
-      ctx.fillStyle = "#1e293b";
-      ctx.fillRect(fx + 10, fy + 3, 26, 14);
-      ctx.fillStyle = "#475569";
-      ctx.fillRect(fx + 11, fy + 4, 24, 12);
-      ctx.fillStyle = "#94a3b8";
-      ctx.fillRect(fx + 12, fy + 4, 22, 2);
-
-      // Crisp 8x8 Ivory & Obsidian Checkered Board
-      const cx = fx + 14;
-      const cy = fy + 6;
-      for (let r = 0; r < 4; r++) {
-        for (let c = 0; c < 4; c++) {
-          const isWhite = (r + c) % 2 === 0;
-          ctx.fillStyle = isWhite ? "#f8fafc" : "#0f172a";
-          ctx.fillRect(cx + c * 4.5, cy + r * 2, 4.5, 2);
-        }
-      }
-
-      // Sculpted 3D Mini Chess Pieces
-      ctx.fillStyle = "#ffffff"; // White King & Queen
-      ctx.fillRect(cx + 5, cy + 1, 2, 3);
-      ctx.fillRect(cx + 9, cy + 2, 2, 2);
-      ctx.fillStyle = "#dc2626"; // Black / Red Master Pieces
-      ctx.fillRect(cx + 12, cy + 4, 2, 3);
-      ctx.fillRect(cx + 3, cy + 5, 2, 2);
-    } else if (f.type === "wishing_well") {
-      // =====================================================================
-      // ⛲ 3. GRAND ANCIENT VILLAGE WISHING WELL (50x56)
-      // =====================================================================
-      // Well Drop Shadow
-      ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
-      ctx.beginPath();
-      ctx.ellipse(fx + 25, fy + 50, 26, 8, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Stone Wall Base (Ashlar Masonry Blocks)
-      ctx.fillStyle = "#0f172a";
-      ctx.fillRect(fx + 5, fy + 26, 40, 26);
-      ctx.fillStyle = "#334155";
-      ctx.fillRect(fx + 7, fy + 28, 36, 22);
-
-      // Brick Rows & Mortar Relief
-      ctx.fillStyle = "#475569";
-      ctx.fillRect(fx + 8, fy + 29, 10, 4);
-      ctx.fillRect(fx + 20, fy + 29, 11, 4);
-      ctx.fillRect(fx + 33, fy + 29, 9, 4);
-      ctx.fillRect(fx + 8, fy + 35, 16, 5);
-      ctx.fillRect(fx + 26, fy + 35, 16, 5);
-      ctx.fillRect(fx + 8, fy + 42, 12, 5);
-      ctx.fillRect(fx + 22, fy + 42, 20, 5);
-
-      // Creeping Green Ivy on Wall
-      ctx.fillStyle = "#15803d";
-      ctx.fillRect(fx + 7, fy + 38, 6, 7);
-      ctx.fillRect(fx + 36, fy + 36, 6, 8);
-      ctx.fillStyle = "#4ade80";
-      ctx.fillRect(fx + 8, fy + 39, 3, 3);
-      ctx.fillRect(fx + 37, fy + 37, 3, 3);
-
-      // Beveled Stone Well Rim Lip
-      ctx.fillStyle = "#1e293b";
-      ctx.fillRect(fx + 3, fy + 24, 44, 5);
-      ctx.fillStyle = "#64748b";
-      ctx.fillRect(fx + 5, fy + 24, 40, 3);
-      ctx.fillStyle = "#94a3b8";
-      ctx.fillRect(fx + 5, fy + 24, 40, 1);
-
-      // Deep Water Pool Inside Well with Waves & Gold Coins
-      const waterRipple = Math.sin(time * 0.005) * 1.5;
-      ctx.fillStyle = "#0c4a6e";
-      ctx.fillRect(fx + 9, fy + 27, 32, 4);
-      ctx.fillStyle = "#38bdf8";
-      ctx.fillRect(fx + 12 + waterRipple, fy + 28, 10, 2);
-      ctx.fillStyle = "#e0f2fe";
-      ctx.fillRect(fx + 26 - waterRipple, fy + 28, 8, 1);
-
-      // Floating Wish Coins
-      ctx.fillStyle = "#fbbf24";
-      ctx.fillRect(fx + 14, fy + 28, 2, 2);
-      ctx.fillRect(fx + 32, fy + 28, 2, 2);
-
-      // Heavy Timber Support Posts
-      ctx.fillStyle = "#451a03";
-      ctx.fillRect(fx + 6, fy + 6, 5, 20);
-      ctx.fillRect(fx + 39, fy + 6, 5, 20);
-      ctx.fillStyle = "#78350f";
-      ctx.fillRect(fx + 7, fy + 6, 3, 20);
-      ctx.fillRect(fx + 40, fy + 6, 3, 20);
-
-      // Turned Wood Spool & Hemp Rope Coil
-      ctx.fillStyle = "#92400e";
-      ctx.fillRect(fx + 11, fy + 10, 28, 4);
-      ctx.fillStyle = "#d97706"; // Rope Spool
-      ctx.fillRect(fx + 21, fy + 9, 8, 6);
-      ctx.fillRect(fx + 24, fy + 14, 2, 10); // Suspended rope
-
-      // Suspended Oak Water Bucket with Water
-      ctx.fillStyle = "#78350f";
-      ctx.fillRect(fx + 21, fy + 22, 8, 7);
-      ctx.fillStyle = "#38bdf8";
-      ctx.fillRect(fx + 22, fy + 22, 6, 2);
-      ctx.fillStyle = "#334155";
-      ctx.fillRect(fx + 21, fy + 25, 8, 1.5);
-
-      // Pitched Terracotta Canopy Roof (Gable Roof)
-      ctx.fillStyle = "#431407";
-      ctx.beginPath();
-      ctx.moveTo(fx + 25, fy - 4);
-      ctx.lineTo(fx + 49, fy + 8);
-      ctx.lineTo(fx + 1, fy + 8);
-      ctx.closePath();
-      ctx.fill();
-
-      // Scalloped Terracotta Clay Tiles
-      ctx.fillStyle = "#c2410c";
-      ctx.beginPath();
-      ctx.moveTo(fx + 25, fy - 2);
-      ctx.lineTo(fx + 47, fy + 8);
-      ctx.lineTo(fx + 3, fy + 8);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = "#ea580c";
-      ctx.fillRect(fx + 8, fy + 4, 34, 3);
-      ctx.fillStyle = "#fdba74"; // Ridge Cap
-      ctx.fillRect(fx + 22, fy - 3, 6, 2);
-    } else if (f.type === "birdbath") {
-      // =====================================================================
-      // 🐦 4. TWO-TIER CARVED LIMESTONE BIRDBATH (30x30)
-      // =====================================================================
-      // Drop Shadow
-      ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
-      ctx.beginPath();
-      ctx.ellipse(fx + 15, fy + 28, 14, 4.5, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Stepped Pedestal Base Plinth
-      ctx.fillStyle = "#1e293b";
-      ctx.fillRect(fx + 8, fy + 23, 14, 6);
-      ctx.fillStyle = "#475569";
-      ctx.fillRect(fx + 9, fy + 24, 12, 4);
-
-      // Fluted Corinthian Column Shaft
-      ctx.fillStyle = "#334155";
-      ctx.fillRect(fx + 12, fy + 12, 6, 12);
-      ctx.fillStyle = "#94a3b8";
-      ctx.fillRect(fx + 14, fy + 12, 2, 12);
-
-      // Wide Lower Scalloped Basin
-      ctx.fillStyle = "#1e293b";
-      ctx.fillRect(fx + 2, fy + 6, 26, 8);
-      ctx.fillStyle = "#475569";
-      ctx.fillRect(fx + 3, fy + 7, 24, 6);
-      ctx.fillStyle = "#cbd5e1";
-      ctx.fillRect(fx + 3, fy + 6, 24, 1.5);
-
-      // Crystal Blue Water in Basin with Caustics
-      const bathRipples = Math.sin(time * 0.006) * 1.5;
-      ctx.fillStyle = "#0284c7";
-      ctx.fillRect(fx + 6, fy + 7, 18, 3);
-      ctx.fillStyle = "#38bdf8";
-      ctx.fillRect(fx + 8 + bathRipples, fy + 7, 7, 1.5);
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(fx + 17 - bathRipples, fy + 7, 3, 1.5);
-
-      // Two Animated Perched Bluebirds
-      const birdBob = Math.sin(time * 0.008) > 0.5 ? 1 : 0;
-      // Bluebird 1 (Right)
-      ctx.fillStyle = "#0284c7";
-      ctx.fillRect(fx + 23, fy + 2 + birdBob, 5, 5);
-      ctx.fillStyle = "#38bdf8";
-      ctx.fillRect(fx + 22, fy + 3 + birdBob, 4, 4);
-      ctx.fillStyle = "#f97316";
-      ctx.fillRect(fx + 28, fy + 4 + birdBob, 2, 2);
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(fx + 25, fy + 3 + birdBob, 1, 1);
-
-      // Bluebird 2 (Left - Drinking)
-      ctx.fillStyle = "#0284c7";
-      ctx.fillRect(fx + 2, fy + 4 - birdBob, 5, 4);
-      ctx.fillStyle = "#f97316";
-      ctx.fillRect(fx + 6, fy + 6 - birdBob, 2, 2);
-    } else if (f.type === "streetlamp") {
-      // =====================================================================
-      // 🏮 5. VICTORIAN ORNATE GASLIGHT STREETLAMP (22x48)
-      // =====================================================================
-      // Ground Shadow & Ambient Warm Light Halo
-      ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
-      ctx.beginPath();
-      ctx.ellipse(fx + 11, fy + 45, 11, 4, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Warm Ambient Radial Ground Halo
-      const glowPulse = Math.sin(time * 0.006 + fx) * 3;
-      const lampGrad = ctx.createRadialGradient(fx + 11, fy + 14, 3, fx + 11, fy + 14, 32 + glowPulse);
-      lampGrad.addColorStop(0, "rgba(253, 224, 71, 0.4)");
-      lampGrad.addColorStop(0.5, "rgba(251, 191, 36, 0.15)");
-      lampGrad.addColorStop(1, "rgba(253, 224, 71, 0)");
-      ctx.fillStyle = lampGrad;
-      ctx.beginPath();
-      ctx.arc(fx + 11, fy + 14, 32 + glowPulse, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Cast Iron Fluted Pedestal Base
-      ctx.fillStyle = "#0f172a";
-      ctx.fillRect(fx + 6, fy + 38, 10, 8);
-      ctx.fillStyle = "#334155";
-      ctx.fillRect(fx + 7, fy + 39, 8, 4);
-
-      // Tall Lamp Post Shaft
-      ctx.fillStyle = "#0f172a";
-      ctx.fillRect(fx + 9.5, fy + 16, 3, 23);
-      ctx.fillStyle = "#475569";
-      ctx.fillRect(fx + 10.5, fy + 16, 1.5, 23);
-
-      // Scrollwork Bracket Arms
-      ctx.fillStyle = "#0f172a";
-      ctx.fillRect(fx + 4, fy + 14, 14, 2);
-      ctx.fillRect(fx + 5, fy + 12, 12, 2);
-
-      // Brass Finial Crown & Lantern Housing
-      ctx.fillStyle = "#0f172a";
-      ctx.fillRect(fx + 5, fy + 6, 12, 10);
-      ctx.fillStyle = "#fbbf24";
-      ctx.fillRect(fx + 10, fy + 2, 2, 4); // Finial apex
-      ctx.fillRect(fx + 4, fy + 5, 14, 2); // Cap rim
-
-      // Glowing Amber Beveled Glass Windows & Flame Filament
-      ctx.fillStyle = "#fde047";
-      ctx.fillRect(fx + 7, fy + 7, 8, 8);
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(fx + 9, fy + 9, 4, 4);
-    } else if (f.type === "barrel_stack") {
-      // =====================================================================
-      // 🍎 6. RUSTIC OAK CIDER BARRELS & APPLE CRATES (40x30)
-      // =====================================================================
-      // Drop Shadow
-      ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
-      ctx.beginPath();
-      ctx.ellipse(fx + 20, fy + 27, 20, 5, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Bottom Left Oak Barrel
-      ctx.fillStyle = "#451a03";
-      ctx.fillRect(fx + 1, fy + 8, 16, 20);
-      ctx.fillStyle = "#78350f";
-      ctx.fillRect(fx + 2, fy + 9, 14, 18);
-      ctx.fillStyle = "#b45309";
-      ctx.fillRect(fx + 5, fy + 9, 8, 18);
-      // Steel Hoops
-      ctx.fillStyle = "#334155";
-      ctx.fillRect(fx + 1, fy + 11, 16, 2);
-      ctx.fillRect(fx + 1, fy + 23, 16, 2);
-
-      // Top Oak Barrel (Pyramid Stack)
-      ctx.fillStyle = "#451a03";
-      ctx.fillRect(fx + 8, fy, 14, 14);
-      ctx.fillStyle = "#78350f";
-      ctx.fillRect(fx + 9, fy + 1, 12, 12);
-      ctx.fillStyle = "#b45309";
-      ctx.fillRect(fx + 11, fy + 1, 7, 12);
-      ctx.fillStyle = "#334155";
-      ctx.fillRect(fx + 8, fy + 3, 14, 2);
-      ctx.fillRect(fx + 8, fy + 10, 14, 2);
-
-      // Right Fruit Crate with Apples & Pears
-      ctx.fillStyle = "#78350f";
-      ctx.fillRect(fx + 20, fy + 12, 18, 16);
-      ctx.fillStyle = "#d97706";
-      ctx.fillRect(fx + 21, fy + 13, 16, 14);
-      ctx.fillStyle = "#b45309";
-      ctx.fillRect(fx + 21, fy + 19, 16, 2);
-
-      // Apples in Crate
-      ctx.fillStyle = "#ef4444";
-      ctx.fillRect(fx + 22, fy + 10, 4, 4);
-      ctx.fillRect(fx + 27, fy + 9, 4, 4);
-      ctx.fillRect(fx + 32, fy + 11, 4, 4);
-      ctx.fillStyle = "#facc15"; // Golden pear
-      ctx.fillRect(fx + 25, fy + 11, 4, 4);
-      ctx.fillStyle = "#22c55e"; // Leaves
-      ctx.fillRect(fx + 29, fy + 8, 2, 2);
-    }
-  });
-}
-
-// --- AUTHENTIC RETRO PIXEL-ART MULTI-SPECIES TREES ---
-
-function drawSpriteTrees(ctx: CanvasRenderingContext2D, time: number) {
-  const wind = Math.sin(time * 0.003) * 1.8;
-
-  DECORATIVE_TREES.forEach((t) => {
-    const tx = t.x;
-    const ty = t.y;
-    const wx = tx + wind;
-
-    if (t.type === "grand_oak") {
-      // 1. GRAND GREAT OAK TREE (64x80 - 5-Lobed Massive Canopy)
-      // Base Shadow
-      ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
-      ctx.beginPath();
-      ctx.ellipse(tx + 32, ty + 74, 30, 10, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Trunk with Gnarled Bark Grain & Roots
-      ctx.fillStyle = "#271204"; // Trunk Outline
-      ctx.fillRect(tx + 22, ty + 42, 20, 36);
-      ctx.fillRect(tx + 14, ty + 70, 36, 8);
-
-      ctx.fillStyle = "#78350f"; // Bark Body
-      ctx.fillRect(tx + 24, ty + 44, 16, 32);
-      ctx.fillRect(tx + 16, ty + 72, 32, 5);
-
-      ctx.fillStyle = "#b45309"; // Bark Grain Highlights
-      ctx.fillRect(tx + 26, ty + 46, 3, 28);
-      ctx.fillRect(tx + 33, ty + 48, 2, 24);
-
-      ctx.fillStyle = "#451a03"; // Knot Hole & Shading
-      ctx.fillRect(tx + 30, ty + 54, 4, 6);
-      ctx.fillRect(tx + 36, ty + 46, 3, 30);
-
-      // 5-Lobed Massive Leaf Canopy
-      // Outer Silhouette Outline
-      ctx.fillStyle = "#052e16";
-      ctx.fillRect(wx + 4, ty + 18, 56, 32);
-      ctx.fillRect(wx + 10, ty + 8, 44, 46);
-      ctx.fillRect(wx + 16, ty + 2, 32, 54);
-
-      // Deep Shadow Pockets
-      ctx.fillStyle = "#14532d";
-      ctx.fillRect(wx + 6, ty + 20, 52, 28);
-      ctx.fillRect(wx + 12, ty + 10, 40, 42);
-      ctx.fillRect(wx + 18, ty + 4, 28, 50);
-
-      // Emerald Mid-Tone Foliage Lobes
-      ctx.fillStyle = "#16a34a";
-      ctx.fillRect(wx + 8, ty + 18, 20, 18); // Left lobe
-      ctx.fillRect(wx + 34, ty + 18, 20, 18); // Right lobe
-      ctx.fillRect(wx + 18, ty + 6, 26, 22); // Top crown
-      ctx.fillRect(wx + 14, ty + 28, 34, 18); // Bottom belly
-
-      // Leaf Bunch Highlights
-      ctx.fillStyle = "#4ade80";
-      ctx.fillRect(wx + 10, ty + 18, 12, 10);
-      ctx.fillRect(wx + 36, ty + 18, 12, 10);
-      ctx.fillRect(wx + 22, ty + 8, 18, 12);
-      ctx.fillRect(wx + 18, ty + 28, 24, 8);
-
-      // Sun Glints & Leaf Notches
-      ctx.fillStyle = "#86efac";
-      ctx.fillRect(wx + 12, ty + 14, 6, 4);
-      ctx.fillRect(wx + 38, ty + 14, 6, 4);
-      ctx.fillRect(wx + 26, ty + 6, 10, 4);
-      ctx.fillRect(wx + 22, ty + 26, 8, 3);
-    } else if (t.type === "pine") {
-      // 2. HIGHLAND CONIFER PINE / FIR TREE (48x78 - 4-Tiered Jagged Needles)
-      // Base Shadow
-      ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
-      ctx.beginPath();
-      ctx.ellipse(tx + 24, ty + 74, 22, 7, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Slender Pine Trunk
-      ctx.fillStyle = "#291305";
-      ctx.fillRect(tx + 18, ty + 50, 12, 26);
-      ctx.fillStyle = "#78350f";
-      ctx.fillRect(tx + 20, ty + 52, 8, 23);
-      ctx.fillStyle = "#b45309";
-      ctx.fillRect(tx + 21, ty + 54, 2, 19);
-
-      // 4-Tier Conical Needle Layers (Top to Bottom)
-      const renderPineTier = (tierY: number, tierW: number, tierH: number) => {
-        const left = wx + 24 - tierW / 2;
-        ctx.fillStyle = "#022c22"; // Outline
-        ctx.beginPath();
-        ctx.moveTo(left, tierY + tierH);
-        ctx.lineTo(wx + 24, tierY);
-        ctx.lineTo(left + tierW, tierY + tierH);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.fillStyle = "#064e3b"; // Shadow
-        ctx.beginPath();
-        ctx.moveTo(left + 2, tierY + tierH - 1);
-        ctx.lineTo(wx + 24, tierY + 2);
-        ctx.lineTo(left + tierW - 2, tierY + tierH - 1);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.fillStyle = "#059669"; // Mid
-        ctx.beginPath();
-        ctx.moveTo(left + 4, tierY + tierH - 3);
-        ctx.lineTo(wx + 24, tierY + 3);
-        ctx.lineTo(left + tierW - 6, tierY + tierH - 3);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.fillStyle = "#6ee7b7"; // Mint needle tips
-        ctx.fillRect(wx + 22, tierY + 3, 4, 3);
-        ctx.fillRect(left + 3, tierY + tierH - 4, 3, 2);
-        ctx.fillRect(left + tierW - 6, tierY + tierH - 4, 3, 2);
-      };
-
-      renderPineTier(ty + 2, 20, 18);  // Tier 1 (Apex)
-      renderPineTier(ty + 14, 28, 20); // Tier 2
-      renderPineTier(ty + 28, 38, 22); // Tier 3
-      renderPineTier(ty + 44, 46, 24); // Tier 4 (Base)
-    } else if (t.type === "maple") {
-      // 3. GOLDEN AUTUMN BIRCH / MAPLE TREE (58x74 - Warm Autumn Palette)
-      // Base Shadow
-      ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
-      ctx.beginPath();
-      ctx.ellipse(tx + 29, ty + 70, 26, 8, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Birch Trunk
-      ctx.fillStyle = "#e2e8f0";
-      ctx.fillRect(tx + 22, ty + 42, 14, 30);
-      ctx.fillStyle = "#334155"; // Charcoal Bark Flecks
-      ctx.fillRect(tx + 23, ty + 48, 4, 2);
-      ctx.fillRect(tx + 29, ty + 56, 5, 2);
-      ctx.fillRect(tx + 24, ty + 64, 4, 2);
-
-      // Autumn Canopy (Crimson, Burnt Orange, Amber Gold)
-      ctx.fillStyle = "#450a0a"; // Deep Crimson Outline
-      ctx.fillRect(wx + 4, ty + 16, 50, 30);
-      ctx.fillRect(wx + 10, ty + 6, 38, 42);
-
-      ctx.fillStyle = "#7f1d1d"; // Dark Autumn Shadow
-      ctx.fillRect(wx + 6, ty + 18, 46, 26);
-      ctx.fillRect(wx + 12, ty + 8, 34, 38);
-
-      ctx.fillStyle = "#ea580c"; // Burnt Orange Mid-Tone
-      ctx.fillRect(wx + 8, ty + 16, 18, 16);
-      ctx.fillRect(wx + 30, ty + 16, 18, 16);
-      ctx.fillRect(wx + 16, ty + 6, 24, 20);
-
-      ctx.fillStyle = "#f59e0b"; // Amber Gold Highlights
-      ctx.fillRect(wx + 10, ty + 14, 12, 8);
-      ctx.fillRect(wx + 32, ty + 14, 12, 8);
-      ctx.fillRect(wx + 20, ty + 6, 16, 10);
-
-      ctx.fillStyle = "#fef08a"; // Yellow Sun Glints
-      ctx.fillRect(wx + 14, ty + 10, 6, 3);
-      ctx.fillRect(wx + 34, ty + 10, 6, 3);
-      ctx.fillRect(wx + 24, ty + 4, 8, 3);
-    } else {
-      // 4. FLOWERING CHERRY BLOSSOM / SAKURA TREE (58x74 - Pink Petal Clouds)
-      // Base Shadow
-      ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
-      ctx.beginPath();
-      ctx.ellipse(tx + 29, ty + 70, 26, 8, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Dark Cherry Wood Trunk
-      ctx.fillStyle = "#3f1a0a";
-      ctx.fillRect(tx + 22, ty + 42, 14, 30);
-      ctx.fillStyle = "#78350f";
-      ctx.fillRect(tx + 24, ty + 44, 10, 26);
-      ctx.fillStyle = "#b45309";
-      ctx.fillRect(tx + 25, ty + 46, 2, 22);
-
-      // Pillowy Pink Blossom Clusters
-      ctx.fillStyle = "#500724"; // Outline
-      ctx.fillRect(wx + 4, ty + 16, 50, 30);
-      ctx.fillRect(wx + 10, ty + 6, 38, 42);
-
-      ctx.fillStyle = "#831843"; // Deep Magenta Shadow
-      ctx.fillRect(wx + 6, ty + 18, 46, 26);
-      ctx.fillRect(wx + 12, ty + 8, 34, 38);
-
-      ctx.fillStyle = "#db2777"; // Rich Pink Blooms
-      ctx.fillRect(wx + 8, ty + 16, 18, 16);
-      ctx.fillRect(wx + 30, ty + 16, 18, 16);
-      ctx.fillRect(wx + 16, ty + 6, 24, 20);
-
-      ctx.fillStyle = "#f472b6"; // Pale Rose Petal Highlights
-      ctx.fillRect(wx + 10, ty + 14, 12, 8);
-      ctx.fillRect(wx + 32, ty + 14, 12, 8);
-      ctx.fillRect(wx + 20, ty + 6, 16, 10);
-
-      ctx.fillStyle = "#fdf2f8"; // Pure White Petal Tips
-      ctx.fillRect(wx + 14, ty + 10, 6, 3);
-      ctx.fillRect(wx + 34, ty + 10, 6, 3);
-      ctx.fillRect(wx + 24, ty + 4, 8, 3);
-    }
-  });
-}
-
-// --- CUSTOM 3D-STYLE SPRITE BUILDINGS ---
-
-function drawCustomBuildings(ctx: CanvasRenderingContext2D, time: number) {
-  // =========================================================================
-  // --- 1. PROJECTS SHOWCASE GUILD (NW: 140x110 at x:70, y:60) ---
-  // =========================================================================
-  const b1X = 70;
-  const b1Y = 60;
-  const b1W = 140;
-  const b1H = 110;
-
-  // 1. 3D Volumetric Drop Shadow
-  ctx.fillStyle = "rgba(0, 0, 0, 0.42)";
-  ctx.beginPath();
-  ctx.ellipse(b1X + b1W / 2 + 6, b1Y + b1H + 2, b1W / 2 + 10, 15, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // 2. Stepped Ashlar Stone Foundation Plinth (3D Chiseled Blocks)
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(b1X + 2, b1Y + b1H - 18, b1W - 4, 18);
-  ctx.fillStyle = "#1e293b";
-  ctx.fillRect(b1X + 4, b1Y + b1H - 16, b1W - 8, 14);
-  ctx.fillStyle = "#334155";
-  ctx.fillRect(b1X + 6, b1Y + b1H - 14, b1W - 12, 10);
-  ctx.fillStyle = "#475569";
-  ctx.fillRect(b1X + 6, b1Y + b1H - 14, b1W - 12, 2.5);
-
-  // Ashlar Stone Blocks & Mortar Joints
-  ctx.strokeStyle = "#0f172a";
-  ctx.lineWidth = 1;
-  for (let sx = b1X + 22; sx < b1X + b1W - 14; sx += 22) {
-    ctx.beginPath();
-    ctx.moveTo(sx, b1Y + b1H - 14);
-    ctx.lineTo(sx, b1Y + b1H - 4);
-    ctx.stroke();
-  }
-  // Moss on Foundation Stones
-  ctx.fillStyle = "#15803d";
-  ctx.fillRect(b1X + 8, b1Y + b1H - 8, 8, 3);
-  ctx.fillRect(b1X + b1W - 24, b1Y + b1H - 7, 7, 3);
-
-  // 3. Stucco Facade with 3D Depth & Peeking Brickwork
-  ctx.fillStyle = "#fef3c7";
-  ctx.fillRect(b1X + 8, b1Y + 34, b1W - 16, b1H - 50);
-
-  // 3D Isometric Wall Shading (Sunlit left, ambient shadow right)
-  const b1Shade = ctx.createLinearGradient(b1X + 8, b1Y, b1X + b1W - 8, b1Y);
-  b1Shade.addColorStop(0, "rgba(255, 255, 255, 0.12)");
-  b1Shade.addColorStop(0.5, "rgba(0, 0, 0, 0)");
-  b1Shade.addColorStop(1, "rgba(15, 23, 42, 0.18)");
-  ctx.fillStyle = b1Shade;
-  ctx.fillRect(b1X + 8, b1Y + 34, b1W - 16, b1H - 50);
-
-  // Peeking Weathered Brickwork Patches
-  ctx.fillStyle = "#991b1b";
-  ctx.fillRect(b1X + 16, b1Y + 48, 14, 8);
-  ctx.fillRect(b1X + b1W - 32, b1Y + 70, 16, 8);
-  ctx.fillStyle = "#b45309";
-  ctx.fillRect(b1X + 17, b1Y + 49, 6, 3);
-  ctx.fillRect(b1X + 24, b1Y + 49, 5, 3);
-  ctx.fillRect(b1X + 19, b1Y + 53, 9, 3);
-
-  // 4. Tudor Half-Timber Oak Framework (Dark Walnut Beams with Wood Grain)
-  ctx.fillStyle = "#270f03"; // Dark Beam Shadow Outline
-  ctx.fillRect(b1X + 7, b1Y + 34, b1W - 14, 6); // Upper horizontal belt
-  ctx.fillRect(b1X + 7, b1Y + 68, b1W - 14, 6); // Mid horizontal belt
-  ctx.fillRect(b1X + 7, b1Y + 34, 7, b1H - 50); // Left corner post
-  ctx.fillRect(b1X + b1W - 14, b1Y + 34, 7, b1H - 50); // Right corner post
-  ctx.fillRect(b1X + 44, b1Y + 34, 6, b1H - 50); // Left vertical stud
-  ctx.fillRect(b1X + b1W - 50, b1Y + 34, 6, b1H - 50); // Right vertical stud
-
-  ctx.fillStyle = "#78350f"; // Rich Honey Walnut Tone
-  ctx.fillRect(b1X + 8, b1Y + 35, b1W - 16, 4);
-  ctx.fillRect(b1X + 8, b1Y + 69, b1W - 16, 4);
-  ctx.fillRect(b1X + 8, b1Y + 35, 5, b1H - 52);
-  ctx.fillRect(b1X + b1W - 13, b1Y + 35, 5, b1H - 52);
-  ctx.fillRect(b1X + 45, b1Y + 35, 4, b1H - 52);
-  ctx.fillRect(b1X + b1W - 49, b1Y + 35, 4, b1H - 52);
-
-  // Beam Highlights (Gleam along top edge)
-  ctx.fillStyle = "#b45309";
-  ctx.fillRect(b1X + 8, b1Y + 35, b1W - 16, 1.5);
-  ctx.fillRect(b1X + 8, b1Y + 69, b1W - 16, 1.5);
-
-  // Diagonal Tudor Cross Braces (Stout X-Bracing)
-  ctx.strokeStyle = "#270f03";
-  ctx.lineWidth = 5;
-  ctx.beginPath();
-  ctx.moveTo(b1X + 14, b1Y + 41);
-  ctx.lineTo(b1X + 44, b1Y + 68);
-  ctx.moveTo(b1X + b1W - 14, b1Y + 41);
-  ctx.lineTo(b1X + b1W - 44, b1Y + 68);
-  ctx.stroke();
-  ctx.strokeStyle = "#78350f";
-  ctx.lineWidth = 3;
-  ctx.stroke();
-
-  // Iron Timber Pegs
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(b1X + 10, b1Y + 37, 2, 2);
-  ctx.fillRect(b1X + b1W - 12, b1Y + 37, 2, 2);
-  ctx.fillRect(b1X + 46, b1Y + 70, 2, 2);
-  ctx.fillRect(b1X + b1W - 48, b1Y + 70, 2, 2);
-
-  // 5. 3D Mansard Blue Slate Roof with Tile Shingle Texture
-  // Under-Roof Deep Shadow Rafters
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(b1X - 2, b1Y + 34, b1W + 4, 6);
-
-  // Mansard Roof Trapezoid Body
-  ctx.fillStyle = "#1e3a8a";
-  ctx.beginPath();
-  ctx.moveTo(b1X - 4, b1Y + 36);
-  ctx.lineTo(b1X + 24, b1Y - 2);
-  ctx.lineTo(b1X + b1W - 24, b1Y - 2);
-  ctx.lineTo(b1X + b1W + 4, b1Y + 36);
-  ctx.closePath();
-  ctx.fill();
-
-  // 3D Roof Shadow (Right Flank Depth)
-  const roofGrad = ctx.createLinearGradient(b1X, b1Y, b1X + b1W, b1Y);
-  roofGrad.addColorStop(0, "rgba(255, 255, 255, 0.15)");
-  roofGrad.addColorStop(0.6, "rgba(0, 0, 0, 0)");
-  roofGrad.addColorStop(1, "rgba(15, 23, 42, 0.4)");
-  ctx.fillStyle = roofGrad;
-  ctx.beginPath();
-  ctx.moveTo(b1X - 4, b1Y + 36);
-  ctx.lineTo(b1X + 24, b1Y - 2);
-  ctx.lineTo(b1X + b1W - 24, b1Y - 2);
-  ctx.lineTo(b1X + b1W + 4, b1Y + 36);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.strokeStyle = "#0f172a";
-  ctx.lineWidth = 2.5;
-  ctx.stroke();
-
-  // Slate Shingle Horizontal Courses & Specular Lines
-  ctx.strokeStyle = "rgba(147, 197, 253, 0.4)";
-  ctx.lineWidth = 1.5;
-  for (let ry = b1Y + 6; ry < b1Y + 36; ry += 5.5) {
-    const inset = ((b1Y + 36 - ry) / 38) * 28;
-    ctx.beginPath();
-    ctx.moveTo(b1X - 2 + inset, ry);
-    ctx.lineTo(b1X + b1W + 2 - inset, ry);
-    ctx.stroke();
-    // Individual Slate Vertical Joints
-    ctx.fillStyle = "#0f172a";
-    for (let jx = b1X + inset + 8; jx < b1X + b1W - inset - 8; jx += 10) {
-      ctx.fillRect(jx, ry - 3, 1, 4);
-    }
-  }
-
-  // Gilded Roof Cresting & Acroterion Finials
-  ctx.fillStyle = "#fbbf24";
-  ctx.fillRect(b1X + 24, b1Y - 4, b1W - 48, 3);
-  ctx.fillRect(b1X + 22, b1Y - 7, 4, 7);
-  ctx.fillRect(b1X + b1W - 26, b1Y - 7, 4, 7);
-
-  // Center Attic Dormer Gable Window
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(b1X + b1W / 2 - 15, b1Y + 6, 30, 22);
-  ctx.fillStyle = "#1e3a8a";
-  ctx.beginPath();
-  ctx.moveTo(b1X + b1W / 2 - 17, b1Y + 10);
-  ctx.lineTo(b1X + b1W / 2, b1Y - 1);
-  ctx.lineTo(b1X + b1W / 2 + 17, b1Y + 10);
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = "#fbbf24";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  // Dormer Glowing Stained Window
-  ctx.fillStyle = "#fef08a";
-  ctx.fillRect(b1X + b1W / 2 - 9, b1Y + 12, 18, 14);
-  ctx.strokeStyle = "#451a03";
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(b1X + b1W / 2 - 9, b1Y + 12, 18, 14);
-
-  // Brick Chimney with Masonry Quoins & Rising Smoke
-  ctx.fillStyle = "#450a0a";
-  ctx.fillRect(b1X + b1W - 34, b1Y - 18, 18, 28);
-  ctx.fillStyle = "#991b1b";
-  ctx.fillRect(b1X + b1W - 32, b1Y - 16, 14, 26);
-  ctx.fillStyle = "#78350f"; // Chimney Cap
-  ctx.fillRect(b1X + b1W - 36, b1Y - 20, 22, 4);
-
-  const smokeT = (time * 0.003) % 4;
-  ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-  ctx.beginPath();
-  ctx.arc(b1X + b1W - 25, b1Y - 24 - smokeT * 8, 4 + smokeT * 1.5, 0, Math.PI * 2);
-  ctx.arc(b1X + b1W - 20 + Math.sin(time * 0.004) * 4, b1Y - 34 - smokeT * 8, 6 + smokeT, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Multi-Pane Stained-Glass Bay Windows (Warm Candlelit Interior)
-  const drawGuildBayWindow = (wx: number, wy: number) => {
-    // 3D Stone Sill & Ledge
-    ctx.fillStyle = "#1e293b";
-    ctx.fillRect(wx - 2, wy + 26, 30, 5);
-    ctx.fillStyle = "#475569";
-    ctx.fillRect(wx - 1, wy + 26, 28, 2);
-
-    // Window Frame & Stucco Arch
-    ctx.fillStyle = "#451a03";
-    ctx.fillRect(wx, wy, 26, 26);
-
-    // Warm Interior Golden Glass
-    const candlePulse = Math.sin(time * 0.006 + wx) * 0.15;
-    ctx.fillStyle = `rgba(254, 240, 138, ${0.85 + candlePulse})`;
-    ctx.fillRect(wx + 2, wy + 2, 22, 22);
-
-    // Iron Window Mullions (Grid)
-    ctx.strokeStyle = "#451a03";
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(wx + 2, wy + 2, 22, 22);
-    ctx.beginPath();
-    ctx.moveTo(wx + 13, wy + 2);
-    ctx.lineTo(wx + 13, wy + 24);
-    ctx.moveTo(wx + 2, wy + 13);
-    ctx.lineTo(wx + 24, wy + 13);
-    ctx.stroke();
-
-    // Window Planter Box with Blooming Flowers
-    ctx.fillStyle = "#78350f";
-    ctx.fillRect(wx, wy + 22, 26, 5);
-    ctx.fillStyle = "#15803d";
-    ctx.fillRect(wx + 2, wy + 19, 22, 4);
-    ctx.fillStyle = "#ef4444";
-    ctx.fillRect(wx + 4, wy + 18, 3, 3);
-    ctx.fillRect(wx + 12, wy + 18, 3, 3);
-    ctx.fillRect(wx + 19, wy + 18, 3, 3);
-  };
-
-  drawGuildBayWindow(b1X + 16, b1Y + 44);
-  drawGuildBayWindow(b1X + b1W - 42, b1Y + 44);
-
-  // Grand Portico & Carved Oak Double Entrance Doors
-  const dX = b1X + b1W / 2 - 20;
-  const dY = b1Y + b1H - 46;
-
-  // Arched Stone Portico Frame
-  ctx.fillStyle = "#1e293b";
-  ctx.fillRect(dX - 4, dY - 4, 48, 46);
-  ctx.fillStyle = "#475569";
-  ctx.fillRect(dX - 2, dY - 2, 44, 44);
-  ctx.fillStyle = "#fbbf24"; // Keystone
-  ctx.fillRect(dX + 18, dY - 5, 4, 5);
-
-  // Double Oak Door Body
-  ctx.fillStyle = "#451a03";
-  ctx.fillRect(dX, dY, 40, 42);
-  ctx.fillStyle = "#78350f";
-  ctx.fillRect(dX + 2, dY + 2, 17, 38);
-  ctx.fillRect(dX + 21, dY + 2, 17, 38);
-
-  // Door Iron Strap Hinges & Brass Knockers
-  ctx.fillStyle = "#1e293b";
-  ctx.fillRect(dX + 2, dY + 10, 8, 2);
-  ctx.fillRect(dX + 2, dY + 28, 8, 2);
-  ctx.fillRect(dX + 30, dY + 10, 8, 2);
-  ctx.fillRect(dX + 30, dY + 28, 8, 2);
-
-  ctx.fillStyle = "#facc15"; // Brass Knockers
-  ctx.fillRect(dX + 13, dY + 20, 3, 4);
-  ctx.fillRect(dX + 24, dY + 20, 3, 4);
-
-  // Hanging Wrought Iron Guild Signboard
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(dX - 28, b1Y + 24, 96, 16);
-  ctx.strokeStyle = "#fbbf24";
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(dX - 28, b1Y + 24, 96, 16);
-  ctx.fillStyle = "#38bdf8";
-  ctx.font = "bold 8px monospace";
-  ctx.textAlign = "center";
-  ctx.fillText("PROJECTS GUILD", b1X + b1W / 2, b1Y + 35);
-
-  // =========================================================================
-  // --- 2. AZRA'S AI ARCANE SANCTUARY (NE: 140x125 at x:560, y:45) ---
-  // =========================================================================
-  const b2X = 560;
-  const b2Y = 45;
-  const b2W = 140;
-  const b2H = 125;
-
-  // 1. 3D Volumetric Drop Shadow
-  ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
-  ctx.beginPath();
-  ctx.ellipse(b2X + b2W / 2 + 6, b2Y + b2H + 2, b2W / 2 + 12, 18, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // 2. Stepped Obsidian & Titanium Cyber Platform (Multi-Tiered Ziggurat Foundation)
-  ctx.fillStyle = "#020617";
-  ctx.fillRect(b2X + 2, b2Y + b2H - 20, b2W - 4, 20);
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(b2X + 4, b2Y + b2H - 17, b2W - 8, 17);
-  ctx.fillStyle = "#1e293b";
-  ctx.fillRect(b2X + 6, b2Y + b2H - 14, b2W - 12, 14);
-  ctx.fillStyle = "#334155";
-  ctx.fillRect(b2X + 8, b2Y + b2H - 14, b2W - 16, 2.5);
-
-  // Laser-Etched Sapphire Fiber-Optic Circuit Traces
-  ctx.strokeStyle = "#0ea5e9";
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(b2X + 14, b2Y + b2H - 8);
-  ctx.lineTo(b2X + b2W / 2 - 24, b2Y + b2H - 8);
-  ctx.lineTo(b2X + b2W / 2 - 12, b2Y + b2H - 2);
-  ctx.moveTo(b2X + b2W - 14, b2Y + b2H - 8);
-  ctx.lineTo(b2X + b2W / 2 + 24, b2Y + b2H - 8);
-  ctx.lineTo(b2X + b2W / 2 + 12, b2Y + b2H - 2);
-  ctx.stroke();
-
-  // Corner Power Capacitor Nodes (Blinking Blue/Cyan)
-  const capBlink = Math.sin(time * 0.008) > 0;
-  ctx.fillStyle = capBlink ? "#38bdf8" : "#0284c7";
-  ctx.fillRect(b2X + 8, b2Y + b2H - 11, 4, 4);
-  ctx.fillRect(b2X + b2W - 12, b2Y + b2H - 11, 4, 4);
-
-  // 3. Cyber Sanctum Hull (Brushed Dark Titanium with Hex Nano-Mesh)
-  ctx.fillStyle = "#090d16";
-  ctx.fillRect(b2X + 8, b2Y + 44, b2W - 16, b2H - 60);
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(b2X + 10, b2Y + 46, b2W - 20, b2H - 64);
-  ctx.strokeStyle = "#0284c7";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(b2X + 8, b2Y + 44, b2W - 16, b2H - 60);
-
-  // Hexagonal Nano-Mesh Hull Texture
-  ctx.strokeStyle = "rgba(56, 189, 248, 0.18)";
-  ctx.lineWidth = 1;
-  for (let hxY = b2Y + 50; hxY < b2Y + b2H - 20; hxY += 8) {
-    ctx.beginPath();
-    ctx.moveTo(b2X + 12, hxY);
-    ctx.lineTo(b2X + b2W - 12, hxY);
-    ctx.stroke();
-  }
-
-  // 4. Vertical High-Voltage Plasma Conduits with Animated Data Stream
-  const dataFlow = (time * 0.02) % 32;
-  ctx.fillStyle = "#022c22";
-  ctx.fillRect(b2X + 16, b2Y + 46, 8, b2H - 64);
-  ctx.fillRect(b2X + b2W - 24, b2Y + 46, 8, b2H - 64);
-  ctx.strokeStyle = "#0ea5e9";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(b2X + 16, b2Y + 46, 8, b2H - 64);
-  ctx.strokeRect(b2X + b2W - 24, b2Y + 46, 8, b2H - 64);
-
-  // Streaming Data Pulse Packets
-  ctx.fillStyle = "#38bdf8";
-  ctx.fillRect(b2X + 17, b2Y + 48 + dataFlow, 6, 7);
-  ctx.fillRect(b2X + b2W - 23, b2Y + 48 + ((dataFlow + 16) % 32), 6, 7);
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(b2X + 19, b2Y + 50 + dataFlow, 2, 3);
-  ctx.fillRect(b2X + b2W - 21, b2Y + 50 + ((dataFlow + 16) % 32), 2, 3);
-
-  // 5. 3D Geodesic Glass & Crystal Observatory Dome
-  const domePulse = Math.sin(time * 0.005) * 4;
-  const domeGlow = ctx.createRadialGradient(
-    b2X + b2W / 2,
-    b2Y + 44,
-    10,
-    b2X + b2W / 2,
-    b2Y + 44,
-    b2W / 2 - 10
-  );
-  domeGlow.addColorStop(0, "rgba(56, 189, 248, 0.45)");
-  domeGlow.addColorStop(0.7, "rgba(14, 165, 233, 0.25)");
-  domeGlow.addColorStop(1, "rgba(2, 6, 23, 0.9)");
-
-  ctx.fillStyle = domeGlow;
-  ctx.beginPath();
-  ctx.arc(b2X + b2W / 2, b2Y + 46, b2W / 2 - 14, Math.PI, 0);
-  ctx.fill();
-  ctx.strokeStyle = "#38bdf8";
-  ctx.lineWidth = 2.5;
-  ctx.stroke();
-
-  // Geodesic Faceted Rib Network (Triangular Crystal Web)
-  ctx.strokeStyle = "rgba(186, 230, 253, 0.65)";
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.arc(b2X + b2W / 2, b2Y + 46, b2W / 2 - 28, Math.PI, 0);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.moveTo(b2X + b2W / 2, b2Y - 10);
-  ctx.lineTo(b2X + b2W / 2, b2Y + 46);
-  ctx.moveTo(b2X + b2W / 2 - 42, b2Y + 46);
-  ctx.lineTo(b2X + b2W / 2 - 20, b2Y + 16);
-  ctx.lineTo(b2X + b2W / 2, b2Y - 10);
-  ctx.lineTo(b2X + b2W / 2 + 20, b2Y + 16);
-  ctx.lineTo(b2X + b2W / 2 + 42, b2Y + 46);
-  ctx.moveTo(b2X + b2W / 2 - 34, b2Y + 28);
-  ctx.lineTo(b2X + b2W / 2 + 34, b2Y + 28);
-  ctx.stroke();
-
-  // 6. Floating Gemini AI Core Matrix (Central Radiant Orb & Gyroscopic Rings)
-  const coreGrad = ctx.createRadialGradient(
-    b2X + b2W / 2,
-    b2Y + 24 + domePulse,
-    2,
-    b2X + b2W / 2,
-    b2Y + 24 + domePulse,
-    28
-  );
-  coreGrad.addColorStop(0, "#ffffff");
-  coreGrad.addColorStop(0.3, "#67e8f9");
-  coreGrad.addColorStop(0.6, "#0284c7");
-  coreGrad.addColorStop(1, "rgba(56, 189, 248, 0)");
-  ctx.fillStyle = coreGrad;
-  ctx.beginPath();
-  ctx.arc(b2X + b2W / 2, b2Y + 24 + domePulse, 28, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Counter-Rotating Gyroscopic Energy Rings
-  const ringRot1 = time * 0.003;
-  const ringRot2 = -time * 0.004;
-  ctx.strokeStyle = "#a5f3fc";
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.ellipse(b2X + b2W / 2, b2Y + 24 + domePulse, 18, 7, ringRot1, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.strokeStyle = "#38bdf8";
-  ctx.beginPath();
-  ctx.ellipse(b2X + b2W / 2, b2Y + 24 + domePulse, 18, 7, ringRot2, 0, Math.PI * 2);
-  ctx.stroke();
-
-  // Orbiting Magic Sparkle Glyph Runes
-  const runeAngle = time * 0.004;
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(b2X + b2W / 2 + Math.cos(runeAngle) * 22 - 1, b2Y + 24 + domePulse + Math.sin(runeAngle) * 10 - 1, 3, 3);
-  ctx.fillRect(b2X + b2W / 2 - Math.cos(runeAngle) * 22 - 1, b2Y + 24 + domePulse - Math.sin(runeAngle) * 10 - 1, 3, 3);
-
-  // 7. Twin Flanking Crystal Spire Pylons (Floating Anti-Gravity Levitation)
-  const drawPylon = (px: number) => {
-    ctx.fillStyle = "#020617";
-    ctx.fillRect(px, b2Y + 14, 14, 32);
-    ctx.fillStyle = "#0f172a";
-    ctx.fillRect(px + 2, b2Y + 16, 10, 28);
-    ctx.strokeStyle = "#38bdf8";
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(px, b2Y + 14, 14, 32);
-
-    const ringFloat = Math.sin(time * 0.006 + px) * 3;
-    ctx.strokeStyle = "#67e8f9";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.ellipse(px + 7, b2Y + 10 + ringFloat, 10, 3.5, 0, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.fillStyle = "#38bdf8";
-    ctx.beginPath();
-    ctx.moveTo(px + 7, b2Y - 2 + ringFloat);
-    ctx.lineTo(px + 14, b2Y + 10 + ringFloat);
-    ctx.lineTo(px, b2Y + 10 + ringFloat);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(px + 5, b2Y + 2 + ringFloat, 3, 5);
-  };
-  drawPylon(b2X + 4);
-  drawPylon(b2X + b2W - 18);
-
-  // 8. Hexagonal Holographic Energy Portal Door
-  const hx = b2X + b2W / 2;
-  const hy = b2Y + b2H - 26;
-  ctx.fillStyle = "#020617";
-  ctx.fillRect(hx - 24, hy - 22, 48, 44);
-  ctx.strokeStyle = "#38bdf8";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(hx - 24, hy - 22, 48, 44);
-
-  ctx.fillStyle = "rgba(14, 165, 233, 0.4)";
-  ctx.fillRect(hx - 20, hy - 18, 40, 40);
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.75)";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(hx - 20, hy - 2);
-  ctx.lineTo(hx + 20, hy - 2);
-  ctx.moveTo(hx - 20, hy + 12);
-  ctx.lineTo(hx + 20, hy + 12);
-  ctx.stroke();
-
-  // Portal Matrix Binary Code Streams
-  const matrixShift = Math.floor(time * 0.005);
-  ctx.fillStyle = "#bae6fd";
-  ctx.font = "bold 5px monospace";
-  ctx.textAlign = "center";
-  ctx.fillText((matrixShift % 2 === 0 ? "0101" : "1010"), hx, hy + 4);
-  ctx.fillText((matrixShift % 3 === 0 ? "AI//AZRA" : "GEMINI"), hx, hy + 18);
-
-  // 9. Floating Luminous Cyber Signboard
-  ctx.fillStyle = "#020617";
-  ctx.fillRect(hx - 48, b2Y + 54, 96, 16);
-  ctx.strokeStyle = "#38bdf8";
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(hx - 48, b2Y + 54, 96, 16);
-  ctx.fillStyle = "#38bdf8";
-  ctx.font = "bold 8px monospace";
-  ctx.textAlign = "center";
-  ctx.fillText("AZRA AI SANCTUARY", hx, b2Y + 65);
-
-  // =========================================================================
-  // --- 3. DEVOPS & TELEMETRY POWER STATION (Mid-West: 140x110 at x:60, y:260) ---
-  // =========================================================================
-  const b3X = 60;
-  const b3Y = 260;
-  const b3W = 140;
-  const b3H = 110;
-
-  // 1. 3D Volumetric Drop Shadow
-  ctx.fillStyle = "rgba(0, 0, 0, 0.42)";
-  ctx.beginPath();
-  ctx.ellipse(b3X + b3W / 2 + 6, b3Y + b3H + 2, b3W / 2 + 10, 15, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // 2. Heavy Concrete Base with Hazard Safety Stripes
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(b3X + 2, b3Y + b3H - 18, b3W - 4, 18);
-  ctx.fillStyle = "#1e293b";
-  ctx.fillRect(b3X + 4, b3Y + b3H - 16, b3W - 8, 16);
-  ctx.fillStyle = "#334155";
-  ctx.fillRect(b3X + 6, b3Y + b3H - 14, b3W - 12, 12);
-  // Diagonal Yellow/Black Hazard Stripes
-  for (let hz = b3X + 8; hz < b3X + b3W - 16; hz += 14) {
-    ctx.fillStyle = "#fbbf24";
-    ctx.beginPath();
-    ctx.moveTo(hz, b3Y + b3H - 14);
-    ctx.lineTo(hz + 6, b3Y + b3H - 14);
-    ctx.lineTo(hz + 2, b3Y + b3H - 2);
-    ctx.lineTo(hz - 4, b3Y + b3H - 2);
-    ctx.closePath();
-    ctx.fill();
-  }
-
-  // 3. Corrugated Metal Siding (Emerald Industrial Steel) with 3D Depth
-  ctx.fillStyle = "#064e3b";
-  ctx.fillRect(b3X + 8, b3Y + 36, b3W - 16, b3H - 50);
-
-  // 3D Siding Shadow (Right side depth gradient)
-  const b3Shade = ctx.createLinearGradient(b3X + 8, b3Y, b3X + b3W - 8, b3Y);
-  b3Shade.addColorStop(0, "rgba(255, 255, 255, 0.1)");
-  b3Shade.addColorStop(0.6, "rgba(0, 0, 0, 0)");
-  b3Shade.addColorStop(1, "rgba(2, 44, 34, 0.45)");
-  ctx.fillStyle = b3Shade;
-  ctx.fillRect(b3X + 8, b3Y + 36, b3W - 16, b3H - 50);
-
-  ctx.strokeStyle = "#059669";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(b3X + 8, b3Y + 36, b3W - 16, b3H - 50);
-
-  // Vertical Corrugation Ribs & Rivets
-  ctx.strokeStyle = "rgba(52, 211, 153, 0.35)";
-  ctx.lineWidth = 1;
-  for (let cxRib = b3X + 16; cxRib < b3X + b3W - 16; cxRib += 8) {
-    ctx.beginPath();
-    ctx.moveTo(cxRib, b3Y + 38);
-    ctx.lineTo(cxRib, b3Y + b3H - 16);
-    ctx.stroke();
-    // Rivet Dots
-    ctx.fillStyle = "#94a3b8";
-    ctx.fillRect(cxRib - 1, b3Y + 40, 2, 2);
-    ctx.fillRect(cxRib - 1, b3Y + b3H - 20, 2, 2);
-  }
-
-  // 4. Corrugated Roof & Upper Mechanical Deck
-  ctx.fillStyle = "#111827";
-  ctx.fillRect(b3X, b3Y + 12, b3W, 26);
-  ctx.fillStyle = "#10b981";
-  ctx.fillRect(b3X + 12, b3Y + 16, b3W - 24, 8);
-  ctx.strokeStyle = "#065f46";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(b3X, b3Y + 12, b3W, 26);
-
-  // Dual Rooftop Exhaust Turbine Fans (Animated Spinning Blades!)
-  const fanAngle = time * 0.015;
-  const drawTurbineFan = (fx: number) => {
-    ctx.fillStyle = "#1e293b";
-    ctx.beginPath();
-    ctx.ellipse(fx, b3Y + 10, 11, 6, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "#64748b";
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
-    // Spinning Blades
-    ctx.strokeStyle = "#34d399";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(fx + Math.cos(fanAngle) * 8, b3Y + 10 + Math.sin(fanAngle) * 4);
-    ctx.lineTo(fx - Math.cos(fanAngle) * 8, b3Y + 10 - Math.sin(fanAngle) * 4);
-    ctx.moveTo(fx + Math.cos(fanAngle + Math.PI / 2) * 8, b3Y + 10 + Math.sin(fanAngle + Math.PI / 2) * 4);
-    ctx.lineTo(fx - Math.cos(fanAngle + Math.PI / 2) * 8, b3Y + 10 - Math.sin(fanAngle + Math.PI / 2) * 4);
-    ctx.stroke();
-
-    // Rising Steam Vapor
-    const steamPulse = (time * 0.004 + fx) % 3;
-    ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
-    ctx.beginPath();
-    ctx.arc(fx, b3Y - 4 - steamPulse * 6, 3 + steamPulse * 1.2, 0, Math.PI * 2);
-    ctx.fill();
-  };
-  drawTurbineFan(b3X + 38);
-  drawTurbineFan(b3X + b3W - 38);
-
-  // Radio Telemetry Lattice Mast & Blinking Beacon
-  ctx.fillStyle = "#94a3b8";
-  ctx.fillRect(b3X + b3W / 2 - 2, b3Y - 20, 4, 34);
-  ctx.strokeStyle = "#64748b";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(b3X + b3W / 2 - 8, b3Y - 14);
-  ctx.lineTo(b3X + b3W / 2 + 8, b3Y + 12);
-  ctx.moveTo(b3X + b3W / 2 + 8, b3Y - 14);
-  ctx.lineTo(b3X + b3W / 2 - 8, b3Y + 12);
-  ctx.stroke();
-
-  const beaconBlink = Math.sin(time * 0.008) > 0;
-  ctx.fillStyle = beaconBlink ? "#34d399" : "#065f46";
-  ctx.beginPath();
-  ctx.arc(b3X + b3W / 2, b3Y - 22, 5, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#ffffff";
-  if (beaconBlink) ctx.fillRect(b3X + b3W / 2 - 1, b3Y - 23, 2, 2);
-
-  // Live Telemetry Server Room Windows (Blinking Activity Lights)
-  const drawServerWindow = (wx: number, wy: number) => {
-    ctx.fillStyle = "#022c22";
-    ctx.fillRect(wx, wy, 28, 26);
-    ctx.strokeStyle = "#10b981";
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(wx, wy, 28, 26);
-
-    const ledTick = Math.floor(time * 0.005);
-    ctx.fillStyle = (ledTick + wx) % 2 === 0 ? "#34d399" : "#065f46";
-    ctx.fillRect(wx + 4, wy + 5, 20, 3);
-    ctx.fillStyle = (ledTick + wx) % 3 === 0 ? "#38bdf8" : "#0369a1";
-    ctx.fillRect(wx + 4, wy + 11, 16, 3);
-    ctx.fillStyle = (ledTick + wx) % 2 === 1 ? "#fbbf24" : "#b45309";
-    ctx.fillRect(wx + 4, wy + 17, 18, 3);
-  };
-  drawServerWindow(b3X + 16, b3Y + 48);
-  drawServerWindow(b3X + b3W - 44, b3Y + 48);
-
-  // Heavy Vault Blast Door
-  const sdX = b3X + b3W / 2 - 20;
-  const sdY = b3Y + b3H - 46;
-  ctx.fillStyle = "#1e293b";
-  ctx.fillRect(sdX - 2, sdY - 2, 44, 44);
-  ctx.fillStyle = "#334155";
-  ctx.fillRect(sdX, sdY, 40, 42);
-  ctx.strokeStyle = "#10b981";
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(sdX, sdY, 40, 42);
-
-  ctx.fillStyle = "#64748b";
-  ctx.fillRect(sdX + 4, sdY + 6, 32, 4);
-  ctx.fillRect(sdX + 4, sdY + 30, 32, 4);
-  ctx.fillStyle = "#34d399";
-  ctx.fillRect(sdX + 28, sdY + 16, 6, 8);
-
-  // Stenciled Facility Sign
-  ctx.fillStyle = "#111827";
-  ctx.fillRect(b3X + b3W / 2 - 42, b3Y + 28, 84, 15);
-  ctx.strokeStyle = "#10b981";
-  ctx.strokeRect(b3X + b3W / 2 - 42, b3Y + 28, 84, 15);
-  ctx.fillStyle = "#34d399";
-  ctx.font = "bold 8px monospace";
-  ctx.textAlign = "center";
-  ctx.fillText("DEVOPS 24/7 PLANT", b3X + b3W / 2, b3Y + 39);
-
-  // =========================================================================
-  // --- 4. ACADEMY OF ENVERGA DOJO (SW: 140x110 at x:60, y:560) ---
-  // =========================================================================
-  const b4X = 60;
-  const b4Y = 560;
-  const b4W = 140;
-  const b4H = 110;
-
-  // 1. 3D Volumetric Drop Shadow
-  ctx.fillStyle = "rgba(0, 0, 0, 0.42)";
-  ctx.beginPath();
-  ctx.ellipse(b4X + b4W / 2 + 6, b4Y + b4H + 2, b4W / 2 + 10, 15, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // 2. Stepped Ashlar Granite Plinth Foundation
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(b4X + 2, b4Y + b4H - 18, b4W - 4, 18);
-  ctx.fillStyle = "#1e293b";
-  ctx.fillRect(b4X + 4, b4Y + b4H - 16, b4W - 8, 16);
-  ctx.fillStyle = "#334155";
-  ctx.fillRect(b4X + 6, b4Y + b4H - 13, b4W - 12, 11);
-  ctx.fillStyle = "#64748b";
-  ctx.fillRect(b4X + 6, b4Y + b4H - 13, b4W - 12, 2.5);
-
-  // Carved Stone Relief Joints
-  ctx.fillStyle = "#475569";
-  for (let sx = b4X + 16; sx < b4X + b4W - 16; sx += 18) {
-    ctx.fillRect(sx, b4Y + b4H - 10, 1, 8);
-  }
-
-  // 3. Lacquered Crimson Wood Walls with Structural Timber Studs & 3D Shading
-  ctx.fillStyle = "#5c0e0e";
-  ctx.fillRect(b4X + 10, b4Y + 36, b4W - 20, b4H - 50);
-  ctx.fillStyle = "#7f1d1d";
-  ctx.fillRect(b4X + 12, b4Y + 38, b4W - 24, b4H - 52);
-
-  // 3D Wall Shading (Right flank depth)
-  const b4Shade = ctx.createLinearGradient(b4X + 12, b4Y, b4X + b4W - 12, b4Y);
-  b4Shade.addColorStop(0, "rgba(255, 255, 255, 0.12)");
-  b4Shade.addColorStop(0.6, "rgba(0, 0, 0, 0)");
-  b4Shade.addColorStop(1, "rgba(38, 6, 6, 0.4)");
-  ctx.fillStyle = b4Shade;
-  ctx.fillRect(b4X + 12, b4Y + 38, b4W - 24, b4H - 52);
-
-  // Wood Battens & Grain Texture
-  ctx.strokeStyle = "rgba(220, 38, 38, 0.3)";
-  ctx.lineWidth = 1;
-  for (let bx = b4X + 18; bx < b4X + b4W - 18; bx += 8) {
-    ctx.beginPath();
-    ctx.moveTo(bx, b4Y + 40);
-    ctx.lineTo(bx, b4Y + b4H - 16);
-    ctx.stroke();
-  }
-
-  // 4. Vermilion Structural Pillars with Gold Dougong Bracket Capitals
-  const drawDojoPillar = (px: number) => {
-    ctx.fillStyle = "#450a0a";
-    ctx.fillRect(px, b4Y + 34, 9, b4H - 46);
-    ctx.fillStyle = "#dc2626";
-    ctx.fillRect(px + 1, b4Y + 34, 7, b4H - 46);
-    ctx.fillStyle = "#ef4444";
-    ctx.fillRect(px + 2, b4Y + 36, 2, b4H - 50); // Pillar highlight
-
-    // Multi-Tiered Gold Dougong Bracket Capital (Tokyō)
-    ctx.fillStyle = "#fbbf24";
-    ctx.fillRect(px - 3, b4Y + 34, 15, 3);
-    ctx.fillRect(px - 1, b4Y + 37, 11, 3);
-    // Base Plinth Fitting
-    ctx.fillStyle = "#f59e0b";
-    ctx.fillRect(px - 2, b4Y + b4H - 16, 13, 4);
-  };
-  drawDojoPillar(b4X + 12);
-  drawDojoPillar(b4X + 44);
-  drawDojoPillar(b4X + b4W - 53);
-  drawDojoPillar(b4X + b4W - 21);
-
-  // 5. Traditional 3D Curved Pagoda Clay Tile Roof (Irimoya-zukuri Style)
-  ctx.fillStyle = "#260606"; // Under-eave deep shadow
-  ctx.fillRect(b4X - 2, b4Y + 36, b4W + 4, 5);
-
-  // Curved Pagoda Roof Slope
-  ctx.fillStyle = "#7f1d1d";
-  ctx.beginPath();
-  ctx.moveTo(b4X - 6, b4Y + 38);
-  ctx.quadraticCurveTo(b4X + 18, b4Y + 30, b4X + 26, b4Y + 2);
-  ctx.lineTo(b4X + b4W - 26, b4Y + 2);
-  ctx.quadraticCurveTo(b4X + b4W - 18, b4Y + 30, b4X + b4W + 6, b4Y + 38);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.strokeStyle = "#f59e0b"; // Gold Eave Trim
-  ctx.lineWidth = 2.5;
-  ctx.stroke();
-
-  // Overlapping Terracotta Kawara Roof Tile Texture Lines
-  for (let ry = b4Y + 6; ry < b4Y + 36; ry += 5) {
-    const rProgress = (b4Y + 38 - ry) / 32;
-    const rxInset = rProgress * 26;
-    ctx.strokeStyle = ry % 10 === 0 ? "#b91c1c" : "#991b1b";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(b4X - 4 + rxInset, ry);
-    ctx.lineTo(b4X + b4W + 4 - rxInset, ry);
-    ctx.stroke();
-
-    // Circular Eave Kawara Tile Ends (Tomoe Tiles)
-    ctx.fillStyle = "#f59e0b";
-    for (let tx = b4X - 2 + rxInset; tx < b4X + b4W + 2 - rxInset; tx += 9) {
-      ctx.fillRect(tx, ry - 1, 2, 2);
-    }
-  }
-
-  // Upturned Eaves with Shachihoko Gold Finials & Hanging Wind Bells (Fūrin)
-  ctx.fillStyle = "#fbbf24";
-  ctx.fillRect(b4X - 8, b4Y + 34, 8, 5);
-  ctx.fillRect(b4X + b4W, b4Y + 34, 8, 5);
-  ctx.fillRect(b4X + 24, b4Y - 2, b4W - 48, 4); // Roof Ridge
-  ctx.fillRect(b4X + b4W / 2 - 8, b4Y - 8, 16, 8); // Center Crest Spire
-
-  // Hanging Bronze Wind Bells (Fūrin)
-  const bellSway = Math.sin(time * 0.005) * 2;
-  const drawFurin = (bx: number, by: number) => {
-    ctx.strokeStyle = "#d97706";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(bx, by);
-    ctx.lineTo(bx + bellSway, by + 6);
-    ctx.stroke();
-    ctx.fillStyle = "#fbbf24";
-    ctx.beginPath();
-    ctx.arc(bx + bellSway, by + 7, 2.5, 0, Math.PI * 2);
-    ctx.fill();
-  };
-  drawFurin(b4X - 6, b4Y + 39);
-  drawFurin(b4X + b4W + 6, b4Y + 39);
-
-  // 6. Authentic Shoji Sliding Screens (Washi Paper with Kumiko Geometric Lattice)
-  const shX = b4X + b4W / 2 - 24;
-  const shY = b4Y + b4H - 46;
-  ctx.fillStyle = "#450a0a";
-  ctx.fillRect(shX - 2, shY - 2, 52, 46);
-
-  ctx.fillStyle = "#fef3c7";
-  ctx.fillRect(shX, shY, 23, 42);
-  ctx.fillRect(shX + 25, shY, 23, 42);
-
-  // Kumiko Wood Lattice Grid
-  ctx.strokeStyle = "#78350f";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(shX, shY, 23, 42);
-  ctx.strokeRect(shX + 25, shY, 23, 42);
-  for (let gy = shY + 7; gy < shY + 42; gy += 7) {
-    ctx.beginPath();
-    ctx.moveTo(shX, gy);
-    ctx.lineTo(shX + 23, gy);
-    ctx.moveTo(shX + 25, gy);
-    ctx.lineTo(shX + 48, gy);
-    ctx.stroke();
-  }
-  for (let gx = shX + 7; gx < shX + 23; gx += 7) {
-    ctx.beginPath();
-    ctx.moveTo(gx, shY);
-    ctx.lineTo(gx, shY + 42);
-    ctx.moveTo(gx + 25, shY);
-    ctx.lineTo(gx + 25, shY + 42);
-    ctx.stroke();
-  }
-
-  // 7. Flanking Stone Honor Lanterns (Tōrō) with Flickering Candlelight
-  const drawToro = (lx: number) => {
-    ctx.fillStyle = "#0f172a";
-    ctx.fillRect(lx - 1, b4Y + b4H - 10, 12, 10);
-    ctx.fillStyle = "#334155";
-    ctx.fillRect(lx, b4Y + b4H - 26, 10, 18);
-    ctx.fillStyle = "#475569";
-    ctx.fillRect(lx - 2, b4Y + b4H - 28, 14, 4);
-
-    const fireFlicker = Math.sin(time * 0.015 + lx) * 0.5;
-    ctx.fillStyle = "#fef08a";
-    ctx.fillRect(lx + 1, b4Y + b4H - 24, 8, 8);
-    ctx.fillStyle = "#f59e0b";
-    ctx.fillRect(lx + 3 + fireFlicker, b4Y + b4H - 22, 4, 5);
-
-    ctx.fillStyle = "#1e293b";
-    ctx.beginPath();
-    ctx.moveTo(lx - 4, b4Y + b4H - 28);
-    ctx.lineTo(lx + 5, b4Y + b4H - 34);
-    ctx.lineTo(lx + 14, b4Y + b4H - 28);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = "#fbbf24";
-    ctx.fillRect(lx + 4, b4Y + b4H - 36, 2, 3);
-  };
-  drawToro(b4X + 20);
-  drawToro(b4X + b4W - 30);
-
-  // 8. Gold-Framed Academic Honors Tablet Plaque
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(b4X + b4W / 2 - 46, b4Y + 22, 92, 15);
-  ctx.strokeStyle = "#fbbf24";
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(b4X + b4W / 2 - 46, b4Y + 22, 92, 15);
-  ctx.fillStyle = "#fbbf24";
+/**
+ * The Guild interior's two static text labels — the fireplace's guild
+ * plaque and the exit sign above the south door. Both were dropped when
+ * drawProjectsGuildInterior moved into game-interior.ts, because that
+ * module only receives PixelCtx (no fillText/font). Restored here on the
+ * full context, using the same fillText + backing-rect technique the
+ * overworld's NPC nameplates use below (canvas text is fine; it's UI, not
+ * the gradient/curve/alpha art the pixel contract restricts). Positions
+ * match game-interior.ts's hearth (world 300..400, 0..72) and door
+ * (world 310..390, 488..540).
+ */
+function drawGuildInteriorLabels(ctx: CanvasRenderingContext2D): void {
+  // Guild crest plaque, on the chimney breast above the firebox.
+  ctx.fillStyle = PAL.gold;
+  ctx.fillRect(325, 28, 50, 14);
+  ctx.fillStyle = PAL.out;
+  ctx.fillRect(327, 30, 46, 10);
+  ctx.fillStyle = PAL.goldL;
   ctx.font = "bold 7px monospace";
   ctx.textAlign = "center";
-  ctx.fillText("ACADEMY OF ENVERGA", b4X + b4W / 2, b4Y + 33);
+  ctx.fillText("PROJ GUILD", 350, 38);
 
-  // =========================================================================
-  // --- 5. FRANZE'S GAMER COTTAGE & PS5 LOUNGE (SE: 140x110 at x:560, y:535) ---
-  // =========================================================================
-  const b5X = 560;
-  const b5Y = 535;
-  const b5W = 140;
-  const b5H = 110;
-
-  // 1. 3D Volumetric Drop Shadow
-  ctx.fillStyle = "rgba(0, 0, 0, 0.42)";
-  ctx.beginPath();
-  ctx.ellipse(b5X + b5W / 2 + 6, b5Y + b5H + 2, b5W / 2 + 10, 15, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // 2. Stepped Fieldstone & Slate Foundation Plinth
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(b5X + 2, b5Y + b5H - 18, b5W - 4, 18);
-  ctx.fillStyle = "#1e293b";
-  ctx.fillRect(b5X + 4, b5Y + b5H - 16, b5W - 8, 16);
-  ctx.fillStyle = "#334155";
-  ctx.fillRect(b5X + 6, b5Y + b5H - 13, b5W - 12, 11);
-  ctx.fillStyle = "#475569";
-  ctx.fillRect(b5X + 6, b5Y + b5H - 13, b5W - 12, 2.5);
-
-  // Fieldstone Joint Notches
-  ctx.fillStyle = "#64748b";
-  for (let fx = b5X + 16; fx < b5X + b5W - 16; fx += 16) {
-    ctx.fillRect(fx, b5Y + b5H - 10, 8, 4);
-    ctx.fillRect(fx + 8, b5Y + b5H - 6, 7, 4);
-  }
-
-  // 3. Cedar Clapboard & Slate Timber Walls with 3D Depth
-  ctx.fillStyle = "#1e293b";
-  ctx.fillRect(b5X + 8, b5Y + 36, b5W - 16, b5H - 50);
-  ctx.fillStyle = "#334155";
-  ctx.fillRect(b5X + 10, b5Y + 38, b5W - 20, b5H - 52);
-
-  // 3D Wall Shadow Gradient
-  const b5Shade = ctx.createLinearGradient(b5X + 10, b5Y, b5X + b5W - 10, b5Y);
-  b5Shade.addColorStop(0, "rgba(255, 255, 255, 0.1)");
-  b5Shade.addColorStop(0.6, "rgba(0, 0, 0, 0)");
-  b5Shade.addColorStop(1, "rgba(15, 23, 42, 0.35)");
-  ctx.fillStyle = b5Shade;
-  ctx.fillRect(b5X + 10, b5Y + 38, b5W - 20, b5H - 52);
-
-  // Horizontal Cedar Board Siding with Wood Grain Notches
-  ctx.strokeStyle = "rgba(15, 23, 42, 0.8)";
-  ctx.lineWidth = 1;
-  for (let cySiding = b5Y + 44; cySiding < b5Y + b5H - 14; cySiding += 7) {
-    ctx.beginPath();
-    ctx.moveTo(b5X + 10, cySiding);
-    ctx.lineTo(b5X + b5W - 10, cySiding);
-    ctx.stroke();
-    // Wood grain knots
-    ctx.fillStyle = "#1e293b";
-    ctx.fillRect(b5X + 24 + ((cySiding * 7) % 80), cySiding + 2, 3, 1.5);
-  }
-
-  // Heavy Dark Cedar Corner Post Beams
-  ctx.fillStyle = "#451a03";
-  ctx.fillRect(b5X + 8, b5Y + 36, 5, b5H - 50);
-  ctx.fillRect(b5X + b5W - 13, b5Y + 36, 5, b5H - 50);
-
-  // 4. 3D Multi-Pitch Cedar Wood Shake Roof with Overhang
-  ctx.fillStyle = "#260606"; // Under-eave shadow
-  ctx.fillRect(b5X + 2, b5Y + 36, b5W - 4, 6);
-
-  ctx.fillStyle = "#78350f"; // Main Cedar Shake
-  ctx.beginPath();
-  ctx.moveTo(b5X, b5Y + 38);
-  ctx.lineTo(b5X + 24, b5Y);
-  ctx.lineTo(b5X + b5W - 24, b5Y);
-  ctx.lineTo(b5X + b5W, b5Y + 38);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.strokeStyle = "#b45309";
-  ctx.lineWidth = 2.5;
-  ctx.stroke();
-
-  // Roof Shingle Overlap Texture Lines & Individual Shingles
-  for (let sry = b5Y + 6; sry < b5Y + 36; sry += 5) {
-    const sProgress = (b5Y + 38 - sry) / 38;
-    const sInset = sProgress * 24;
-    ctx.strokeStyle = sry % 10 === 0 ? "#92400e" : "rgba(251, 191, 36, 0.35)";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(b5X + sInset, sry);
-    ctx.lineTo(b5X + b5W - sInset, sry);
-    ctx.stroke();
-
-    ctx.fillStyle = "#451a03";
-    for (let shx = b5X + sInset + 6; shx < b5X + b5W - sInset - 6; shx += 7) {
-      ctx.fillRect(shx, sry - 3, 1, 4);
-    }
-  }
-
-  // Center Attic Dormer Gable Window with Stained Glass Glow
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(b5X + b5W / 2 - 14, b5Y + 8, 28, 20);
-  ctx.fillStyle = "#78350f";
-  ctx.beginPath();
-  ctx.moveTo(b5X + b5W / 2 - 16, b5Y + 12);
-  ctx.lineTo(b5X + b5W / 2, b5Y + 2);
-  ctx.lineTo(b5X + b5W / 2 + 16, b5Y + 12);
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = "#fbbf24";
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-  ctx.fillStyle = "#fef08a";
-  ctx.fillRect(b5X + b5W / 2 - 8, b5Y + 14, 16, 12);
-  ctx.strokeStyle = "#451a03";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(b5X + b5W / 2 - 8, b5Y + 14, 16, 12);
-
-  // 5. Fieldstone Chimney with Rising Animated Smoke Puffs
-  ctx.fillStyle = "#1e293b";
-  ctx.fillRect(b5X + b5W - 32, b5Y - 16, 18, 26);
-  ctx.fillStyle = "#475569";
-  ctx.fillRect(b5X + b5W - 30, b5Y - 14, 14, 24);
-  ctx.fillStyle = "#334155";
-  ctx.fillRect(b5X + b5W - 28, b5Y - 10, 5, 4);
-  ctx.fillRect(b5X + b5W - 22, b5Y - 4, 4, 4);
-
-  const cottageSmoke = (time * 0.003 + 1) % 4;
-  ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-  ctx.beginPath();
-  ctx.arc(b5X + b5W - 23, b5Y - 22 - cottageSmoke * 8, 4 + cottageSmoke * 1.5, 0, Math.PI * 2);
-  ctx.arc(b5X + b5W - 18 + Math.sin(time * 0.004) * 4, b5Y - 32 - cottageSmoke * 8, 6 + cottageSmoke, 0, Math.PI * 2);
-  ctx.fill();
-
-  // 6. Grand Panoramic Gamer Bay Window (Live RGB PS5 Setup & TV Screen!)
-  const gx = b5X + 16;
-  const gy = b5Y + 46;
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(gx, gy, 52, 34);
-  ctx.strokeStyle = "#8b5cf6";
+  // Exit sign above the south doorway.
+  ctx.fillStyle = PAL.roofD;
+  ctx.fillRect(295, 466, 110, 16);
+  ctx.strokeStyle = PAL.gold;
   ctx.lineWidth = 2;
-  ctx.strokeRect(gx, gy, 52, 34);
-
-  const rgbHue = (time * 0.05) % 360;
-  ctx.fillStyle = `hsla(${rgbHue}, 85%, 60%, 0.25)`;
-  ctx.fillRect(gx + 2, gy + 2, 48, 30);
-
-  ctx.fillStyle = "#020617";
-  ctx.fillRect(gx + 4, gy + 4, 28, 22);
-  ctx.strokeStyle = "#38bdf8";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(gx + 4, gy + 4, 28, 22);
-
-  const gamePlayerY = gy + 14 + Math.sin(time * 0.01) * 3;
-  ctx.fillStyle = "#22c55e";
-  ctx.fillRect(gx + 6, gy + 20, 24, 4);
-  ctx.fillStyle = "#ef4444";
-  ctx.fillRect(gx + 12, gamePlayerY, 5, 5);
-  ctx.fillStyle = "#facc15";
-  ctx.fillRect(gx + 22, gy + 10, 3, 3);
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(gx + 6, gy + 6, 8, 2);
-
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(gx + 36, gy + 8, 6, 20);
-  ctx.fillStyle = "#0284c7";
-  ctx.fillRect(gx + 38, gy + 9, 2, 18);
-  ctx.fillStyle = "#38bdf8";
-  ctx.fillRect(gx + 39, gy + 10, 1, 16);
-
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(gx + 44, gy + 20, 5, 4);
-  ctx.fillStyle = "#0284c7";
-  ctx.fillRect(gx + 45, gy + 21, 3, 2);
-
-  // 7. Glowing Purple PlayStation Controller Neon Sign
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(b5X + b5W / 2 - 38, b5Y + 12, 76, 18);
-  ctx.strokeStyle = "#a855f7";
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(b5X + b5W / 2 - 38, b5Y + 12, 76, 18);
-  ctx.fillStyle = "#c084fc";
+  ctx.strokeRect(295, 466, 110, 16);
+  ctx.fillStyle = PAL.goldL;
   ctx.font = "bold 8px monospace";
   ctx.textAlign = "center";
-  ctx.fillText("PS5 GAMER LOUNGE", b5X + b5W / 2, b5Y + 24);
+  ctx.fillText("▼ EXIT TO TOWN ▼", 350, 477);
+}
 
-  // 8. Cottage Entrance Door & Cedar Porch Deck
-  const gdx = b5X + b5W - 54;
-  const gdy = b5Y + b5H - 46;
-
-  ctx.fillStyle = "#1e293b";
-  ctx.fillRect(gdx - 2, gdy + 34, 46, 12);
-  ctx.fillStyle = "#78350f";
-  ctx.fillRect(gdx, gdy + 36, 42, 8);
-  ctx.fillStyle = "#b45309";
-  ctx.fillRect(gdx, gdy + 36, 42, 2);
-
-  ctx.fillStyle = "#451a03";
-  ctx.fillRect(gdx + 6, gdy, 30, 36);
-  ctx.fillStyle = "#78350f";
-  ctx.fillRect(gdx + 8, gdy + 2, 26, 32);
-  ctx.fillStyle = "#fbbf24";
-  ctx.fillRect(gdx + 28, gdy + 18, 3, 3);
-
-  ctx.fillStyle = "#1e293b";
-  ctx.fillRect(gdx, gdy + 12, 4, 8);
-  ctx.fillStyle = "#fef08a";
-  ctx.fillRect(gdx - 1, gdy + 14, 6, 6);
-
-  // =========================================================================
-  // --- 6. VILLAGE POST & COURIER LODGE (North Plaza at x:350, y:55, w:130, h:95) ---
-  // =========================================================================
-  const b6X = 350;
-  const b6Y = 55;
-  const b6W = 130;
-  const b6H = 95;
-
-  // 1. 3D Volumetric Drop Shadow
-  ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
-  ctx.beginPath();
-  ctx.ellipse(b6X + b6W / 2 + 5, b6Y + b6H + 2, b6W / 2 + 8, 14, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // 2. Multi-Tone Cobblestone / Basalt Foundation Plinth
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(b6X + 2, b6Y + b6H - 18, b6W - 4, 18);
-  ctx.fillStyle = "#1e293b";
-  ctx.fillRect(b6X + 4, b6Y + b6H - 16, b6W - 8, 14);
-  ctx.fillStyle = "#334155";
-  ctx.fillRect(b6X + 6, b6Y + b6H - 14, b6W - 12, 10);
-  ctx.fillStyle = "#475569";
-  ctx.fillRect(b6X + 6, b6Y + b6H - 14, b6W - 12, 2.5);
-
-  ctx.fillStyle = "#475569";
-  for (let fx = b6X + 12; fx < b6X + b6W - 16; fx += 14) {
-    ctx.fillRect(fx, b6Y + b6H - 11, 10, 4);
-    ctx.fillRect(fx + 6, b6Y + b6H - 6, 8, 4);
-  }
-
-  // 3. Tudor Stucco Plaster Walls (Warm Ivory / Sandstone) with 3D Depth
-  ctx.fillStyle = "#fef3c7";
-  ctx.fillRect(b6X + 8, b6Y + 32, b6W - 16, b6H - 46);
-
-  const b6Shade = ctx.createLinearGradient(b6X + 8, b6Y, b6X + b6W - 8, b6Y);
-  b6Shade.addColorStop(0, "rgba(255, 255, 255, 0.12)");
-  b6Shade.addColorStop(0.6, "rgba(0, 0, 0, 0)");
-  b6Shade.addColorStop(1, "rgba(15, 23, 42, 0.2)");
-  ctx.fillStyle = b6Shade;
-  ctx.fillRect(b6X + 8, b6Y + 32, b6W - 16, b6H - 46);
-
-  // Peeking Brick Patch
-  ctx.fillStyle = "#b45309";
-  ctx.fillRect(b6X + 18, b6Y + 44, 8, 3);
-  ctx.fillRect(b6X + 28, b6Y + 44, 8, 3);
-  ctx.fillRect(b6X + 22, b6Y + 48, 9, 3);
-
-  // 4. Heavy Dark Oak Half-Timbering Framing Beams
-  ctx.fillStyle = "#451a03";
-  ctx.fillRect(b6X + 8, b6Y + 32, b6W - 16, 4);
-  ctx.fillRect(b6X + 8, b6Y + b6H - 18, b6W - 16, 3);
-  ctx.fillRect(b6X + 8, b6Y + 32, 6, b6H - 47);
-  ctx.fillRect(b6X + b6W - 14, b6Y + 32, 6, b6H - 47);
-
-  ctx.fillStyle = "#78350f";
-  ctx.fillRect(b6X + 9, b6Y + 33, b6W - 18, 2);
-  ctx.fillRect(b6X + 9, b6Y + 33, 4, b6H - 49);
-  ctx.fillRect(b6X + b6W - 13, b6Y + 33, 4, b6H - 49);
-
-  const drawTimberX = (tx: number, ty: number, tw: number, th: number) => {
-    ctx.strokeStyle = "#451a03";
-    ctx.lineWidth = 3.5;
-    ctx.beginPath();
-    ctx.moveTo(tx, ty);
-    ctx.lineTo(tx + tw, ty + th);
-    ctx.moveTo(tx + tw, ty);
-    ctx.lineTo(tx, ty + th);
-    ctx.stroke();
-    ctx.strokeStyle = "#78350f";
-    ctx.lineWidth = 1.8;
-    ctx.stroke();
-  };
-  drawTimberX(b6X + 16, b6Y + 36, 18, 24);
-  drawTimberX(b6X + b6W - 36, b6Y + 36, 18, 24);
-
-  ctx.fillStyle = "#451a03";
-  ctx.fillRect(b6X + 38, b6Y + 32, 4, b6H - 47);
-  ctx.fillRect(b6X + b6W - 42, b6Y + 32, 4, b6H - 47);
-
-  // 5. Terracotta Scalloped Tile Hip Roof with 3D Overhang
-  ctx.fillStyle = "#260606";
-  ctx.fillRect(b6X + 2, b6Y + 32, b6W - 4, 4);
-
-  ctx.fillStyle = "#7f1d1d";
-  ctx.beginPath();
-  ctx.moveTo(b6X - 2, b6Y + 34);
-  ctx.lineTo(b6X + 24, b6Y);
-  ctx.lineTo(b6X + b6W - 24, b6Y);
-  ctx.lineTo(b6X + b6W + 2, b6Y + 34);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.strokeStyle = "#b91c1c";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  for (let rsy = b6Y + 6; rsy < b6Y + 32; rsy += 5) {
-    const sInset = ((b6Y + 34 - rsy) / 34) * 24;
-    ctx.strokeStyle = rsy % 10 === 0 ? "#dc2626" : "#991b1b";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(b6X + sInset, rsy);
-    ctx.lineTo(b6X + b6W - sInset, rsy);
-    ctx.stroke();
-
-    ctx.fillStyle = "#d97706";
-    for (let rx = b6X + sInset + 6; rx < b6X + b6W - sInset - 6; rx += 8) {
-      ctx.fillRect(rx, rsy - 2, 2, 2);
-    }
-  }
-
-  // Golden Roof Ridge Cap
-  ctx.fillStyle = "#f59e0b";
-  ctx.fillRect(b6X + 22, b6Y - 1, b6W - 44, 3);
-  ctx.fillStyle = "#fbbf24";
-  ctx.fillRect(b6X + 24, b6Y - 1, b6W - 48, 1);
-
-  // Rooftop Brick Chimney with Smoke Puff
-  ctx.fillStyle = "#7f1d1d";
-  ctx.fillRect(b6X + 24, b6Y - 12, 10, 14);
-  ctx.fillStyle = "#450a0a";
-  ctx.fillRect(b6X + 22, b6Y - 14, 14, 3);
-  const postSmoke = (time * 0.003 + 2) % 3;
-  ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
-  ctx.beginPath();
-  ctx.arc(b6X + 29, b6Y - 18 - postSmoke * 5, 2.5 + postSmoke, 0, Math.PI * 2);
-  ctx.fill();
-
-  // 6. Polished 3D Brass Courier Horn Crest Medallion
-  ctx.fillStyle = "#0f172a";
-  ctx.beginPath();
-  ctx.arc(b6X + b6W / 2, b6Y + 16, 9, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = "#fbbf24";
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-
-  ctx.strokeStyle = "#fbbf24";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.arc(b6X + b6W / 2, b6Y + 16, 5, 0, Math.PI * 1.5);
-  ctx.lineTo(b6X + b6W / 2 + 5, b6Y + 16);
-  ctx.stroke();
-  ctx.fillStyle = "#facc15";
-  ctx.fillRect(b6X + b6W / 2 + 3, b6Y + 14, 3, 4);
-
-  // 7. Royal Brass Mailbox & Parcel Box on Porch
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(b6X + 18, b6Y + 60, 16, 18);
-  ctx.fillStyle = "#ca8a04";
-  ctx.fillRect(b6X + 19, b6Y + 61, 14, 16);
-  ctx.fillStyle = "#facc15";
-  ctx.fillRect(b6X + 20, b6Y + 62, 12, 3);
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(b6X + 22, b6Y + 63, 8, 1);
-  ctx.fillStyle = "#78350f";
-  ctx.fillRect(b6X + 12, b6Y + 68, 6, 8);
-  ctx.strokeStyle = "#fbbf24";
-  ctx.lineWidth = 0.5;
-  ctx.strokeRect(b6X + 12, b6Y + 68, 6, 8);
-
-  // 8. Leaded Diamond-Lattice Casement Post Window
-  ctx.fillStyle = "#451a03";
-  ctx.fillRect(b6X + b6W - 38, b6Y + 48, 22, 22);
-  ctx.fillStyle = "#fef08a";
-  ctx.fillRect(b6X + b6W - 36, b6Y + 50, 18, 18);
-  ctx.strokeStyle = "#78350f";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(b6X + b6W - 27, b6Y + 50);
-  ctx.lineTo(b6X + b6W - 27, b6Y + 68);
-  ctx.moveTo(b6X + b6W - 36, b6Y + 59);
-  ctx.lineTo(b6X + b6W - 18, b6Y + 59);
-  ctx.stroke();
-
-  // 9. Gilded Oak Signboard
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(b6X + b6W / 2 - 44, b6Y + 24, 88, 14);
-  ctx.strokeStyle = "#fbbf24";
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(b6X + b6W / 2 - 44, b6Y + 24, 88, 14);
-  ctx.fillStyle = "#fbbf24";
-  ctx.font = "bold 7px monospace";
+function drawVillagePostInteriorLabels(ctx: CanvasRenderingContext2D): void {
+  ctx.fillStyle = PAL.goldD;
+  ctx.fillRect(280, 38, 140, 18);
+  ctx.fillStyle = PAL.out;
+  ctx.fillRect(283, 41, 134, 12);
+  ctx.fillStyle = PAL.goldL;
+  ctx.font = "bold 8px monospace";
   ctx.textAlign = "center";
-  ctx.fillText("VILLAGE POST", b6X + b6W / 2, b6Y + 34);
+  ctx.fillText("VILLAGE POST // DISPATCH", 350, 50);
 
-  // 10. Tudor Oak Entrance Door with Brass Knob & Sconce Lantern
-  ctx.fillStyle = "#451a03";
-  ctx.fillRect(b6X + b6W / 2 - 13, b6Y + b6H - 42, 26, 40);
-  ctx.fillStyle = "#78350f";
-  ctx.fillRect(b6X + b6W / 2 - 11, b6Y + b6H - 40, 22, 36);
+  ctx.fillStyle = PAL.roofD;
+  ctx.fillRect(272, 282, 156, 20);
+  ctx.fillStyle = PAL.wallL;
+  ctx.font = "bold 9px monospace";
+  ctx.fillText("[SPACE / E] SEND INQUIRY", 350, 296);
 
-  ctx.strokeStyle = "#451a03";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(b6X + b6W / 2 - 9, b6Y + b6H - 37, 8, 14);
-  ctx.strokeRect(b6X + b6W / 2 + 1, b6Y + b6H - 37, 8, 14);
-  ctx.strokeRect(b6X + b6W / 2 - 9, b6Y + b6H - 19, 8, 12);
-  ctx.strokeRect(b6X + b6W / 2 + 1, b6Y + b6H - 19, 8, 12);
+  ctx.fillStyle = PAL.roofD;
+  ctx.fillRect(295, 466, 110, 16);
+  ctx.fillStyle = PAL.goldL;
+  ctx.font = "bold 8px monospace";
+  ctx.fillText("▼ EXIT TO TOWN ▼", 350, 477);
+}
 
-  ctx.fillStyle = "#fbbf24";
-  ctx.fillRect(b6X + b6W / 2 + 5, b6Y + b6H - 24, 2.5, 3);
-
-  ctx.fillStyle = "#1e293b";
-  ctx.fillRect(b6X + b6W / 2 - 18, b6Y + b6H - 32, 3, 6);
-  ctx.fillStyle = "#fef08a";
-  ctx.fillRect(b6X + b6W / 2 - 20, b6Y + b6H - 30, 4, 4);
-
-  // =========================================================================
-  // --- 7. CAREER & WORK EXPERIENCE ARCHIVES (East Quarter: 140x105 at x:750, y:150) ---
-  // =========================================================================
-  const b7X = 750;
-  const b7Y = 150;
-  const b7W = 140;
-  const b7H = 105;
-
-  // 1. 3D Volumetric Drop Shadow
-  ctx.fillStyle = "rgba(0, 0, 0, 0.42)";
-  ctx.beginPath();
-  ctx.ellipse(b7X + b7W / 2 + 6, b7Y + b7H + 2, b7W / 2 + 10, 15, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // 2. 3-Tier Stepped Classical Marble Stylobate (Crepidoma Foundation)
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(b7X + 2, b7Y + b7H - 18, b7W - 4, 18);
-  ctx.fillStyle = "#1e293b";
-  ctx.fillRect(b7X + 4, b7Y + b7H - 15, b7W - 8, 15);
-  ctx.fillStyle = "#334155";
-  ctx.fillRect(b7X + 6, b7Y + b7H - 12, b7W - 12, 12);
-  ctx.fillStyle = "#64748b";
-  ctx.fillRect(b7X + 8, b7Y + b7H - 9, b7W - 16, 9);
-  ctx.fillStyle = "#e2e8f0";
-  ctx.fillRect(b7X + 8, b7Y + b7H - 9, b7W - 16, 2.5);
-
-  ctx.fillStyle = "#94a3b8";
-  for (let sx = b7X + 16; sx < b7X + b7W - 16; sx += 20) {
-    ctx.fillRect(sx, b7Y + b7H - 7, 1, 6);
-  }
-
-  // 3. Classical Ashlar Stone Walls (Honed Granite & Marble) with 3D Depth
-  ctx.fillStyle = "#1e293b";
-  ctx.fillRect(b7X + 10, b7Y + 36, b7W - 20, b7H - 46);
-  ctx.fillStyle = "#334155";
-  ctx.fillRect(b7X + 12, b7Y + 38, b7W - 24, b7H - 48);
-
-  const b7Shade = ctx.createLinearGradient(b7X + 12, b7Y, b7X + b7W - 12, b7Y);
-  b7Shade.addColorStop(0, "rgba(255, 255, 255, 0.1)");
-  b7Shade.addColorStop(0.6, "rgba(0, 0, 0, 0)");
-  b7Shade.addColorStop(1, "rgba(15, 23, 42, 0.35)");
-  ctx.fillStyle = b7Shade;
-  ctx.fillRect(b7X + 12, b7Y + 38, b7W - 24, b7H - 48);
-
-  // Staggered Ashlar Block Courses
-  ctx.strokeStyle = "rgba(148, 163, 184, 0.3)";
-  ctx.lineWidth = 1;
-  for (let ay = b7Y + 44; ay < b7Y + b7H - 12; ay += 10) {
-    ctx.beginPath();
-    ctx.moveTo(b7X + 12, ay);
-    ctx.lineTo(b7X + b7W - 12, ay);
-    ctx.stroke();
-  }
-  for (let ay = b7Y + 44; ay < b7Y + b7H - 12; ay += 10) {
-    const shift = (ay % 20 === 0) ? 0 : 12;
-    for (let ax = b7X + 24 + shift; ax < b7X + b7W - 16; ax += 24) {
-      ctx.beginPath();
-      ctx.moveTo(ax, ay - 10);
-      ctx.lineTo(ax, ay);
-      ctx.stroke();
-    }
-  }
-
-  // 4. 4 Fluted Ionic / Corinthian White Marble Columns with Volute Capitals
-  const drawFlutedColumn = (cxPos: number) => {
-    ctx.fillStyle = "#64748b";
-    ctx.fillRect(cxPos - 2, b7Y + b7H - 14, 14, 5);
-    ctx.fillStyle = "#cbd5e1";
-    ctx.fillRect(cxPos - 1, b7Y + b7H - 13, 12, 3);
-
-    ctx.fillStyle = "#e2e8f0";
-    ctx.fillRect(cxPos, b7Y + 36, 10, b7H - 49);
-    ctx.strokeStyle = "#94a3b8";
-    ctx.lineWidth = 1;
-    ctx.strokeRect(cxPos, b7Y + 36, 10, b7H - 49);
-
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(cxPos + 2, b7Y + 38, 1.5, b7H - 53);
-    ctx.fillRect(cxPos + 6, b7Y + 38, 1.5, b7H - 53);
-    ctx.fillStyle = "#94a3b8";
-    ctx.fillRect(cxPos + 4, b7Y + 38, 1, b7H - 53);
-
-    ctx.fillStyle = "#f8fafc";
-    ctx.fillRect(cxPos - 3, b7Y + 34, 16, 5);
-    ctx.fillStyle = "#fbbf24";
-    ctx.fillRect(cxPos - 1, b7Y + 38, 12, 2);
-  };
-  drawFlutedColumn(b7X + 14);
-  drawFlutedColumn(b7X + 44);
-  drawFlutedColumn(b7X + b7W - 54);
-  drawFlutedColumn(b7X + b7W - 24);
-
-  // 5. Classical Triangular Pediment Roof & Dentil Molding Frieze
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(b7X + 4, b7Y + 30, b7W - 8, 8);
-  ctx.fillStyle = "#334155";
-  ctx.fillRect(b7X + 6, b7Y + 32, b7W - 12, 4);
-
-  ctx.fillStyle = "#f8fafc";
-  for (let dx = b7X + 8; dx < b7X + b7W - 8; dx += 6) {
-    ctx.fillRect(dx, b7Y + 34, 3, 2);
-  }
-
-  // Triangular Pediment Tympanum
-  ctx.fillStyle = "#1e293b";
-  ctx.beginPath();
-  ctx.moveTo(b7X - 2, b7Y + 32);
-  ctx.lineTo(b7X + b7W / 2, b7Y - 4);
-  ctx.lineTo(b7X + b7W + 2, b7Y + 32);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.strokeStyle = "#fbbf24";
-  ctx.lineWidth = 2.5;
-  ctx.stroke();
-
-  // Gold Apex Acroterion Finial
-  ctx.fillStyle = "#fbbf24";
-  ctx.fillRect(b7X + b7W / 2 - 3, b7Y - 8, 6, 5);
-  ctx.fillRect(b7X + b7W / 2 - 5, b7Y - 11, 10, 3);
-  ctx.fillRect(b7X - 4, b7Y + 30, 4, 4);
-  ctx.fillRect(b7X + b7W, b7Y + 30, 4, 4);
-
-  // Carved Tympanum Relief Medallion (Golden Laurel Wreath & Open Codex)
-  ctx.fillStyle = "#0f172a";
-  ctx.beginPath();
-  ctx.arc(b7X + b7W / 2, b7Y + 16, 11, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = "#fbbf24";
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-
-  ctx.fillStyle = "#fbbf24";
-  ctx.beginPath();
-  ctx.arc(b7X + b7W / 2, b7Y + 16, 7, 0, Math.PI * 1.8);
-  ctx.stroke();
-  ctx.fillRect(b7X + b7W / 2 - 5, b7Y + 13, 10, 6);
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(b7X + b7W / 2 - 1, b7Y + 13, 2, 6);
-
-  // 6. Arched Stained Glass Cathedral Windows
-  const drawArchiveStainedGlass = (wx: number, wy: number) => {
-    ctx.fillStyle = "#0f172a";
-    ctx.beginPath();
-    ctx.arc(wx + 7, wy + 6, 7, Math.PI, 0);
-    ctx.rect(wx, wy + 6, 14, 18);
-    ctx.fill();
-
-    ctx.fillStyle = "#0284c7";
-    ctx.fillRect(wx + 2, wy + 6, 5, 8);
-    ctx.fillStyle = "#38bdf8";
-    ctx.fillRect(wx + 7, wy + 6, 5, 8);
-    ctx.fillStyle = "#f59e0b";
-    ctx.fillRect(wx + 3, wy + 14, 8, 8);
-
-    ctx.fillStyle = "#94a3b8";
-    ctx.fillRect(wx + 5, wy - 2, 4, 4);
-  };
-  drawArchiveStainedGlass(b7X + 26, b7Y + 46);
-  drawArchiveStainedGlass(b7X + b7W - 40, b7Y + 46);
-
-  // 7. Gilded Classical Architrave Signboard
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(b7X + b7W / 2 - 46, b7Y + 26, 92, 14);
-  ctx.strokeStyle = "#fbbf24";
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(b7X + b7W / 2 - 46, b7Y + 26, 92, 14);
-  ctx.fillStyle = "#38bdf8";
-  ctx.font = "bold 7px monospace";
+function drawAzraSanctuaryInteriorLabels(ctx: CanvasRenderingContext2D): void {
+  ctx.fillStyle = PAL.violetD;
+  ctx.fillRect(270, 38, 160, 18);
+  ctx.fillStyle = PAL.out;
+  ctx.fillRect(273, 41, 154, 12);
+  ctx.fillStyle = PAL.glassL;
+  ctx.font = "bold 8px monospace";
   ctx.textAlign = "center";
-  ctx.fillText("CAREER ARCHIVES", b7X + b7W / 2, b7Y + 36);
+  ctx.fillText("AZRA SANCTUARY // ORACLE", 350, 50);
 
-  // 8. Grand Bronze Double Portal Doors with Lion Knockers
-  const adX = b7X + b7W / 2 - 18;
-  const adY = b7Y + b7H - 46;
-  ctx.fillStyle = "#1e293b";
-  ctx.fillRect(adX - 2, adY - 2, 40, 44);
-  ctx.fillStyle = "#451a03";
-  ctx.fillRect(adX, adY, 36, 42);
+  ctx.fillStyle = PAL.arcaneD;
+  ctx.fillRect(278, 304, 144, 20);
+  ctx.fillStyle = PAL.wallL;
+  ctx.font = "bold 9px monospace";
+  ctx.fillText("[SPACE / E] ASK AZRA", 350, 318);
 
-  ctx.fillStyle = "#78350f";
-  ctx.fillRect(adX + 2, adY + 2, 15, 38);
-  ctx.fillRect(adX + 19, adY + 2, 15, 38);
-
-  ctx.strokeStyle = "#451a03";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(adX + 4, adY + 5, 11, 14);
-  ctx.strokeRect(adX + 21, adY + 5, 11, 14);
-  ctx.strokeRect(adX + 4, adY + 22, 11, 15);
-  ctx.strokeRect(adX + 21, adY + 22, 11, 15);
-
-  ctx.fillStyle = "#fbbf24";
-  ctx.fillRect(adX + 8, adY + 11, 3, 3);
-  ctx.fillRect(adX + 25, adY + 11, 3, 3);
-  ctx.fillRect(adX + 12, adY + 26, 3, 3);
-  ctx.fillRect(adX + 21, adY + 26, 3, 3);
-
-  // Flanking Stone Urns / Laurel Planters on Steps
-  const drawMarbleUrn = (ux: number) => {
-    ctx.fillStyle = "#64748b";
-    ctx.fillRect(ux, b7Y + b7H - 16, 8, 8);
-    ctx.fillStyle = "#94a3b8";
-    ctx.fillRect(ux - 1, b7Y + b7H - 18, 10, 3);
-    ctx.fillStyle = "#15803d";
-    ctx.beginPath();
-    ctx.arc(ux + 4, b7Y + b7H - 20, 5, 0, Math.PI * 2);
-    ctx.fill();
-  };
-  drawMarbleUrn(b7X + 10);
-  drawMarbleUrn(b7X + b7W - 18);
+  ctx.fillStyle = PAL.violetD;
+  ctx.fillRect(295, 466, 110, 16);
+  ctx.fillStyle = PAL.glassL;
+  ctx.font = "bold 8px monospace";
+  ctx.fillText("▼ EXIT TO TOWN ▼", 350, 477);
 }
 
-// =========================================================================
-// --- REALISTIC 3D BASKETBALL COURT (LeBron GOAT Court: 90x100 at 730, 535) ---
-// =========================================================================
-function drawBasketballCourt(ctx: CanvasRenderingContext2D) {
-  const courtX = 730;
-  const courtY = 535;
-  const courtW = 90;
-  const courtH = 100;
+function drawDevopsStationInteriorLabels(ctx: CanvasRenderingContext2D): void {
+  ctx.fillStyle = PAL.steelD;
+  ctx.fillRect(262, 38, 176, 18);
+  ctx.fillStyle = PAL.out;
+  ctx.fillRect(265, 41, 170, 12);
+  ctx.fillStyle = PAL.grassL;
+  ctx.font = "bold 8px monospace";
+  ctx.textAlign = "center";
+  ctx.fillText("OPS BAY // ALL SYSTEMS NOMINAL", 350, 50);
 
-  // 1. 3D Drop Shadow on Lawn
-  ctx.fillStyle = "rgba(0, 0, 0, 0.38)";
-  ctx.beginPath();
-  ctx.ellipse(courtX + courtW / 2 + 4, courtY + courtH + 2, courtW / 2 + 6, 12, 0, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.fillStyle = PAL.steelX;
+  ctx.fillRect(270, 310, 160, 20);
+  ctx.fillStyle = PAL.glassL;
+  ctx.font = "bold 9px monospace";
+  ctx.fillText("[SPACE / E] OPEN OPS CONSOLE", 350, 324);
 
-  // 2. Concrete Apron Border
-  ctx.fillStyle = "#334155";
-  ctx.fillRect(courtX - 4, courtY - 4, courtW + 8, courtH + 8);
-  ctx.fillStyle = "#475569";
-  ctx.fillRect(courtX - 2, courtY - 2, courtW + 4, courtH + 4);
-
-  // 3. Premium Hardwood Parquet / Terracotta Court Surface
-  ctx.fillStyle = "#c2410c";
-  ctx.fillRect(courtX, courtY, courtW, courtH);
-
-  // Horizontal Parquet Floor Plank Grooves
-  ctx.strokeStyle = "rgba(124, 45, 18, 0.4)";
-  ctx.lineWidth = 1;
-  for (let py = courtY + 6; py < courtY + courtH; py += 6) {
-    ctx.beginPath();
-    ctx.moveTo(courtX, py);
-    ctx.lineTo(courtX + courtW, py);
-    ctx.stroke();
-  }
-
-  // 4. Contrasting Royal Purple / Gold Painted Lane Key (LeBron Lakers Tribute!)
-  const keyX = courtX + courtW / 2 - 18;
-  const keyY = courtY + 4;
-  const keyW = 36;
-  const keyH = 46;
-
-  ctx.fillStyle = "#4c1d95"; // Royal Purple Key Base
-  ctx.fillRect(keyX, keyY, keyW, keyH);
-  ctx.strokeStyle = "#fbbf24"; // Gold Key Border
-  ctx.lineWidth = 2;
-  ctx.strokeRect(keyX, keyY, keyW, keyH);
-
-  // Free Throw Circle
-  ctx.fillStyle = "rgba(251, 191, 36, 0.25)";
-  ctx.beginPath();
-  ctx.ellipse(courtX + courtW / 2, keyY + keyH, 18, 10, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = "#ffffff";
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-
-  // 3-Point Arc
-  ctx.strokeStyle = "#ffffff";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.ellipse(courtX + courtW / 2, courtY + 18, 38, 34, 0, 0, Math.PI);
-  ctx.stroke();
-
-  // Half-Court Circle & Center Line
-  ctx.beginPath();
-  ctx.moveTo(courtX, courtY + courtH - 8);
-  ctx.lineTo(courtX + courtW, courtY + courtH - 8);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.ellipse(courtX + courtW / 2, courtY + courtH - 8, 16, 8, 0, Math.PI, 0);
-  ctx.stroke();
-
-  // Perimeter Out-of-Bounds White Court Lines
-  ctx.strokeStyle = "#ffffff";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(courtX + 2, courtY + 2, courtW - 4, courtH - 4);
-
-  // 5. Realistic 3D Basketball Hoop & Padded Stanchion
-  const hx = courtX + courtW / 2;
-  const hy = courtY + 6;
-
-  // Stanchion Padded Base
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(hx - 6, hy - 4, 12, 8);
-  ctx.fillStyle = "#1e3a8a"; // Blue Padding Cushion
-  ctx.fillRect(hx - 5, hy - 3, 10, 6);
-
-  // Overhanging Cantilever Support Arm
-  ctx.strokeStyle = "#1e293b";
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(hx, hy);
-  ctx.lineTo(hx, hy + 8);
-  ctx.stroke();
-
-  // Transparent Shatterproof Glass Backboard
-  ctx.fillStyle = "rgba(241, 245, 249, 0.75)";
-  ctx.fillRect(hx - 18, hy + 2, 36, 12);
-  ctx.strokeStyle = "#ffffff";
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(hx - 18, hy + 2, 36, 12);
-
-  // Inner Red Target Square Box
-  ctx.strokeStyle = "#dc2626";
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(hx - 8, hy + 4, 16, 7);
-
-  // Breakaway Red Iron Rim & Mounting Flange
-  ctx.fillStyle = "#dc2626";
-  ctx.fillRect(hx - 2, hy + 10, 4, 2);
-  ctx.strokeStyle = "#ea580c";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.ellipse(hx, hy + 12, 7, 3.5, 0, 0, Math.PI * 2);
-  ctx.stroke();
-
-  // Woven White Chain/Nylon Net (Detailed Mesh Loops)
-  ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
-  ctx.beginPath();
-  ctx.moveTo(hx - 6, hy + 13);
-  ctx.lineTo(hx - 3, hy + 21);
-  ctx.lineTo(hx + 3, hy + 21);
-  ctx.lineTo(hx + 6, hy + 13);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.strokeStyle = "#cbd5e1";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(hx - 5, hy + 14);
-  ctx.lineTo(hx + 2, hy + 20);
-  ctx.moveTo(hx + 5, hy + 14);
-  ctx.lineTo(hx - 2, hy + 20);
-  ctx.stroke();
-
-  // 6. Textured Leather Basketball on Court
-  const bx = courtX + courtW / 2 + 18;
-  const by = courtY + 58;
-
-  // Ball Drop Shadow
-  ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
-  ctx.beginPath();
-  ctx.ellipse(bx + 1, by + 6, 6, 2.5, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Leather Orange Ball
-  ctx.fillStyle = "#ea580c";
-  ctx.beginPath();
-  ctx.arc(bx, by, 6, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = "#c2410c";
-  ctx.lineWidth = 1;
-  ctx.stroke();
-
-  // Black Curved Seams
-  ctx.strokeStyle = "#0f172a";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(bx - 6, by);
-  ctx.lineTo(bx + 6, by);
-  ctx.moveTo(bx, by - 6);
-  ctx.lineTo(bx, by + 6);
-  ctx.stroke();
-
-  // Ball Highlight Glint
-  ctx.fillStyle = "#fed7aa";
-  ctx.fillRect(bx - 3, by - 4, 2, 2);
+  ctx.fillStyle = PAL.steelD;
+  ctx.fillRect(295, 466, 110, 16);
+  ctx.fillStyle = PAL.grassL;
+  ctx.font = "bold 8px monospace";
+  ctx.fillText("▼ EXIT TO TOWN ▼", 350, 477);
 }
 
-function drawDetailedBanners(ctx: CanvasRenderingContext2D, time: number) {
-  const banners = WORLD_OBJECTS.filter((o) => o.type === "banner");
-
-  banners.forEach((banner) => {
-    const bx = banner.x;
-    const by = banner.y;
-    const windSway = Math.sin(time * 0.005 + bx * 0.1) * 3.5;
-
-    // 1. Turned Hardwood Flagpole with Turned Brass Collar Joints
-    ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
-    ctx.beginPath();
-    ctx.ellipse(bx + 8, by + banner.height + 2, 7, 3, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = "#451a03"; // Dark outline
-    ctx.fillRect(bx + 5, by, 7, banner.height);
-
-    ctx.fillStyle = "#78350f"; // Wood Pole Body
-    ctx.fillRect(bx + 6, by + 1, 5, banner.height - 2);
-
-    ctx.fillStyle = "#b45309"; // Wood Highlight
-    ctx.fillRect(bx + 7, by + 1, 2, banner.height - 2);
-
-    // Brass Collar Rings
-    ctx.fillStyle = "#facc15";
-    ctx.fillRect(bx + 5, by + 12, 7, 2);
-    ctx.fillRect(bx + 5, by + 42, 7, 2);
-
-    // Finial Spearhead Top
-    ctx.fillStyle = "#ca8a04";
-    ctx.beginPath();
-    ctx.moveTo(bx + 4, by + 4);
-    ctx.lineTo(bx + 8.5, by - 5);
-    ctx.lineTo(bx + 13, by + 4);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = "#fde047";
-    ctx.fillRect(bx + 7, by - 2, 3, 4);
-
-    // Hanging Gold Tassel Cord
-    const cordSway = Math.sin(time * 0.004 + bx) * 2;
-    ctx.strokeStyle = "#fbbf24";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(bx + 8.5, by + 3);
-    ctx.quadraticCurveTo(bx + 3, by + 14, bx + 4 + cordSway, by + 22);
-    ctx.stroke();
-    ctx.fillStyle = "#f59e0b";
-    ctx.fillRect(bx + 3 + cordSway, by + 22, 3, 5);
-
-    // 2. Banner Cloth Specs
-    let bgDark = "#7f1d1d";
-    let bgMid = "#991b1b";
-    let bgLight = "#dc2626";
-    let trimColor = "#fbbf24";
-    let crestType: "mseuf" | "raones" | "ellipsense" | "techbears" | "lebron" = "mseuf";
-
-    if (banner.id === "banner-mseuf") {
-      bgDark = "#450a0a";
-      bgMid = "#881337";
-      bgLight = "#be123c";
-      trimColor = "#facc15";
-      crestType = "mseuf";
-    } else if (banner.id === "banner-raones") {
-      bgDark = "#172554";
-      bgMid = "#1e40af";
-      bgLight = "#2563eb";
-      trimColor = "#67e8f9";
-      crestType = "raones";
-    } else if (banner.id === "banner-ellipsense") {
-      bgDark = "#022c22";
-      bgMid = "#065f46";
-      bgLight = "#059669";
-      trimColor = "#34d399";
-      crestType = "ellipsense";
-    } else if (banner.id === "banner-techbears") {
-      bgDark = "#451a03";
-      bgMid = "#b45309";
-      bgLight = "#d97706";
-      trimColor = "#fde047";
-      crestType = "techbears";
-    } else if (banner.id === "banner-lebron") {
-      bgDark = "#2e1065";
-      bgMid = "#581c87";
-      bgLight = "#7e22ce";
-      trimColor = "#facc15";
-      crestType = "lebron";
-    }
-
-    // 3. Fluttering Swallowtail Pennant Base
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(bx + 11, by + 4);
-    ctx.lineTo(bx + 11 + 34, by + 4);
-    ctx.lineTo(bx + 11 + 34 + windSway, by + 42);
-    ctx.lineTo(bx + 11 + 17 + windSway / 2, by + 35);
-    ctx.lineTo(bx + 11, by + 42);
-    ctx.closePath();
-
-    // Fill Base Gradient
-    ctx.fillStyle = bgMid;
-    ctx.fill();
-
-    // Clip to pennant for drawing rich woven texture & damask weave
-    ctx.clip();
-
-    // Damask Fabric Weave (Alternating subtle vertical/horizontal micro-threads)
-    ctx.fillStyle = bgDark;
-    for (let wy = by + 4; wy < by + 44; wy += 4) {
-      ctx.fillRect(bx + 11, wy, 36 + windSway, 1);
-    }
-    ctx.fillStyle = bgLight;
-    for (let wx = bx + 11; wx < bx + 48; wx += 4) {
-      ctx.fillRect(wx, by + 4, 1, 40);
-    }
-
-    // Diagonal Shading Fold
-    ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
-    ctx.beginPath();
-    ctx.moveTo(bx + 24, by + 4);
-    ctx.lineTo(bx + 38 + windSway, by + 42);
-    ctx.lineTo(bx + 31 + windSway, by + 42);
-    ctx.lineTo(bx + 18, by + 4);
-    ctx.closePath();
-    ctx.fill();
-
-    // Detailed Pixel Emblems
-    const cx = bx + 27 + windSway / 2;
-    const cy = by + 20;
-
-    if (crestType === "mseuf") {
-      // Royal Imperial Crown & Enterprise Pillars
-      ctx.fillStyle = "#fbbf24";
-      ctx.fillRect(cx - 7, cy - 8, 14, 3);
-      ctx.fillRect(cx - 9, cy - 5, 18, 5);
-      ctx.fillRect(cx - 8, cy - 10, 3, 3);
-      ctx.fillRect(cx - 1, cy - 11, 3, 3);
-      ctx.fillRect(cx + 6, cy - 10, 3, 3);
-      ctx.fillStyle = "#ef4444"; // Ruby gems
-      ctx.fillRect(cx - 5, cy - 4, 2, 2);
-      ctx.fillRect(cx - 1, cy - 4, 2, 2);
-      ctx.fillRect(cx + 3, cy - 4, 2, 2);
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 6px monospace";
-      ctx.textAlign = "center";
-      ctx.fillText("MSEUF", cx, cy + 8);
-    } else if (crestType === "raones") {
-      // Tech Startup Spark & Silver Lightning
-      ctx.fillStyle = "#e0f2fe";
-      ctx.beginPath();
-      ctx.moveTo(cx + 2, cy - 11);
-      ctx.lineTo(cx - 5, cy - 2);
-      ctx.lineTo(cx - 1, cy - 2);
-      ctx.lineTo(cx - 3, cy + 6);
-      ctx.lineTo(cx + 5, cy - 3);
-      ctx.lineTo(cx + 1, cy - 3);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "#38bdf8";
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 6px monospace";
-      ctx.textAlign = "center";
-      ctx.fillText("RA-1", cx, cy + 10);
-    } else if (crestType === "ellipsense") {
-      // Alliance Compass Globe
-      ctx.fillStyle = "#34d399";
-      ctx.beginPath();
-      ctx.arc(cx, cy - 3, 6, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "#fbbf24";
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      ctx.fillStyle = "#fbbf24";
-      ctx.fillRect(cx - 1, cy - 9, 2, 12);
-      ctx.fillRect(cx - 6, cy - 4, 12, 2);
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 6px monospace";
-      ctx.textAlign = "center";
-      ctx.fillText("ELLIP", cx, cy + 9);
-    } else if (crestType === "techbears") {
-      // Twin Fleet Chevron Mobility Badges
-      ctx.fillStyle = "#fbbf24";
-      ctx.beginPath();
-      ctx.moveTo(cx - 6, cy - 8);
-      ctx.lineTo(cx, cy - 3);
-      ctx.lineTo(cx + 6, cy - 8);
-      ctx.lineTo(cx, cy - 1);
-      ctx.closePath();
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(cx - 6, cy - 2);
-      ctx.lineTo(cx, cy + 3);
-      ctx.lineTo(cx + 6, cy - 2);
-      ctx.lineTo(cx, cy + 5);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 6px monospace";
-      ctx.textAlign = "center";
-      ctx.fillText("FLEET", cx, cy + 11);
-    } else if (crestType === "lebron") {
-      // Ornate #23 Jersey Numerals & Imperial Gold Crown
-      ctx.fillStyle = "#fbbf24";
-      ctx.fillRect(cx - 6, cy - 11, 12, 2);
-      ctx.fillRect(cx - 7, cy - 13, 2, 2);
-      ctx.fillRect(cx - 1, cy - 14, 2, 2);
-      ctx.fillRect(cx + 5, cy - 13, 2, 2);
-      ctx.fillStyle = "#fde047";
-      ctx.font = "bold 8px monospace";
-      ctx.textAlign = "center";
-      ctx.fillText("#23 KING", cx, cy);
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 6px monospace";
-      ctx.fillText("GOAT", cx, cy + 8);
-    }
-
-    ctx.restore();
-
-    // 4. Gold-Embroidered Brocade Border & Bullion Fringe
-    ctx.strokeStyle = trimColor;
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(bx + 11, by + 4);
-    ctx.lineTo(bx + 11 + 34, by + 4);
-    ctx.lineTo(bx + 11 + 34 + windSway, by + 42);
-    ctx.lineTo(bx + 11 + 17 + windSway / 2, by + 35);
-    ctx.lineTo(bx + 11, by + 42);
-    ctx.closePath();
-    ctx.stroke();
-
-    // Gold bullion fringe tassels along bottom hem
-    ctx.fillStyle = trimColor;
-    ctx.fillRect(bx + 11, by + 42, 2, 3);
-    ctx.fillRect(bx + 17 + windSway * 0.2, by + 40, 2, 3);
-    ctx.fillRect(bx + 23 + windSway * 0.4, by + 37, 2, 3);
-    ctx.fillRect(bx + 29 + windSway * 0.6, by + 37, 2, 3);
-    ctx.fillRect(bx + 35 + windSway * 0.8, by + 40, 2, 3);
-    ctx.fillRect(bx + 43 + windSway, by + 42, 2, 3);
-  });
+function drawCareerArchiveInteriorLabels(ctx: CanvasRenderingContext2D): void {
+  ctx.fillStyle = PAL.woodD; ctx.fillRect(260, 38, 180, 18);
+  ctx.fillStyle = PAL.out; ctx.fillRect(263, 41, 174, 12);
+  ctx.fillStyle = PAL.goldL; ctx.font = "bold 8px monospace"; ctx.textAlign = "center";
+  ctx.fillText("CAREER ARCHIVES // TIMELINE ROOM", 350, 50);
+  ctx.fillStyle = PAL.woodD; ctx.fillRect(264, 310, 172, 20);
+  ctx.fillStyle = PAL.wallL; ctx.font = "bold 9px monospace";
+  ctx.fillText("[SPACE / E] VIEW CAREER TIMELINE", 350, 324);
+  ctx.fillStyle = PAL.woodD; ctx.fillRect(295, 466, 110, 16);
+  ctx.fillStyle = PAL.goldL; ctx.font = "bold 8px monospace"; ctx.fillText("▼ EXIT TO TOWN ▼", 350, 477);
 }
 
-function drawDetailedStatues(ctx: CanvasRenderingContext2D, time: number) {
-  const statues = WORLD_OBJECTS.filter((o) => o.type === "statue");
-
-  statues.forEach((statue) => {
-    const sx = statue.x;
-    const sy = statue.y;
-
-    // 1. Realistic Stepped Stone Plinth (3D Beveled Masonry Pedestal)
-    // Plinth Drop Shadow
-    ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
-    ctx.beginPath();
-    ctx.ellipse(sx + 25, sy + 62, 24, 8, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Bottom Masonry Base Tier
-    ctx.fillStyle = "#1e293b";
-    ctx.fillRect(sx + 4, sy + 48, 42, 14);
-    ctx.fillStyle = "#334155";
-    ctx.fillRect(sx + 6, sy + 50, 38, 10);
-    ctx.fillStyle = "#475569";
-    ctx.fillRect(sx + 6, sy + 48, 38, 2);
-
-    // Mid Beveled Pedestal Tier
-    ctx.fillStyle = "#1e293b";
-    ctx.fillRect(sx + 8, sy + 38, 34, 12);
-    ctx.fillStyle = "#475569";
-    ctx.fillRect(sx + 10, sy + 40, 30, 8);
-    ctx.fillStyle = "#64748b";
-    ctx.fillRect(sx + 10, sy + 38, 30, 2);
-
-    // Stone Mortar Lines & Moss Glints
-    ctx.fillStyle = "#15803d";
-    ctx.fillRect(sx + 6, sy + 54, 4, 3);
-    ctx.fillRect(sx + 38, sy + 52, 4, 3);
-    ctx.fillStyle = "#4ade80";
-    ctx.fillRect(sx + 7, sy + 54, 2, 1);
-
-    const float = Math.sin(time * 0.005 + sx) * 3;
-
-    if (statue.id === "statue-nextjs") {
-      // =====================================================================
-      // ⚛️ 1. REACT & NEXT.JS ATOM MONOLITH
-      // =====================================================================
-      // Floating Obsidian Monolith Core
-      ctx.fillStyle = "#0f172a";
-      ctx.beginPath();
-      ctx.moveTo(sx + 25, sy + 2 + float);
-      ctx.lineTo(sx + 41, sy + 36 + float);
-      ctx.lineTo(sx + 9, sy + 36 + float);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.strokeStyle = "#38bdf8";
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      // Next.js Monolith Facet Shading
-      ctx.fillStyle = "rgba(56, 189, 248, 0.25)";
-      ctx.beginPath();
-      ctx.moveTo(sx + 25, sy + 2 + float);
-      ctx.lineTo(sx + 41, sy + 36 + float);
-      ctx.lineTo(sx + 25, sy + 36 + float);
-      ctx.closePath();
-      ctx.fill();
-
-      // Engraved Next.js "N" Emblem
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 8px monospace";
-      ctx.textAlign = "center";
-      ctx.fillText("N", sx + 25, sy + 28 + float);
-
-      // 3D Orbiting React Atomic Rings (Tilted Multi-Axis Ellipses)
-      const ringTime = time * 0.003;
-      ctx.strokeStyle = "rgba(56, 189, 248, 0.85)";
-      ctx.lineWidth = 1.5;
-
-      // Ring 1 (Horizontal)
-      ctx.beginPath();
-      ctx.ellipse(sx + 25, sy + 20 + float, 17, 6, ringTime, 0, Math.PI * 2);
-      ctx.stroke();
-
-      // Ring 2 (Tilted 60 deg)
-      ctx.beginPath();
-      ctx.ellipse(sx + 25, sy + 20 + float, 17, 6, ringTime + Math.PI / 3, 0, Math.PI * 2);
-      ctx.stroke();
-
-      // Ring 3 (Tilted 120 deg)
-      ctx.beginPath();
-      ctx.ellipse(sx + 25, sy + 20 + float, 17, 6, ringTime + (2 * Math.PI) / 3, 0, Math.PI * 2);
-      ctx.stroke();
-
-      // Orbiting Glowing Electron Sparkles
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(sx + 25 + Math.cos(ringTime * 2) * 15, sy + 20 + float + Math.sin(ringTime * 2) * 5, 2.5, 2.5);
-      ctx.fillStyle = "#38bdf8";
-      ctx.fillRect(sx + 25 - Math.cos(ringTime * 2) * 15, sy + 20 + float - Math.sin(ringTime * 2) * 5, 2.5, 2.5);
-    } else if (statue.id === "statue-typescript") {
-      // =====================================================================
-      // 🔷 2. TYPESCRIPT SYSTEMS OBELISK
-      // =====================================================================
-      // Egyptian Tapered Lapis Granite Obelisk Shaft
-      const ox = sx + 25;
-      const oy = sy + 6 + float;
-
-      // Obelisk Column
-      ctx.fillStyle = "#1e3a8a";
-      ctx.beginPath();
-      ctx.moveTo(ox - 9, oy + 32);
-      ctx.lineTo(ox - 6, oy + 6);
-      ctx.lineTo(ox + 6, oy + 6);
-      ctx.lineTo(ox + 9, oy + 32);
-      ctx.closePath();
-      ctx.fill();
-
-      // 3D Shading on Right Face
-      ctx.fillStyle = "#172554";
-      ctx.beginPath();
-      ctx.moveTo(ox, oy + 6);
-      ctx.lineTo(ox + 6, oy + 6);
-      ctx.lineTo(ox + 9, oy + 32);
-      ctx.lineTo(ox, oy + 32);
-      ctx.closePath();
-      ctx.fill();
-
-      // Gold Pyramidion Cap (Apex Point)
-      ctx.fillStyle = "#fbbf24";
-      ctx.beginPath();
-      ctx.moveTo(ox, oy - 4);
-      ctx.lineTo(ox + 6, oy + 6);
-      ctx.lineTo(ox - 6, oy + 6);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = "#fde047";
-      ctx.fillRect(ox - 2, oy + 1, 4, 4);
-
-      // Engraved Glowing Gold "TS" Inscription & Hieroglyphs
-      ctx.strokeStyle = "#38bdf8";
-      ctx.lineWidth = 1;
-      ctx.strokeRect(ox - 7, oy + 10, 14, 18);
-
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 8px monospace";
-      ctx.textAlign = "center";
-      ctx.fillText("TS", ox, oy + 22);
-
-      // Floating Cyan Type-Check Rune Ring
-      const tsFloat = Math.sin(time * 0.006) * 2;
-      ctx.strokeStyle = "#67e8f9";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.ellipse(ox, oy + 30 + tsFloat, 12, 4, 0, 0, Math.PI * 2);
-      ctx.stroke();
-    } else if (statue.id === "statue-postgres") {
-      // =====================================================================
-      // 🐘 3. POSTGRESQL & DATABASE SAPPHIRE RELIC
-      // =====================================================================
-      // Sacred Database Reliquary Altar
-      const rx = sx + 25;
-      const ry = sy + 18 + float;
-
-      // Faceted Floating Sapphire Database Gem
-      ctx.fillStyle = "#1e40af";
-      ctx.beginPath();
-      ctx.moveTo(rx, ry - 14); // Top point
-      ctx.lineTo(rx + 14, ry); // Right corner
-      ctx.lineTo(rx, ry + 14); // Bottom point
-      ctx.lineTo(rx - 14, ry); // Left corner
-      ctx.closePath();
-      ctx.fill();
-
-      // Facet Highlights (3D Cut Gem Geometry)
-      ctx.fillStyle = "#3b82f6";
-      ctx.beginPath();
-      ctx.moveTo(rx, ry - 14);
-      ctx.lineTo(rx + 14, ry);
-      ctx.lineTo(rx, ry);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = "#60a5fa";
-      ctx.beginPath();
-      ctx.moveTo(rx, ry - 14);
-      ctx.lineTo(rx, ry);
-      ctx.lineTo(rx - 14, ry);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = "#93c5fd"; // Top facet gleam
-      ctx.beginPath();
-      ctx.moveTo(rx, ry - 14);
-      ctx.lineTo(rx + 6, ry - 5);
-      ctx.lineTo(rx - 6, ry - 5);
-      ctx.closePath();
-      ctx.fill();
-
-      // Outer Gem Border
-      ctx.strokeStyle = "#bae6fd";
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-
-      // Engraved PostgreSQL Elephant Silhouette / Database Platter Lines
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(rx - 6, ry + 3, 12, 2);
-      ctx.fillRect(rx - 4, ry + 7, 8, 2);
-
-      // Orbiting Binary Data Sparks
-      const binAngle = time * 0.005;
-      ctx.fillStyle = "#38bdf8";
-      ctx.font = "bold 6px monospace";
-      ctx.fillText("1", rx + Math.cos(binAngle) * 16, ry + Math.sin(binAngle) * 8);
-      ctx.fillText("0", rx - Math.cos(binAngle) * 16, ry - Math.sin(binAngle) * 8);
-    } else if (statue.id === "statue-docker") {
-      // =====================================================================
-      // 🐳 4. DOCKER WHALE TOTEM & CONTAINER SHIP RELIC
-      // =====================================================================
-      const dx = sx + 25;
-      const dy = sy + 18 + float;
-
-      // Sculpted Cyan Mechanical Whale Body
-      ctx.fillStyle = "#0369a1"; // Whale Underbody
-      ctx.beginPath();
-      ctx.ellipse(dx, dy + 10, 18, 9, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = "#0284c7"; // Whale Main Flank
-      ctx.beginPath();
-      ctx.ellipse(dx + 1, dy + 8, 16, 7, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Whale Tail & Flipper
-      ctx.fillStyle = "#0369a1";
-      ctx.beginPath();
-      ctx.moveTo(dx - 14, dy + 10);
-      ctx.lineTo(dx - 22, dy + 4);
-      ctx.lineTo(dx - 20, dy + 12);
-      ctx.closePath();
-      ctx.fill();
-
-      // Glowing Eye
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(dx + 11, dy + 6, 2, 2);
-
-      // Stacked Microservice Shipping Containers (3D Beveled Cargo Crates)
-      // Container 1 (Blue)
-      ctx.fillStyle = "#2563eb";
-      ctx.fillRect(dx - 10, dy - 2, 8, 7);
-      ctx.strokeStyle = "#93c5fd";
-      ctx.lineWidth = 1;
-      ctx.strokeRect(dx - 10, dy - 2, 8, 7);
-
-      // Container 2 (Amber Gold)
-      ctx.fillStyle = "#d97706";
-      ctx.fillRect(dx - 1, dy - 2, 8, 7);
-      ctx.strokeStyle = "#fde047";
-      ctx.strokeRect(dx - 1, dy - 2, 8, 7);
-
-      // Container 3 (Emerald Green - Top Tier)
-      ctx.fillStyle = "#059669";
-      ctx.fillRect(dx - 6, dy - 10, 8, 7);
-      ctx.strokeStyle = "#6ee7b7";
-      ctx.strokeRect(dx - 6, dy - 10, 8, 7);
-
-      // Blowhole Water Geyser Spout
-      const spoutT = (time * 0.008) % 3;
-      ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
-      ctx.beginPath();
-      ctx.arc(dx + 8, dy - 6 - spoutT * 4, 2 + spoutT, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  });
+function drawAcademyInteriorLabels(ctx: CanvasRenderingContext2D): void {
+  ctx.fillStyle = PAL.roofD; ctx.fillRect(264, 38, 172, 18);
+  ctx.fillStyle = PAL.out; ctx.fillRect(267, 41, 166, 12);
+  ctx.fillStyle = PAL.goldL; ctx.font = "bold 8px monospace"; ctx.textAlign = "center";
+  ctx.fillText("ACADEMY OF ENVERGA // HONORS DOJO", 350, 50);
+  ctx.fillStyle = PAL.roofD; ctx.fillRect(258, 146, 184, 20);
+  ctx.fillStyle = PAL.wallL; ctx.font = "bold 9px monospace";
+  ctx.fillText("[SPACE / E] VIEW ACADEMIC HONORS", 350, 160);
+  ctx.fillStyle = PAL.roofD; ctx.fillRect(295, 466, 110, 16);
+  ctx.fillStyle = PAL.goldL; ctx.font = "bold 8px monospace"; ctx.fillText("▼ EXIT TO TOWN ▼", 350, 477);
 }
 
-function drawCentralFountain(ctx: CanvasRenderingContext2D, time: number) {
-  const cx = 420;
-  const cy = 378;
-
-  // =====================================================================
-  // ⛲ GRAND 3D ROYAL CENTRAL FOUNTAIN OF CONTINUOUS DEPLOYMENT
-  // =====================================================================
-
-  // 1. Grand Apron Drop Shadow
-  ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
-  ctx.beginPath();
-  ctx.ellipse(cx, cy + 18, 68, 36, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // 2. Octagonal Mosaic Bluestone Stylobate Apron
-  ctx.fillStyle = "#0f172a";
-  ctx.beginPath();
-  ctx.ellipse(cx, cy + 10, 66, 34, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = "#1e293b";
-  ctx.beginPath();
-  ctx.ellipse(cx, cy + 7, 63, 31, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // 3. Multi-Tiered Bluestone Coping / Basin Masonry (Tier 1 Base Rim)
-  ctx.fillStyle = "#334155";
-  ctx.beginPath();
-  ctx.ellipse(cx, cy + 4, 60, 28, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = "#475569";
-  ctx.beginPath();
-  ctx.ellipse(cx, cy + 1, 57, 25, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = "#64748b"; // Polished Top Coping Rim
-  ctx.beginPath();
-  ctx.ellipse(cx, cy - 1, 54, 23, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = "#94a3b8"; // Inner Bevel Highlight
-  ctx.beginPath();
-  ctx.ellipse(cx, cy - 3, 50, 20, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Radial Stone Mortar Seams (12 segmented chiseled ashlar coping blocks)
-  ctx.strokeStyle = "#1e293b";
-  ctx.lineWidth = 1.5;
-  for (let i = 0; i < 12; i++) {
-    const angle = (i * Math.PI) / 6;
-    const x1 = cx + Math.cos(angle) * 48;
-    const y1 = cy + Math.sin(angle) * 19;
-    const x2 = cx + Math.cos(angle) * 58;
-    const y2 = cy + Math.sin(angle) * 27;
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.stroke();
-  }
-
-  // Emerald Moss & Lichen Floral Accents on Rim
-  ctx.fillStyle = "#15803d";
-  ctx.fillRect(cx - 48, cy + 6, 7, 4);
-  ctx.fillRect(cx + 42, cy + 7, 8, 4);
-  ctx.fillRect(cx + 16, cy + 19, 6, 3);
-  ctx.fillRect(cx - 24, cy + 20, 6, 3);
-  ctx.fillStyle = "#4ade80";
-  ctx.fillRect(cx - 47, cy + 6, 3, 2);
-  ctx.fillRect(cx + 44, cy + 7, 3, 2);
-  ctx.fillStyle = "#fb7185"; // Little Pink Flower on Rim
-  ctx.fillRect(cx - 45, cy + 4, 3, 3);
-  ctx.fillRect(cx + 45, cy + 5, 3, 3);
-
-  // 4. Crystal Deep Basin Pool & Animated Caustic Ripples
-  // Deep Basin Bed
-  ctx.fillStyle = "#0369a1";
-  ctx.beginPath();
-  ctx.ellipse(cx, cy + 1, 46, 17, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Turquoise Water Surface Layer
-  ctx.fillStyle = "#0284c7";
-  ctx.beginPath();
-  ctx.ellipse(cx, cy, 44, 15, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Animated Concentric Caustic Wave Ripple Rings
-  const rippleT = time * 0.004;
-  ctx.strokeStyle = "rgba(103, 232, 249, 0.7)";
-  ctx.lineWidth = 1.5;
-  for (let r = 0; r < 4; r++) {
-    const rOffset = (rippleT + r * 0.7) % 3.0;
-    const rw = 14 + rOffset * 9;
-    const rh = 6 + rOffset * 3.8;
-    ctx.beginPath();
-    ctx.ellipse(cx, cy + 1, rw, rh, 0, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-
-  // Glistening Golden Wish Coins & Sapphire Gems on Floor
-  ctx.fillStyle = "#fbbf24";
-  ctx.fillRect(cx - 24, cy + 7, 4, 3);
-  ctx.fillRect(cx + 22, cy + 5, 4, 3);
-  ctx.fillRect(cx - 8, cy + 11, 4, 3);
-  ctx.fillRect(cx + 14, cy + 9, 3, 2);
-  ctx.fillStyle = "#38bdf8"; // Sapphire Gem
-  ctx.fillRect(cx - 18, cy + 4, 3, 3);
-  ctx.fillStyle = "#ffffff"; // Coin Gleams
-  ctx.fillRect(cx - 23, cy + 7, 1.5, 1.5);
-  ctx.fillRect(cx + 23, cy + 5, 1.5, 1.5);
-
-  // 5. 4 Carved Stone Gargoyle / Lion Water Spouts (Shooting Inward)
-  // Left Lion Spout
-  ctx.fillStyle = "#334155";
-  ctx.fillRect(cx - 52, cy - 2, 8, 8);
-  ctx.fillStyle = "#64748b";
-  ctx.fillRect(cx - 50, cy - 1, 5, 5);
-  // Right Lion Spout
-  ctx.fillStyle = "#334155";
-  ctx.fillRect(cx + 44, cy - 2, 8, 8);
-  ctx.fillStyle = "#64748b";
-  ctx.fillRect(cx + 45, cy - 1, 5, 5);
-
-  // Inward Arched Water Streams from Side Spouts
-  const spoutWiggle = Math.sin(time * 0.008) * 1.2;
-  // Left Inward Stream
-  ctx.strokeStyle = "rgba(224, 242, 254, 0.85)";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(cx - 44, cy + 2);
-  ctx.quadraticCurveTo(cx - 30, cy - 4, cx - 18 + spoutWiggle, cy + 5);
-  ctx.stroke();
-  // Right Inward Stream
-  ctx.beginPath();
-  ctx.moveTo(cx + 44, cy + 2);
-  ctx.quadraticCurveTo(cx + 30, cy - 4, cx + 18 - spoutWiggle, cy + 5);
-  ctx.stroke();
-
-  // 6. Tier 2: Fluted Corinthian Marble Column & Mid-Level Shell Bowl
-  ctx.fillStyle = "#1e293b";
-  ctx.fillRect(cx - 14, cy - 8, 28, 18);
-  ctx.fillStyle = "#334155";
-  ctx.fillRect(cx - 11, cy - 24, 22, 20);
-
-  // Column Fluted Highlights & Gold Acanthus Band
-  ctx.fillStyle = "#64748b";
-  ctx.fillRect(cx - 9, cy - 24, 4, 18);
-  ctx.fillRect(cx + 5, cy - 24, 4, 18);
-  ctx.fillStyle = "#1e293b";
-  ctx.fillRect(cx - 2, cy - 24, 4, 18);
-  ctx.fillStyle = "#fbbf24"; // Gold Acanthus Band
-  ctx.fillRect(cx - 11, cy - 10, 22, 3);
-  ctx.fillStyle = "#fde047";
-  ctx.fillRect(cx - 9, cy - 10, 18, 1);
-
-  // Mid Scalloped Marble Basin Bowl (Tier 2 Bowl)
-  ctx.fillStyle = "#1e293b";
-  ctx.beginPath();
-  ctx.ellipse(cx, cy - 24, 25, 12, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = "#334155";
-  ctx.beginPath();
-  ctx.ellipse(cx, cy - 26, 23, 10, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = "#64748b";
-  ctx.beginPath();
-  ctx.ellipse(cx, cy - 27, 20, 8, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = "#94a3b8"; // Bowl Lip Gleam
-  ctx.beginPath();
-  ctx.ellipse(cx, cy - 28, 18, 6.5, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Water in Mid Bowl
-  ctx.fillStyle = "#38bdf8";
-  ctx.beginPath();
-  ctx.ellipse(cx, cy - 29, 16, 5.5, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // 7. Cascading Water Curtains from Mid Bowl Lip (4 Streams)
-  const cascadeW = Math.sin(time * 0.008) * 1.5;
-  ctx.fillStyle = "rgba(224, 242, 254, 0.85)";
-  // Far Left Cascade
-  ctx.fillRect(cx - 20 + cascadeW * 0.5, cy - 26, 5, 26);
-  ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
-  ctx.fillRect(cx - 19 + cascadeW * 0.5, cy - 24, 3, 24);
-
-  // Far Right Cascade
-  ctx.fillStyle = "rgba(224, 242, 254, 0.85)";
-  ctx.fillRect(cx + 15 - cascadeW * 0.5, cy - 26, 5, 26);
-  ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
-  ctx.fillRect(cx + 16 - cascadeW * 0.5, cy - 24, 3, 24);
-
-  // Center-Front Cascade
-  ctx.fillStyle = "rgba(224, 242, 254, 0.85)";
-  ctx.fillRect(cx - 4, cy - 23, 8, 24);
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(cx - 2, cy - 22, 4, 22);
-
-  // 8. Tier 3: Upper Royal Golden Chalice & Geyser Crown
-  ctx.fillStyle = "#78350f";
-  ctx.fillRect(cx - 6, cy - 36, 12, 10);
-  ctx.fillStyle = "#d97706";
-  ctx.fillRect(cx - 5, cy - 36, 10, 8);
-  ctx.fillStyle = "#fbbf24";
-  ctx.fillRect(cx - 4, cy - 36, 8, 8);
-
-  // Upper Chalice Bowl with Gold Rim
-  ctx.fillStyle = "#b45309";
-  ctx.beginPath();
-  ctx.ellipse(cx, cy - 38, 14, 7, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = "#fbbf24";
-  ctx.beginPath();
-  ctx.ellipse(cx, cy - 39, 12, 5.5, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = "#fde047"; // Gold Lip
-  ctx.beginPath();
-  ctx.ellipse(cx, cy - 40, 10, 4.5, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = "#38bdf8"; // Water in Upper Chalice
-  ctx.beginPath();
-  ctx.ellipse(cx, cy - 41, 8, 3.5, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // 9. Surging High-Pressure Water Geyser & Plume Crown
-  const jetPulse = Math.sin(time * 0.01) * 4;
-  const jetHeight = 24 + jetPulse;
-
-  // Multi-Tone Upward Water Column
-  ctx.fillStyle = "rgba(186, 230, 253, 0.9)";
-  ctx.fillRect(cx - 4, cy - 41 - jetHeight, 8, jetHeight);
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(cx - 2, cy - 41 - jetHeight, 4, jetHeight);
-
-  // Frothing White Water Foam Crown at Apex
-  ctx.fillStyle = "#ffffff";
-  ctx.beginPath();
-  ctx.arc(cx, cy - 42 - jetHeight, 6, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "rgba(224, 242, 254, 0.8)";
-  ctx.beginPath();
-  ctx.arc(cx, cy - 42 - jetHeight, 8, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Expanding Water Splash Foam Ring in Upper Chalice
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.ellipse(cx, cy - 41, 9, 3.5, 0, 0, Math.PI * 2);
-  ctx.stroke();
-
-  // 10. 12 Dynamic Airborne Water Droplets Leaping & Splashing
-  const waterTime = time * 0.005;
-  ctx.fillStyle = "#ffffff";
-  for (let i = 0; i < 10; i++) {
-    const angle = (i * Math.PI) / 5 + waterTime;
-    const spreadX = Math.cos(angle) * (18 + (i % 3) * 10);
-    const dropY = cy - 28 + Math.sin(angle) * (12 + (i % 2) * 6) + (i % 3) * 6;
-    ctx.beginPath();
-    ctx.arc(cx + spreadX, dropY, 2.0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // 11. Prismatic Rainbow Mist Shimmer
-  const mistPulse = Math.sin(time * 0.004) * 0.15 + 0.25;
-  const rainbowGrad = ctx.createLinearGradient(cx - 30, cy - 60, cx + 30, cy - 30);
-  rainbowGrad.addColorStop(0, `rgba(239, 68, 68, ${mistPulse * 0.5})`);
-  rainbowGrad.addColorStop(0.25, `rgba(234, 179, 8, ${mistPulse * 0.5})`);
-  rainbowGrad.addColorStop(0.5, `rgba(34, 197, 94, ${mistPulse * 0.6})`);
-  rainbowGrad.addColorStop(0.75, `rgba(56, 189, 248, ${mistPulse * 0.6})`);
-  rainbowGrad.addColorStop(1, `rgba(168, 85, 247, ${mistPulse * 0.5})`);
-
-  ctx.strokeStyle = rainbowGrad;
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.arc(cx + 4, cy - 38, 28, Math.PI * 1.1, Math.PI * 1.9);
-  ctx.stroke();
+function drawGamerCottageInteriorLabels(ctx: CanvasRenderingContext2D): void {
+  ctx.fillStyle = PAL.violetD; ctx.fillRect(264, 38, 172, 18);
+  ctx.fillStyle = PAL.out; ctx.fillRect(267, 41, 166, 12);
+  ctx.fillStyle = PAL.glassL; ctx.font = "bold 8px monospace"; ctx.textAlign = "center";
+  ctx.fillText("GAMER COTTAGE // NIGHT GAME DEN", 350, 50);
+  ctx.fillStyle = PAL.violetD; ctx.fillRect(265, 276, 170, 20);
+  ctx.fillStyle = PAL.wallL; ctx.font = "bold 9px monospace";
+  ctx.fillText("[SPACE / E] OPEN GAME SHELF", 350, 290);
+  ctx.fillStyle = PAL.violetD; ctx.fillRect(295, 466, 110, 16);
+  ctx.fillStyle = PAL.glassL; ctx.font = "bold 8px monospace"; ctx.fillText("▼ EXIT TO TOWN ▼", 350, 477);
 }
 
 function drawParticles(ctx: CanvasRenderingContext2D, particles: Particle[]) {
@@ -4143,566 +562,6 @@ function drawParticles(ctx: CanvasRenderingContext2D, particles: Particle[]) {
     ctx.fillRect(pt.x, pt.y, pt.size, pt.size);
   }
   ctx.globalAlpha = 1.0;
-}
-
-// =========================================================================
-// --- PROJECTS SHOWCASE GUILD INTERIOR RENDERER (700 x 540) ---
-// =========================================================================
-function drawProjectStationPedestal(
-  ctx: CanvasRenderingContext2D,
-  station: ProjectStation,
-  time: number
-) {
-  const sx = station.x;
-  const sy = station.y;
-  const sw = station.width;
-  const sh = station.height;
-
-  // 1. Radial Floor Glow Halo
-  const halo = ctx.createRadialGradient(
-    sx + sw / 2,
-    sy + sh / 2 + 10,
-    4,
-    sx + sw / 2,
-    sy + sh / 2 + 10,
-    44
-  );
-  halo.addColorStop(0, `${station.color}40`);
-  halo.addColorStop(0.6, `${station.color}15`);
-  halo.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = halo;
-  ctx.beginPath();
-  ctx.arc(sx + sw / 2, sy + sh / 2 + 10, 44, 0, Math.PI * 2);
-  ctx.fill();
-
-  // 2. 3D Volumetric Drop Shadow
-  ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
-  ctx.beginPath();
-  ctx.ellipse(sx + sw / 2, sy + sh + 2, sw / 2 + 4, 8, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // 3. Stepped Marble & Polished Walnut Pedestal Plinth
-  // Tier 1 Base Plinth
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(sx - 4, sy + sh - 10, sw + 8, 12);
-  ctx.fillStyle = "#1e293b";
-  ctx.fillRect(sx - 2, sy + sh - 8, sw + 4, 8);
-
-  // Tier 2 Column Body
-  ctx.fillStyle = "#334155";
-  ctx.fillRect(sx, sy + 14, sw, sh - 22);
-  ctx.fillStyle = "#475569";
-  ctx.fillRect(sx + 2, sy + 14, sw - 4, sh - 22);
-
-  // Gold Trim Rings
-  ctx.fillStyle = "#fbbf24";
-  ctx.fillRect(sx - 2, sy + 14, sw + 4, 3);
-  ctx.fillRect(sx - 2, sy + sh - 13, sw + 4, 3);
-
-  // 4. Glowing Holographic Terminal Vitrine (Floating Screen)
-  const hoverFloat = Math.sin(time * 0.005 + sx) * 3;
-
-  // Glass Case Backing
-  ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
-  ctx.fillRect(sx + 6, sy - 12 + hoverFloat, sw - 12, 24);
-  ctx.strokeStyle = station.color;
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(sx + 6, sy - 12 + hoverFloat, sw - 12, 24);
-
-  // Live Screen Color Gradient
-  const screenGrad = ctx.createLinearGradient(
-    sx,
-    sy - 12 + hoverFloat,
-    sx,
-    sy + 12 + hoverFloat
-  );
-  screenGrad.addColorStop(0, `${station.color}40`);
-  screenGrad.addColorStop(1, "rgba(15, 23, 42, 0.9)");
-  ctx.fillStyle = screenGrad;
-  ctx.fillRect(sx + 8, sy - 10 + hoverFloat, sw - 16, 20);
-
-  // Tech Badge Icon Miniature on Screen
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 8px monospace";
-  ctx.textAlign = "center";
-  ctx.fillText("⚡ PROJ", sx + sw / 2, sy - 1 + hoverFloat);
-  ctx.fillStyle = station.color;
-  ctx.font = "bold 7px monospace";
-  ctx.fillText(station.shortTitle.slice(0, 9), sx + sw / 2, sy + 7 + hoverFloat);
-
-  // Corner Capacitor Nodes (Blinking LED dots)
-  const isBlink = Math.floor(time / 400) % 2 === 0;
-  ctx.fillStyle = isBlink ? "#4ade80" : "#166534";
-  ctx.fillRect(sx + 8, sy - 9 + hoverFloat, 2, 2);
-  ctx.fillRect(sx + sw - 10, sy - 9 + hoverFloat, 2, 2);
-
-  // 5. Nameplate Plaque Below Pedestal
-  ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
-  ctx.fillRect(sx + sw / 2 - 42, sy + sh + 4, 84, 12);
-  ctx.strokeStyle = station.color;
-  ctx.lineWidth = 1;
-  ctx.strokeRect(sx + sw / 2 - 42, sy + sh + 4, 84, 12);
-
-  ctx.fillStyle = station.color;
-  ctx.font = "bold 7.5px monospace";
-  ctx.textAlign = "center";
-  ctx.fillText(station.shortTitle, sx + sw / 2, sy + sh + 13);
-}
-
-function drawProjectsGuildInterior(
-  ctx: CanvasRenderingContext2D,
-  time: number,
-  charactersImage: HTMLImageElement | null
-) {
-  const gw = GUILD_INTERIOR_WIDTH; // 700
-  const gh = GUILD_INTERIOR_HEIGHT; // 540
-
-  // 1. Dark Atmospheric Void Backdrop
-  ctx.fillStyle = "#020617";
-  ctx.fillRect(0, 0, gw, gh);
-
-  // 2. Room Outer Drop Shadow & Wall Boundary
-  ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
-  ctx.fillRect(40, 60, gw - 80, gh - 90);
-
-  // 3. Herringbone / Parquet Oak Hardwood Floor (Interior Area: x: 60..640, y: 110..480)
-  const floorX = 60;
-  const floorY = 110;
-  const floorW = gw - 120; // 580
-  const floorH = gh - 150; // 390
-
-  // Rich Walnut / Golden Oak Base Flooring
-  ctx.fillStyle = "#3e2723";
-  ctx.fillRect(floorX, floorY, floorW, floorH);
-
-  // Parquet Herringbone Diagonal Slats
-  const plankW = 20;
-  const plankH = 10;
-  for (let py = floorY; py < floorY + floorH; py += plankH) {
-    for (let px = floorX; px < floorX + floorW; px += plankW) {
-      const isAlt = ((px - floorX) / plankW + (py - floorY) / plankH) % 2 === 0;
-      ctx.fillStyle = isAlt ? "#5d4037" : "#4e342e";
-      ctx.fillRect(px, py, plankW - 1, plankH - 1);
-
-      // Wood Grain Highlight Slat
-      ctx.fillStyle = isAlt ? "#6d4c41" : "#5c3d2e";
-      ctx.fillRect(px + 1, py + 1, plankW - 3, 1.5);
-
-      // Occasional polished parquet gleam
-      if ((px * 7 + py * 13) % 47 === 0) {
-        ctx.fillStyle = "rgba(255, 235, 179, 0.08)";
-        ctx.fillRect(px, py, plankW - 1, plankH - 1);
-      }
-    }
-  }
-
-  // Floor Perimeter Mahogany Inlay Border
-  ctx.fillStyle = "#271206";
-  ctx.fillRect(floorX, floorY, floorW, 4);
-  ctx.fillRect(floorX, floorY + floorH - 4, floorW, 4);
-  ctx.fillRect(floorX, floorY, 4, floorH);
-  ctx.fillRect(floorX + floorW - 4, floorY, 4, floorH);
-  ctx.fillStyle = "#fbbf24";
-  ctx.fillRect(floorX + 4, floorY + 4, floorW - 8, 1.5);
-  ctx.fillRect(floorX + 4, floorY + floorH - 5.5, floorW - 8, 1.5);
-
-  // 4. Grand Royal Blue & Gold Guild Runner Carpet
-  const carpetX = 280;
-  const carpetW = 140;
-  const carpetY = floorY + 10;
-  const carpetH = floorH - 15;
-
-  // Velvet Shadow
-  ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
-  ctx.fillRect(carpetX - 3, carpetY, carpetW + 6, carpetH);
-
-  // Royal Cobalt Velvet Body
-  const carpetGrad = ctx.createLinearGradient(carpetX, 0, carpetX + carpetW, 0);
-  carpetGrad.addColorStop(0, "#172554");
-  carpetGrad.addColorStop(0.5, "#1e3a8a");
-  carpetGrad.addColorStop(1, "#172554");
-  ctx.fillStyle = carpetGrad;
-  ctx.fillRect(carpetX, carpetY, carpetW, carpetH);
-
-  // Gold Filigree Embroidery Border
-  ctx.strokeStyle = "#fbbf24";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(carpetX + 5, carpetY + 5, carpetW - 10, carpetH - 10);
-  ctx.strokeStyle = "#fef08a";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(carpetX + 9, carpetY + 9, carpetW - 18, carpetH - 18);
-
-  // Carpet Diamond Medallions
-  for (let my = carpetY + 30; my < carpetY + carpetH - 30; my += 50) {
-    ctx.fillStyle = "#fbbf24";
-    ctx.beginPath();
-    ctx.moveTo(carpetX + carpetW / 2, my - 12);
-    ctx.lineTo(carpetX + carpetW / 2 + 16, my);
-    ctx.lineTo(carpetX + carpetW / 2, my + 12);
-    ctx.lineTo(carpetX + carpetW / 2 - 16, my);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = "#1e3a8a";
-    ctx.beginPath();
-    ctx.moveTo(carpetX + carpetW / 2, my - 7);
-    ctx.lineTo(carpetX + carpetW / 2 + 9, my);
-    ctx.lineTo(carpetX + carpetW / 2, my + 7);
-    ctx.lineTo(carpetX + carpetW / 2 - 9, my);
-    ctx.closePath();
-    ctx.fill();
-  }
-
-  // Tasseled Gold Carpet Fringes
-  ctx.fillStyle = "#fbbf24";
-  for (let fx = carpetX; fx < carpetX + carpetW; fx += 4) {
-    ctx.fillRect(fx, carpetY - 3, 2.5, 3);
-    ctx.fillRect(fx, carpetY + carpetH, 2.5, 3);
-  }
-
-  // 5. Ashlar Stone Foundation & Dark Mahogany Wainscoting Walls (Top, Left, Right)
-  // Top North Wall (y: 35..110)
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(50, 35, gw - 100, 75);
-  ctx.fillStyle = "#1e293b";
-  ctx.fillRect(54, 38, gw - 108, 42);
-
-  // Stone Brick Mortar Joints
-  ctx.strokeStyle = "#0f172a";
-  ctx.lineWidth = 1.5;
-  for (let sy = 38; sy < 80; sy += 14) {
-    ctx.beginPath();
-    ctx.moveTo(54, sy);
-    ctx.lineTo(gw - 54, sy);
-    ctx.stroke();
-    const offset = sy % 28 === 0 ? 0 : 18;
-    for (let sx = 54 + offset; sx < gw - 54; sx += 36) {
-      ctx.beginPath();
-      ctx.moveTo(sx, sy);
-      ctx.lineTo(sx, sy + 14);
-      ctx.stroke();
-    }
-  }
-
-  // Lower Mahogany Wainscoting Panel on North Wall (y: 80..110)
-  ctx.fillStyle = "#3e1c07";
-  ctx.fillRect(54, 80, gw - 108, 30);
-  ctx.fillStyle = "#78350f";
-  for (let wx = 60; wx < gw - 70; wx += 28) {
-    ctx.fillRect(wx, 83, 24, 24);
-    ctx.fillStyle = "#270f03";
-    ctx.strokeRect(wx + 2, 85, 20, 20);
-    ctx.fillStyle = "#78350f";
-  }
-  // Gold Chair Rail & Baseboard
-  ctx.fillStyle = "#fbbf24";
-  ctx.fillRect(54, 79, gw - 108, 2);
-  ctx.fillStyle = "#270f03";
-  ctx.fillRect(54, 107, gw - 108, 4);
-
-  // Left & Right Wainscoted Timber Walls
-  ctx.fillStyle = "#1e293b";
-  ctx.fillRect(50, 35, 12, gh - 75);
-  ctx.fillRect(gw - 62, 35, 12, gh - 75);
-  ctx.fillStyle = "#451a03";
-  ctx.fillRect(58, 35, 4, gh - 75);
-  ctx.fillRect(gw - 62, 35, 4, gh - 75);
-
-  // 6. Arched Stained Glass Cathedral Windows (West Wall at x:60, y:190 and East Wall at x:610, y:190)
-  const drawStainedGlassWindow = (wx: number, wy: number) => {
-    ctx.fillStyle = "#0f172a";
-    ctx.fillRect(wx - 2, wy - 2, 16, 74);
-    ctx.fillStyle = "#1e3a8a";
-    ctx.fillRect(wx, wy, 12, 70);
-    // Ruby & Amber Glass Panes
-    ctx.fillStyle = "#ef4444";
-    ctx.fillRect(wx + 2, wy + 4, 8, 16);
-    ctx.fillStyle = "#facc15";
-    ctx.fillRect(wx + 2, wy + 24, 8, 18);
-    ctx.fillStyle = "#06b6d4";
-    ctx.fillRect(wx + 2, wy + 46, 8, 20);
-    // Leaded Cames
-    ctx.strokeStyle = "#0f172a";
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(wx, wy, 12, 70);
-
-    // Sunlight Shaft cast across floor
-    const lightAngle = wx < 200 ? 1 : -1;
-    const sunGrad = ctx.createLinearGradient(
-      wx + 6,
-      wy + 35,
-      wx + 6 + lightAngle * 140,
-      wy + 180
-    );
-    sunGrad.addColorStop(0, "rgba(254, 240, 138, 0.22)");
-    sunGrad.addColorStop(0.5, "rgba(56, 189, 248, 0.12)");
-    sunGrad.addColorStop(1, "rgba(254, 240, 138, 0)");
-    ctx.fillStyle = sunGrad;
-    ctx.beginPath();
-    ctx.moveTo(wx + 6, wy + 20);
-    ctx.lineTo(wx + 6 + lightAngle * 150, wy + 160);
-    ctx.lineTo(wx + 6 + lightAngle * 170, wy + 220);
-    ctx.lineTo(wx + 6, wy + 70);
-    ctx.closePath();
-    ctx.fill();
-  };
-
-  drawStainedGlassWindow(54, 210);
-  drawStainedGlassWindow(gw - 66, 210);
-
-  // 7. Grand Stone Fireplace & Chimney (Top Center: x: 300..400, y: 40..112)
-  const fpX = 300;
-  const fpY = 40;
-  const fpW = 100;
-  const fpH = 72;
-
-  // Stone Chimney Breast
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(fpX - 4, fpY, fpW + 8, fpH);
-  ctx.fillStyle = "#334155";
-  ctx.fillRect(fpX, fpY + 4, fpW, fpH - 4);
-
-  // Heavy Carved Mantelpiece
-  ctx.fillStyle = "#1e293b";
-  ctx.fillRect(fpX - 8, fpY + 24, fpW + 16, 8);
-  ctx.fillStyle = "#475569";
-  ctx.fillRect(fpX - 6, fpY + 24, fpW + 12, 2.5);
-  ctx.fillStyle = "#fbbf24";
-  ctx.fillRect(fpX + fpW / 2 - 20, fpY + 8, 40, 14); // Guild Crest Plaque
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(fpX + fpW / 2 - 18, fpY + 10, 36, 10);
-  ctx.fillStyle = "#facc15";
-  ctx.font = "bold 7px monospace";
-  ctx.textAlign = "center";
-  ctx.fillText("PROJ GUILD", fpX + fpW / 2, fpY + 18);
-
-  // Arched Firebox Cavity
-  ctx.fillStyle = "#020617";
-  ctx.fillRect(fpX + 16, fpY + 34, fpW - 32, 38);
-  ctx.fillStyle = "#1c1917";
-  ctx.beginPath();
-  ctx.arc(fpX + fpW / 2, fpY + 42, 22, Math.PI, 0);
-  ctx.fill();
-
-  // Cast Iron Fire Grate & Burning Logs
-  ctx.fillStyle = "#292524";
-  ctx.fillRect(fpX + 22, fpY + 60, fpW - 44, 8);
-  ctx.fillStyle = "#451a03";
-  ctx.fillRect(fpX + 26, fpY + 56, fpW - 52, 6);
-
-  // Animated Fire Flames & Sparks
-  const f1 = Math.sin(time * 0.015) * 4;
-  const f2 = Math.cos(time * 0.02) * 5;
-  const f3 = Math.sin(time * 0.025 + 1.5) * 3;
-
-  // Outer Crimson Flame
-  ctx.fillStyle = "#dc2626";
-  ctx.beginPath();
-  ctx.moveTo(fpX + 30, fpY + 62);
-  ctx.quadraticCurveTo(fpX + 42 + f1, fpY + 38, fpX + 50 + f2, fpY + 32);
-  ctx.quadraticCurveTo(fpX + 58 + f3, fpY + 38, fpX + 70, fpY + 62);
-  ctx.closePath();
-  ctx.fill();
-
-  // Core Amber / Yellow Flame
-  ctx.fillStyle = "#f97316";
-  ctx.beginPath();
-  ctx.moveTo(fpX + 36, fpY + 62);
-  ctx.quadraticCurveTo(fpX + 46 + f2, fpY + 44, fpX + 50 + f1, fpY + 38);
-  ctx.quadraticCurveTo(fpX + 54 + f3, fpY + 44, fpX + 64, fpY + 62);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.fillStyle = "#fef08a";
-  ctx.beginPath();
-  ctx.moveTo(fpX + 42, fpY + 62);
-  ctx.lineTo(fpX + 50, fpY + 46 + f1);
-  ctx.lineTo(fpX + 58, fpY + 62);
-  ctx.closePath();
-  ctx.fill();
-
-  // Leaping Fire Sparks
-  ctx.fillStyle = "#fbbf24";
-  ctx.fillRect(
-    fpX + 46 + Math.sin(time * 0.03) * 12,
-    fpY + 30 - ((time * 0.05) % 20),
-    2,
-    2
-  );
-  ctx.fillRect(
-    fpX + 54 + Math.cos(time * 0.025) * 10,
-    fpY + 28 - (((time + 300) * 0.04) % 18),
-    1.5,
-    1.5
-  );
-
-  // Radial Warm Firelight Gradient on Room Floor
-  const fireHalo = ctx.createRadialGradient(
-    fpX + fpW / 2,
-    fpY + 60,
-    10,
-    fpX + fpW / 2,
-    fpY + 60,
-    160
-  );
-  fireHalo.addColorStop(0, "rgba(251, 146, 60, 0.35)");
-  fireHalo.addColorStop(0.5, "rgba(245, 158, 11, 0.15)");
-  fireHalo.addColorStop(1, "rgba(245, 158, 11, 0)");
-  ctx.fillStyle = fireHalo;
-  ctx.beginPath();
-  ctx.arc(fpX + fpW / 2, fpY + 60, 160, 0, Math.PI * 2);
-  ctx.fill();
-
-  // 8. Bookshelves & Tech Trophy Cabinets (North-West & North-East Corners)
-  // West Tech Library
-  ctx.fillStyle = "#270f03";
-  ctx.fillRect(80, 80, 80, 36);
-  ctx.fillStyle = "#78350f";
-  ctx.fillRect(82, 82, 76, 32);
-  // Colorful Software Engineering Books
-  const bookColors = [
-    "#ef4444",
-    "#3b82f6",
-    "#10b981",
-    "#f59e0b",
-    "#8b5cf6",
-    "#06b6d4",
-  ];
-  for (let bx = 86; bx < 152; bx += 8) {
-    const col = bookColors[Math.floor((bx * 3) / 8) % bookColors.length];
-    ctx.fillStyle = col;
-    ctx.fillRect(bx, 84, 6, 12);
-    ctx.fillRect(bx, 99, 6, 12);
-  }
-
-  // East Drafting Desk & Architecture Blueprints (with Architect Astro)
-  const deskX = 520;
-  const deskY = 82;
-  ctx.fillStyle = "#270f03";
-  ctx.fillRect(deskX, deskY, 80, 34);
-  ctx.fillStyle = "#9a3412";
-  ctx.fillRect(deskX + 2, deskY + 2, 76, 30);
-  // Rolled Blueprints on Desk
-  ctx.fillStyle = "#0284c7";
-  ctx.fillRect(deskX + 8, deskY + 6, 26, 18);
-  ctx.strokeStyle = "#ffffff";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(deskX + 10, deskY + 8, 22, 14);
-  ctx.fillStyle = "#fbbf24";
-  ctx.fillRect(deskX + 40, deskY + 12, 20, 5); // Brass Drafting Compass
-
-  // Architect Astro standing at the drafting table (Row 0 sprite)
-  drawSpritesheetCharacter(
-    ctx,
-    charactersImage,
-    0,
-    deskX + 26,
-    deskY + 18,
-    "down",
-    false,
-    0,
-    "none"
-  );
-  // Architect Astro Nameplate
-  ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
-  ctx.fillRect(deskX + 42 - 46, deskY + 6, 92, 12);
-  ctx.fillStyle = "#38bdf8";
-  ctx.font = "bold 7.5px monospace";
-  ctx.textAlign = "center";
-  ctx.fillText("Architect Astro 🛠️", deskX + 42, deskY + 15);
-
-  // 9. Interactive 3D Project Exhibition Stations / Pedestals
-  GUILD_PROJECT_STATIONS.forEach((station) => {
-    drawProjectStationPedestal(ctx, station, time);
-  });
-
-  // 10. South Entrance Double Oak Doors & Welcome Mat (x: 310..390, y: 470..520)
-  const doorX = 310;
-  const doorY = gh - 70;
-  const doorW = 80;
-
-  // Crimson Embroidered Welcome Exit Mat
-  ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-  ctx.fillRect(doorX - 10, doorY - 14, doorW + 20, 26);
-  ctx.fillStyle = "#991b1b";
-  ctx.fillRect(doorX - 8, doorY - 12, doorW + 16, 22);
-  ctx.strokeStyle = "#fbbf24";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(doorX - 6, doorY - 10, doorW + 12, 18);
-  ctx.fillStyle = "#fef08a";
-  ctx.font = "bold 8px monospace";
-  ctx.textAlign = "center";
-  ctx.fillText("▼ EXIT TO TOWN ▼", doorX + doorW / 2, doorY + 3);
-
-  // South Wall & Double Oak Doorway
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(50, gh - 60, doorX - 50, 60);
-  ctx.fillRect(doorX + doorW, gh - 60, gw - (doorX + doorW) - 50, 60);
-  ctx.fillStyle = "#3e1c07";
-  ctx.fillRect(54, gh - 56, doorX - 58, 20);
-  ctx.fillRect(doorX + doorW + 4, gh - 56, gw - (doorX + doorW) - 58, 20);
-
-  // Double Door Frame
-  ctx.fillStyle = "#1e293b";
-  ctx.fillRect(doorX - 4, doorY, doorW + 8, 48);
-  ctx.fillStyle = "#451a03";
-  ctx.fillRect(doorX, doorY + 2, 38, 44);
-  ctx.fillRect(doorX + 42, doorY + 2, 38, 44);
-  ctx.fillStyle = "#78350f";
-  ctx.fillRect(doorX + 3, doorY + 5, 32, 38);
-  ctx.fillRect(doorX + 45, doorY + 5, 32, 38);
-  // Brass Handles
-  ctx.fillStyle = "#facc15";
-  ctx.fillRect(doorX + 30, doorY + 22, 3, 6);
-  ctx.fillRect(doorX + 47, doorY + 22, 3, 6);
-
-  // 11. Overhead Wrought-Iron Chandeliers with Warm Pulsing Halos
-  const drawChandelier = (cx: number, cy: number) => {
-    // Hanging Chains
-    ctx.strokeStyle = "#1e293b";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(cx, 0);
-    ctx.lineTo(cx, cy);
-    ctx.stroke();
-
-    // Wheel Ring
-    ctx.fillStyle = "#0f172a";
-    ctx.beginPath();
-    ctx.ellipse(cx, cy, 26, 8, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "#475569";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // 4 Candles & Flames
-    const candles = [-18, -6, 6, 18];
-    candles.forEach((ox) => {
-      ctx.fillStyle = "#fef3c7";
-      ctx.fillRect(cx + ox - 2, cy - 8, 4, 8);
-      // Flame
-      const cPulse = Math.sin(time * 0.01 + ox) * 2;
-      ctx.fillStyle = "#f59e0b";
-      ctx.beginPath();
-      ctx.moveTo(cx + ox - 2, cy - 8);
-      ctx.lineTo(cx + ox, cy - 14 + cPulse);
-      ctx.lineTo(cx + ox + 2, cy - 8);
-      ctx.closePath();
-      ctx.fill();
-    });
-
-    // Radial Amber Glow on Floor
-    const cHalo = ctx.createRadialGradient(cx, cy + 80, 5, cx, cy + 80, 90);
-    cHalo.addColorStop(0, "rgba(254, 240, 138, 0.2)");
-    cHalo.addColorStop(1, "rgba(254, 240, 138, 0)");
-    ctx.fillStyle = cHalo;
-    ctx.beginPath();
-    ctx.arc(cx, cy + 80, 90, 0, Math.PI * 2);
-    ctx.fill();
-  };
-
-  drawChandelier(200, 100);
-  drawChandelier(500, 100);
-  drawChandelier(350, 240);
 }
 
 export default function GameCanvas() {
@@ -4722,8 +581,8 @@ export default function GameCanvas() {
   } | null>(null);
 
   // Scene Management (Overworld vs Building Interiors)
-  const [currentScene, setCurrentScene] = useState<"overworld" | "projects-guild">("overworld");
-  const currentSceneRef = useRef<"overworld" | "projects-guild">("overworld");
+  const [currentScene, setCurrentScene] = useState<GameScene>("overworld");
+  const currentSceneRef = useRef<GameScene>("overworld");
   useEffect(() => {
     currentSceneRef.current = currentScene;
   }, [currentScene]);
@@ -4746,6 +605,7 @@ export default function GameCanvas() {
   }, [selectedSkinId]);
 
   const charactersImageRef = useRef<HTMLImageElement | null>(null);
+  const terrainCacheRef = useRef<HTMLCanvasElement | null>(null);
 
   // Player state
   const playerRef = useRef<Player>({
@@ -4768,6 +628,8 @@ export default function GameCanvas() {
   const mobileDirRef = useRef<"up" | "down" | "left" | "right" | null>(null);
   const isRunningRef = useRef<boolean>(false);
   const particlesRef = useRef<Particle[]>([]);
+  const leavesRef = useRef<Leaf[]>([]);
+  const wasInGrassRef = useRef(false);
 
   // Initialize live NPC positions & wander anchors
   useEffect(() => {
@@ -4794,6 +656,13 @@ export default function GameCanvas() {
     cImg.onload = () => {
       charactersImageRef.current = cImg;
     };
+  }, []);
+
+  // Build the static sprite-art terrain once on mount. document.createElement
+  // requires a browser environment, so this must run inside an effect, never
+  // at module scope where Next.js would also execute it during SSR.
+  useEffect(() => {
+    terrainCacheRef.current = renderTerrainToCache();
   }, []);
 
   const handleToggleMute = () => {
@@ -4861,7 +730,84 @@ export default function GameCanvas() {
       return false;
     }
 
-    // --- 2. OVERWORLD COLLISION ---
+    // --- 2. VILLAGE POST INTERIOR SCENE COLLISION ---
+    if (currentSceneRef.current === "village-post") {
+      if (
+        pLeft < 60 ||
+        pRight > VILLAGE_POST_INTERIOR_WIDTH - 60 ||
+        pTop < 112
+      ) {
+        return true;
+      }
+      if (pBottom > VILLAGE_POST_INTERIOR_HEIGHT - 60) {
+        if (pLeft >= 305 && pRight <= 395) return false;
+        return true;
+      }
+
+      // Service counter and parcel stacks.
+      if (pRight > 204 && pLeft < 496 && pBottom > 154 && pTop < 252) return true;
+      if (pRight > 64 && pLeft < 156 && pBottom > 134 && pTop < 232) return true;
+      if (pRight > 550 && pLeft < 638 && pBottom > 168 && pTop < 232) return true;
+      return false;
+    }
+
+    // --- 3. AZRA SANCTUARY INTERIOR SCENE COLLISION ---
+    if (currentSceneRef.current === "azra-sanctuary") {
+      if (
+        pLeft < 60 ||
+        pRight > AZRA_SANCTUARY_INTERIOR_WIDTH - 60 ||
+        pTop < 112
+      ) {
+        return true;
+      }
+      if (pBottom > AZRA_SANCTUARY_INTERIOR_HEIGHT - 60) {
+        if (pLeft >= 305 && pRight <= 395) return false;
+        return true;
+      }
+
+      // Oracle Core and its four framing pylons.
+      if (pRight > 292 && pLeft < 408 && pBottom > 176 && pTop < 292) return true;
+      if (pRight > 228 && pLeft < 276 && pBottom > 170 && pTop < 370) return true;
+      if (pRight > 424 && pLeft < 472 && pBottom > 170 && pTop < 370) return true;
+      return false;
+    }
+
+    // --- 4. DEVOPS STATION INTERIOR SCENE COLLISION ---
+    if (currentSceneRef.current === "devops-station") {
+      if (pLeft < 60 || pRight > DEVOPS_STATION_INTERIOR_WIDTH - 60 || pTop < 112) {
+        return true;
+      }
+      if (pBottom > DEVOPS_STATION_INTERIOR_HEIGHT - 60) {
+        if (pLeft >= 305 && pRight <= 395) return false;
+        return true;
+      }
+
+      // Operations console and the two battery cabinets.
+      if (pRight > 212 && pLeft < 488 && pBottom > 176 && pTop < 274) return true;
+      if (pRight > 72 && pLeft < 140 && pBottom > 208 && pTop < 330) return true;
+      if (pRight > 560 && pLeft < 628 && pBottom > 208 && pTop < 330) return true;
+      return false;
+    }
+
+    if (currentSceneRef.current === "career-archive" || currentSceneRef.current === "academy") {
+      if (pLeft < 60 || pRight > 640 || pTop < 112) return true;
+      if (pBottom > 480) return !(pLeft >= 305 && pRight <= 395);
+      if (currentSceneRef.current === "career-archive") {
+        if (pRight > 216 && pLeft < 488 && pBottom > 182 && pTop < 278) return true;
+        if ((pRight > 40 && pLeft < 124) || (pRight > 576 && pLeft < 660)) return pTop < 332;
+      } else if (pRight > 256 && pLeft < 444 && pBottom > 56 && pTop < 140) return true;
+      return false;
+    }
+
+    if (currentSceneRef.current === "gamer-cottage") {
+      if (pLeft < 60 || pRight > 640 || pTop < 112) return true;
+      if (pBottom > 480) return !(pLeft >= 305 && pRight <= 395);
+      if (pRight > 224 && pLeft < 476 && pBottom > 52 && pTop < 208) return true;
+      if ((pRight > 140 && pLeft < 236) || (pRight > 496 && pLeft < 592)) return pBottom > 292 && pTop < 356;
+      return false;
+    }
+
+    // --- 5. OVERWORLD COLLISION ---
     // Bounds
     if (
       pLeft < 24 ||
@@ -4880,8 +826,9 @@ export default function GameCanvas() {
       const objBottom = obj.y + obj.height;
 
       if (obj.type === "building" || obj.type === "azra") {
-        const doorLeft = objLeft + obj.width / 2 - 18;
-        const doorRight = objLeft + obj.width / 2 + 18;
+        const doorCenterX = obj.id === "devops-plant" ? 160 : obj.id === "education-monument" ? 132 : obj.id === "gaming-lounge" ? 648 : objLeft + obj.width / 2;
+        const doorLeft = doorCenterX - 18;
+        const doorRight = doorCenterX + 18;
         const isNearDoor = pLeft >= doorLeft && pRight <= doorRight && pTop >= objBottom - 24;
         if (isNearDoor) continue;
       }
@@ -5004,7 +951,16 @@ export default function GameCanvas() {
     npc?: NPC;
     worldObject?: WorldObject;
     projectStation?: ProjectStation;
-    doorTransition?: "enter_projects_guild" | "exit_guild";
+    doorTransition?:
+      | "enter_projects_guild"
+      | "exit_guild"
+      | "enter_village_post"
+      | "exit_village_post"
+      | "enter_azra_sanctuary"
+      | "exit_azra_sanctuary"
+      | "enter_devops_station"
+      | "exit_devops_station" | "enter_career_archive" | "exit_career_archive" | "enter_academy" | "exit_academy" | "enter_gamer_cottage" | "exit_gamer_cottage";
+    interiorAction?: "contact" | "azra" | "devops" | "experience" | "education" | "gaming";
     doorName?: string;
   } | null => {
     const p = playerRef.current;
@@ -5039,6 +995,63 @@ export default function GameCanvas() {
       return null;
     }
 
+    if (currentSceneRef.current === "village-post") {
+      if (
+        Math.hypot(centerX - 350, centerY - 475) < 40 ||
+        (p.y >= 455 && p.x >= 300 && p.x <= 400)
+      ) {
+        return { doorTransition: "exit_village_post", doorName: "Exit to Franze Town" };
+      }
+
+      if (Math.hypot(centerX - 350, centerY - 270) < 76) {
+        return { interiorAction: "contact" };
+      }
+      return null;
+    }
+
+    if (currentSceneRef.current === "azra-sanctuary") {
+      if (
+        Math.hypot(centerX - 350, centerY - 475) < 40 ||
+        (p.y >= 455 && p.x >= 300 && p.x <= 400)
+      ) {
+        return { doorTransition: "exit_azra_sanctuary", doorName: "Exit to Franze Town" };
+      }
+
+      if (Math.hypot(centerX - 350, centerY - 315) < 72) {
+        return { interiorAction: "azra" };
+      }
+      return null;
+    }
+
+    if (currentSceneRef.current === "devops-station") {
+      if (
+        Math.hypot(centerX - 350, centerY - 475) < 40 ||
+        (p.y >= 455 && p.x >= 300 && p.x <= 400)
+      ) {
+        return { doorTransition: "exit_devops_station", doorName: "Exit to Franze Town" };
+      }
+
+      if (Math.hypot(centerX - 350, centerY - 300) < 74) {
+        return { interiorAction: "devops" };
+      }
+      return null;
+    }
+
+    if (currentSceneRef.current === "career-archive" || currentSceneRef.current === "academy") {
+      if (Math.hypot(centerX - 350, centerY - 475) < 40 || (p.y >= 455 && p.x >= 300 && p.x <= 400)) {
+        return { doorTransition: currentSceneRef.current === "career-archive" ? "exit_career_archive" : "exit_academy", doorName: "Exit to Franze Town" };
+      }
+      const actionY = currentSceneRef.current === "career-archive" ? 300 : 120;
+      if (Math.hypot(centerX - 350, centerY - actionY) < 76) return { interiorAction: currentSceneRef.current === "career-archive" ? "experience" : "education" };
+      return null;
+    }
+
+    if (currentSceneRef.current === "gamer-cottage") {
+      if (Math.hypot(centerX - 350, centerY - 475) < 40 || (p.y >= 455 && p.x >= 300 && p.x <= 400)) return { doorTransition: "exit_gamer_cottage", doorName: "Exit to Franze Town" };
+      if (Math.hypot(centerX - 350, centerY - 260) < 76) return { interiorAction: "gaming" };
+      return null;
+    }
+
     // --- 2. OVERWORLD INTERACTIONS ---
     // Check Projects Guild Entrance Doorway (x: 140, y: 170)
     if (
@@ -5046,6 +1059,39 @@ export default function GameCanvas() {
       (p.y <= 174 && p.x >= 122 && p.x <= 158 && p.y >= 152)
     ) {
       return { doorTransition: "enter_projects_guild", doorName: "Projects Showcase Guild" };
+    }
+
+    // Village Post doorway (exterior art spans x:410..434, y:131..155).
+    if (
+      Math.hypot(centerX - 422, centerY - 150) < 38 ||
+      (p.y <= 160 && p.x >= 404 && p.x <= 424 && p.y >= 130)
+    ) {
+      return { doorTransition: "enter_village_post", doorName: "Village Post & Courier Lodge" };
+    }
+
+    // AZRA Sanctuary doorway (exterior art spans x:620..644, y:137..161).
+    if (
+      Math.hypot(centerX - 632, centerY - 160) < 40 ||
+      (p.y <= 170 && p.x >= 614 && p.x <= 634 && p.y >= 140)
+    ) {
+      return { doorTransition: "enter_azra_sanctuary", doorName: "AZRA's AI Arcane Sanctuary" };
+    }
+
+    // Power Station doorway (exterior art door spans x:148..172, y:336..364).
+    if (
+      Math.hypot(centerX - 160, centerY - 350) < 38 ||
+      (p.y <= 370 && p.x >= 142 && p.x <= 158 && p.y >= 330)
+    ) {
+      return { doorTransition: "enter_devops_station", doorName: "DevOps & Telemetry Power Station" };
+    }
+    if (Math.hypot(centerX - 820, centerY - 240) < 38 || (p.y <= 260 && p.x >= 802 && p.x <= 818 && p.y >= 220)) {
+      return { doorTransition: "enter_career_archive", doorName: "Career & Work Experience Archives" };
+    }
+    if (Math.hypot(centerX - 132, centerY - 662) < 38 || (p.y <= 680 && p.x >= 114 && p.x <= 130 && p.y >= 640)) {
+      return { doorTransition: "enter_academy", doorName: "Academy of Enverga Honors Dojo" };
+    }
+    if (Math.hypot(centerX - 648, centerY - 632) < 38 || (p.y <= 650 && p.x >= 630 && p.x <= 646 && p.y >= 610)) {
+      return { doorTransition: "enter_gamer_cottage", doorName: "Franze's Gamer Cottage" };
     }
 
     // Check Overworld NPCs
@@ -5083,6 +1129,7 @@ export default function GameCanvas() {
     if (nearby.doorTransition === "enter_projects_guild") {
       retroAudio.playDiscovery();
       setCurrentScene("projects-guild");
+      leavesRef.current = []; // overworld-space leaves must not follow indoors
       const p = playerRef.current;
       p.x = 338;
       p.y = 430;
@@ -5101,6 +1148,155 @@ export default function GameCanvas() {
       p.direction = "down";
       p.isMoving = false;
       targetDestinationRef.current = null;
+      return;
+    }
+
+    if (nearby.doorTransition === "enter_village_post") {
+      retroAudio.playDiscovery();
+      setCurrentScene("village-post");
+      leavesRef.current = [];
+      const p = playerRef.current;
+      p.x = 338;
+      p.y = 430;
+      p.direction = "up";
+      p.isMoving = false;
+      targetDestinationRef.current = null;
+      return;
+    }
+
+    if (nearby.doorTransition === "exit_village_post") {
+      retroAudio.playInteract();
+      setCurrentScene("overworld");
+      const p = playerRef.current;
+      p.x = 410;
+      p.y = 160;
+      p.direction = "down";
+      p.isMoving = false;
+      targetDestinationRef.current = null;
+      return;
+    }
+
+    if (nearby.doorTransition === "enter_azra_sanctuary") {
+      retroAudio.playDiscovery();
+      setCurrentScene("azra-sanctuary");
+      leavesRef.current = [];
+      const p = playerRef.current;
+      p.x = 338;
+      p.y = 430;
+      p.direction = "up";
+      p.isMoving = false;
+      targetDestinationRef.current = null;
+      return;
+    }
+
+    if (nearby.doorTransition === "exit_azra_sanctuary") {
+      retroAudio.playInteract();
+      setCurrentScene("overworld");
+      const p = playerRef.current;
+      p.x = 620;
+      p.y = 180;
+      p.direction = "down";
+      p.isMoving = false;
+      targetDestinationRef.current = null;
+      return;
+    }
+
+    if (nearby.doorTransition === "enter_devops_station") {
+      retroAudio.playDiscovery();
+      setCurrentScene("devops-station");
+      leavesRef.current = [];
+      const p = playerRef.current;
+      p.x = 338;
+      p.y = 430;
+      p.direction = "up";
+      p.isMoving = false;
+      targetDestinationRef.current = null;
+      return;
+    }
+
+    if (nearby.doorTransition === "exit_devops_station") {
+      retroAudio.playInteract();
+      setCurrentScene("overworld");
+      const p = playerRef.current;
+      p.x = 148;
+      p.y = 380;
+      p.direction = "down";
+      p.isMoving = false;
+      targetDestinationRef.current = null;
+      return;
+    }
+
+    if (nearby.doorTransition === "enter_career_archive" || nearby.doorTransition === "enter_academy") {
+      retroAudio.playDiscovery();
+      setCurrentScene(nearby.doorTransition === "enter_career_archive" ? "career-archive" : "academy");
+      leavesRef.current = [];
+      const p = playerRef.current;
+      p.x = 338; p.y = 430; p.direction = "up"; p.isMoving = false;
+      targetDestinationRef.current = null;
+      return;
+    }
+
+    if (nearby.doorTransition === "exit_career_archive" || nearby.doorTransition === "exit_academy") {
+      retroAudio.playInteract();
+      const isCareer = nearby.doorTransition === "exit_career_archive";
+      setCurrentScene("overworld");
+      const p = playerRef.current;
+      // Keep the return body immediately above the Archive flower bed.
+      p.x = isCareer ? 808 : 120; p.y = isCareer ? 260 : 680; p.direction = "down"; p.isMoving = false;
+      targetDestinationRef.current = null;
+      return;
+    }
+
+    if (nearby.doorTransition === "enter_gamer_cottage") {
+      retroAudio.playDiscovery(); setCurrentScene("gamer-cottage"); leavesRef.current = [];
+      const p = playerRef.current;
+      p.x = 338; p.y = 430; p.direction = "up"; p.isMoving = false;
+      targetDestinationRef.current = null;
+      return;
+    }
+
+    if (nearby.doorTransition === "exit_gamer_cottage") {
+      retroAudio.playInteract(); setCurrentScene("overworld");
+      const p = playerRef.current;
+      p.x = 636; p.y = 655; p.direction = "down"; p.isMoving = false;
+      targetDestinationRef.current = null;
+      return;
+    }
+
+    if (nearby.interiorAction === "contact") {
+      retroAudio.playInteract();
+      setActiveModalType("contact");
+      setDiscoveredLocations((prev) => new Set([...prev, "village-post-counter"]));
+      return;
+    }
+
+    if (nearby.interiorAction === "azra") {
+      retroAudio.playInteract();
+      const sanctuary = WORLD_OBJECTS.find((obj) => obj.id === "azra-sanctuary");
+      if (sanctuary) {
+        setActiveWorldObject(sanctuary);
+        setDiscoveredLocations((prev) => new Set([...prev, "azra-oracle-core"]));
+      }
+      return;
+    }
+
+    if (nearby.interiorAction === "devops") {
+      retroAudio.playInteract();
+      setActiveModalType("devops");
+      setDiscoveredLocations((prev) => new Set([...prev, "devops-ops-console"]));
+      return;
+    }
+
+    if (nearby.interiorAction === "experience" || nearby.interiorAction === "education") {
+      retroAudio.playInteract();
+      setActiveModalType(nearby.interiorAction);
+      setDiscoveredLocations((prev) => new Set([...prev, nearby.interiorAction === "experience" ? "career-timeline-desk" : "academy-honors-display"]));
+      return;
+    }
+
+    if (nearby.interiorAction === "gaming") {
+      retroAudio.playInteract(); setActiveModalType("gaming");
+      setDiscoveredLocations((prev) => new Set([...prev, "gamer-cottage-console"]));
       return;
     }
 
@@ -5152,9 +1348,8 @@ export default function GameCanvas() {
     const clickScreenY = (e.clientY - rect.top) * scaleY;
 
     const p = playerRef.current;
-    const isInterior = currentSceneRef.current === "projects-guild";
-    const currentMapW = isInterior ? GUILD_INTERIOR_WIDTH : MAP_TOTAL_WIDTH;
-    const currentMapH = isInterior ? GUILD_INTERIOR_HEIGHT : MAP_TOTAL_HEIGHT;
+    const scene = currentSceneRef.current;
+    const { width: currentMapW, height: currentMapH } = sceneDimensions(scene);
 
     const camX = Math.max(
       0,
@@ -5269,7 +1464,8 @@ export default function GameCanvas() {
       const mobileDir = mobileDirRef.current;
       const targetDest = targetDestinationRef.current;
       const isPaused = Boolean(activeNpc || activeWorldObject || activeModalType);
-      const isInterior = currentSceneRef.current === "projects-guild";
+      const scene = currentSceneRef.current;
+      const isInterior = scene !== "overworld";
 
       // --- 1. PLAYER MOVEMENT UPDATE ---
       let dx = 0;
@@ -5332,7 +1528,7 @@ export default function GameCanvas() {
         }
 
         // Automatic seamless door triggers when stepping across door thresholds
-        if (isInterior) {
+        if (scene === "projects-guild") {
           if (p.y >= 485 && p.x >= 305 && p.x <= 395) {
             retroAudio.playInteract();
             setCurrentScene("overworld");
@@ -5342,16 +1538,107 @@ export default function GameCanvas() {
             p.isMoving = false;
             targetDestinationRef.current = null;
           }
+        } else if (scene === "village-post") {
+          if (p.y >= 485 && p.x >= 305 && p.x <= 395) {
+            retroAudio.playInteract();
+            setCurrentScene("overworld");
+            p.x = 410;
+            p.y = 160;
+            p.direction = "down";
+            p.isMoving = false;
+            targetDestinationRef.current = null;
+          }
+        } else if (scene === "azra-sanctuary") {
+          if (p.y >= 485 && p.x >= 305 && p.x <= 395) {
+            retroAudio.playInteract();
+            setCurrentScene("overworld");
+            p.x = 620;
+            p.y = 180;
+            p.direction = "down";
+            p.isMoving = false;
+            targetDestinationRef.current = null;
+          }
+        } else if (scene === "devops-station") {
+          if (p.y >= 485 && p.x >= 305 && p.x <= 395) {
+            retroAudio.playInteract();
+            setCurrentScene("overworld");
+            p.x = 148;
+            p.y = 380;
+            p.direction = "down";
+            p.isMoving = false;
+            targetDestinationRef.current = null;
+          }
+        } else if (scene === "career-archive" || scene === "academy") {
+          if (p.y >= 485 && p.x >= 305 && p.x <= 395) {
+            retroAudio.playInteract();
+            const isCareer = scene === "career-archive";
+            setCurrentScene("overworld");
+            p.x = isCareer ? 808 : 120; p.y = isCareer ? 260 : 680;
+            p.direction = "down"; p.isMoving = false;
+            targetDestinationRef.current = null;
+          }
+        } else if (scene === "gamer-cottage") {
+          if (p.y >= 485 && p.x >= 305 && p.x <= 395) {
+            retroAudio.playInteract(); setCurrentScene("overworld");
+            p.x = 636; p.y = 655; p.direction = "down"; p.isMoving = false;
+            targetDestinationRef.current = null;
+          }
         } else {
           // Stepping into Projects Guild Front Door
           if (p.y <= 165 && p.x >= 122 && p.x <= 158 && p.y >= 150) {
             retroAudio.playDiscovery();
             setCurrentScene("projects-guild");
+            leavesRef.current = []; // overworld-space leaves must not follow indoors
             p.x = 338;
             p.y = 430;
             p.direction = "up";
             p.isMoving = false;
             targetDestinationRef.current = null;
+          }
+          // Stepping into the Village Post front door.
+          if (p.y <= 148 && p.x >= 404 && p.x <= 424 && p.y >= 130) {
+            retroAudio.playDiscovery();
+            setCurrentScene("village-post");
+            leavesRef.current = [];
+            p.x = 338;
+            p.y = 430;
+            p.direction = "up";
+            p.isMoving = false;
+            targetDestinationRef.current = null;
+          }
+          // Stepping into AZRA's Sanctuary front door.
+          if (p.y <= 160 && p.x >= 614 && p.x <= 634 && p.y >= 140) {
+            retroAudio.playDiscovery();
+            setCurrentScene("azra-sanctuary");
+            leavesRef.current = [];
+            p.x = 338;
+            p.y = 430;
+            p.direction = "up";
+            p.isMoving = false;
+            targetDestinationRef.current = null;
+          }
+          // Stepping into the Power Station front door.
+          if (p.y <= 370 && p.x >= 142 && p.x <= 158 && p.y >= 330) {
+            retroAudio.playDiscovery();
+            setCurrentScene("devops-station");
+            leavesRef.current = [];
+            p.x = 338;
+            p.y = 430;
+            p.direction = "up";
+            p.isMoving = false;
+            targetDestinationRef.current = null;
+          }
+          if (p.y <= 260 && p.x >= 802 && p.x <= 818 && p.y >= 220) {
+            retroAudio.playDiscovery(); setCurrentScene("career-archive"); leavesRef.current = [];
+            p.x = 338; p.y = 430; p.direction = "up"; p.isMoving = false; targetDestinationRef.current = null;
+          }
+          if (p.y <= 680 && p.x >= 114 && p.x <= 130 && p.y >= 640) {
+            retroAudio.playDiscovery(); setCurrentScene("academy"); leavesRef.current = [];
+            p.x = 338; p.y = 430; p.direction = "up"; p.isMoving = false; targetDestinationRef.current = null;
+          }
+          if (p.y <= 650 && p.x >= 630 && p.x <= 646 && p.y >= 610) {
+            retroAudio.playDiscovery(); setCurrentScene("gamer-cottage"); leavesRef.current = [];
+            p.x = 338; p.y = 430; p.direction = "up"; p.isMoving = false; targetDestinationRef.current = null;
           }
         }
 
@@ -5365,6 +1652,26 @@ export default function GameCanvas() {
       } else {
         p.frame = 0;
       }
+
+      // --- 1b. TALL GRASS ENTRY DETECTION & RUSTLE FEEDBACK ---
+      if (!isInterior) {
+        const inGrass = isInTallGrass(p.x + 12, p.y + 20);
+        if (inGrass && !wasInGrassRef.current) {
+          retroAudio.playRustle();
+          leavesRef.current.push(...spawnLeaves(p.x + 12, p.y + 24));
+        }
+        wasInGrassRef.current = inGrass;
+      }
+
+      // Age leaf-burst particles and drop expired ones (own short-lived
+      // array — the 24-particle ambient pool below wraps forever).
+      leavesRef.current = leavesRef.current.filter((l) => {
+        l.life -= 1;
+        l.x += l.vx;
+        l.y += l.vy;
+        l.vy += 0.03;
+        return l.life > 0;
+      });
 
       // --- 2. AUTONOMOUS NPC WANDERING AI (Overworld only) ---
       if (!isInterior) {
@@ -5435,6 +1742,32 @@ export default function GameCanvas() {
             x: p.x + 12,
             y: p.y - 12,
           });
+        } else if (nearby.interiorAction === "contact") {
+          setInteractPrompt({
+            text: "[SPACE / E] Send an Inquiry",
+            x: 350,
+            y: 270,
+          });
+        } else if (nearby.interiorAction === "azra") {
+          setInteractPrompt({
+            text: "[SPACE / E] Ask AZRA",
+            x: 350,
+            y: 315,
+          });
+        } else if (nearby.interiorAction === "devops") {
+          setInteractPrompt({
+            text: "[SPACE / E] Open Ops Console",
+            x: 350,
+            y: 300,
+          });
+        } else if (nearby.interiorAction === "experience" || nearby.interiorAction === "education") {
+          setInteractPrompt({
+            text: nearby.interiorAction === "experience" ? "[SPACE / E] View Career Timeline" : "[SPACE / E] View Academic Honors",
+            x: 350,
+            y: nearby.interiorAction === "experience" ? 300 : 120,
+          });
+        } else if (nearby.interiorAction === "gaming") {
+          setInteractPrompt({ text: "[SPACE / E] Open Game Shelf", x: 350, y: 260 });
         } else if (nearby.projectStation) {
           setInteractPrompt({
             text: `[SPACE / E] Inspect ${nearby.projectStation.shortTitle}`,
@@ -5464,8 +1797,7 @@ export default function GameCanvas() {
       // --- 4. VIEWPORT CAMERA TRACKING ---
       const viewWidth = canvas.width;
       const viewHeight = canvas.height;
-      const currentMapW = isInterior ? GUILD_INTERIOR_WIDTH : MAP_TOTAL_WIDTH;
-      const currentMapH = isInterior ? GUILD_INTERIOR_HEIGHT : MAP_TOTAL_HEIGHT;
+      const { width: currentMapW, height: currentMapH } = sceneDimensions(scene);
 
       const camX = Math.max(
         0,
@@ -5476,50 +1808,127 @@ export default function GameCanvas() {
         Math.min(p.y + p.height / 2 - viewHeight / 2, currentMapH - viewHeight)
       );
 
+      // Baseline for the player: the world y of their feet, where they
+      // visually "touch the ground". Used as this frame's y-sort key in the
+      // overworld's scene layer below (and, for the interior branch, drawn
+      // standalone since that scene is a separate, unsorted branch).
+      const playerFeetY = p.y + 28;
+
       ctx.save();
       ctx.clearRect(0, 0, viewWidth, viewHeight);
       ctx.translate(-camX, -camY);
 
-      if (isInterior) {
-        // Render Projects Guild Interior Scene
-        drawProjectsGuildInterior(ctx, time, charactersImageRef.current);
+      // Player Character (Selected Custom Skin) — resolved up front so both
+      // branches below can draw the player at the right moment.
+      const currentSkin =
+        CHARACTER_SKINS.find((s) => s.id === selectedSkinRef.current) ||
+        CHARACTER_SKINS[0];
+      const drawPlayer = () => {
+        if (currentSkin.spriteType === "dog") {
+          drawKissesTheDog(ctx, p.x, p.y, p.direction, p.isMoving, p.frame, time);
+        } else {
+          drawSpritesheetCharacter(
+            ctx,
+            charactersImageRef.current,
+            currentSkin.spriteRow,
+            p.x,
+            p.y,
+            p.direction,
+            p.isMoving,
+            p.frame,
+            currentSkin.customEffect || "none"
+          );
+        }
+      };
+
+      if (scene === "projects-guild") {
+        // Render Projects Guild Interior Scene — a separate, unsorted
+        // branch (Task 16 is render-order only for the overworld). Still
+        // not y-sorted with the player after this task's conversion: the
+        // player is always drawn last here, so it always renders in front
+        // of the hearth, bookshelf, desk and every pedestal regardless of
+        // where the player actually stands (unlike the overworld below,
+        // which now sorts by baseline). Flagged, not fixed, per Task 12.
+        drawGuildInterior(ctx, time, charactersImageRef.current);
+        // The hearth plaque and exit sign: canvas text, restored here
+        // because game-interior.ts only has PixelCtx (no fillText/font).
+        drawGuildInteriorLabels(ctx);
+        // Architect Astro stands fixed at the drafting desk. This needs
+        // drawImage, which PixelCtx (and so game-interior.ts) deliberately
+        // doesn't expose, so it stays here rather than in the sprite-art
+        // module. Position matches game-interior.ts's desk art (logical
+        // 260,41 = world 520,82) and the fixed hit-test radius around
+        // (566,110) in getNearbyInteractable below.
+        const astroDeskX = 520;
+        const astroDeskY = 82;
+        drawSpritesheetCharacter(
+          ctx, charactersImageRef.current, 0, astroDeskX + 26, astroDeskY + 18,
+          "down", false, 0, "none"
+        );
+        // Astro's nameplate, matching the overworld NPC nameplate style
+        // (rgba backing + fillText) rather than the generic per-NPC block
+        // below, since this is a fixed guild-only render, not a live NPC.
+        ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
+        ctx.fillRect(astroDeskX + 42 - 46, astroDeskY + 6, 92, 12);
+        ctx.fillStyle = PAL.arcane;
+        ctx.font = "bold 7.5px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("Architect Astro 🛠️", astroDeskX + 42, astroDeskY + 15);
+        drawPlayer();
+      } else if (scene === "village-post") {
+        drawVillagePostInterior(ctx, time);
+        drawVillagePostInteriorLabels(ctx);
+        drawPlayer();
+      } else if (scene === "azra-sanctuary") {
+        drawAzraSanctuaryInterior(ctx, time);
+        drawAzraSanctuaryInteriorLabels(ctx);
+        drawPlayer();
+      } else if (scene === "devops-station") {
+        drawDevopsStationInterior(ctx, time);
+        drawDevopsStationInteriorLabels(ctx);
+        drawPlayer();
+      } else if (scene === "career-archive") {
+        drawCareerArchiveInterior(ctx, time);
+        drawCareerArchiveInteriorLabels(ctx);
+        drawPlayer();
+      } else if (scene === "academy") {
+        drawAcademyInterior(ctx, time);
+        drawAcademyInteriorLabels(ctx);
+        drawPlayer();
+      } else if (scene === "gamer-cottage") {
+        drawGamerCottageInterior(ctx, time);
+        drawGamerCottageInteriorLabels(ctx);
+        drawPlayer();
       } else {
         // Render Overworld Scene
-        // 1. Organic Winding Ground & Striped Grass
-        drawOrganicGround(ctx);
+        // 1. Ground band — always beneath everything else, unsorted: the
+        // cached terrain, tall-grass clump bases and the court surface are
+        // flat on the ground, so nothing should ever draw beneath them. The
+        // hoop is a standing object, not ground texture, so it lives in the
+        // sorted layer below instead (collectBasketballHoop).
+        if (terrainCacheRef.current) {
+          drawTerrain(ctx, terrainCacheRef.current);
+        }
+        drawTallGrassBases(ctx);
+        drawBasketballCourt(ctx, time);
 
-        // 2. Fenced Pathway Borders with Dedicated Entrances
-        drawTexturedFences(ctx);
-
-        // 3. Sprite-Style Pixel Flower Pots
-        drawSpriteFlowerPots(ctx, time);
-
-        // 4. Sprite-Style Pixel Bushes & Shrubs
-        drawSpriteBushes(ctx);
-
-        // 4b. Rich 3D Village Outdoor Furniture
-        drawVillageFurniture(ctx, time);
-
-        // 5. Basketball Court
-        drawBasketballCourt(ctx);
-
-        // 6. Statues & Obelisks
-        drawDetailedStatues(ctx, time);
-
-        // 7. Grand Aligned Colonnade of Banners
-        drawDetailedBanners(ctx, time);
-
-        // 8. Custom Handcrafted Buildings
-        drawCustomBuildings(ctx, time);
-
-        // 9. Central Fountain
-        drawCentralFountain(ctx, time);
-
-        // 10. Sprite-Style Pixel Forest Trees
-        drawSpriteTrees(ctx, time);
-
-        // 11. Dynamic Animated Wandering NPCs
-        NPCS.forEach((npc) => {
+        // 2. Sorted layer — every entity with a footprint that can occlude
+        // or be occluded (fences, pots, bushes, furniture, statues,
+        // banners, buildings, the fountain, trees, NPCs, tall-grass tufts
+        // and the player) is collected as a Drawable keyed by baseline —
+        // the world y where it touches the ground — then painted back to
+        // front. This is what fixes the player always drawing in front of
+        // buildings (they used to be two fixed, unconditionally-ordered
+        // draw passes), and folds the old two-call tall-grass depth split
+        // into the same mechanism: each tuft now carries its own baseline
+        // instead of the caller splitting one band into "before" and
+        // "after" the player.
+        //
+        // Built in a fixed order every frame (NPCS is an array; BUILDINGS'
+        // Object.values preserves its static insertion order) so that any
+        // two entities with equal baselines keep a stable relative order
+        // across frames instead of flickering.
+        const npcDrawables: Drawable[] = NPCS.map((npc) => {
           const live = npcLiveStateRef.current[npc.id];
           const nx = live ? live.x : npc.x;
           const ny = live ? live.y : npc.y;
@@ -5527,74 +1936,83 @@ export default function GameCanvas() {
           const isMoving = live ? live.isMoving : false;
           const frame = live ? live.frame : 0;
 
-          if (npc.spriteType === "dog") {
-            drawKissesTheDog(ctx, nx, ny, dir, isMoving, frame, time);
-          } else {
-            drawSpritesheetCharacter(
-              ctx,
-              charactersImageRef.current,
-              npc.spriteRow,
-              nx,
-              ny,
-              dir,
-              isMoving,
-              frame,
-              npc.spriteType === "azra"
-                ? "azra"
-                : npc.spriteType === "sweetheart"
-                ? "allia"
-                : "none"
-            );
-          }
+          return {
+            baseline: ny + 28,
+            draw: () => {
+              if (npc.spriteType === "dog") {
+                drawKissesTheDog(ctx, nx, ny, dir, isMoving, frame, time);
+              } else {
+                drawSpritesheetCharacter(
+                  ctx,
+                  charactersImageRef.current,
+                  npc.spriteRow,
+                  nx,
+                  ny,
+                  dir,
+                  isMoving,
+                  frame,
+                  npc.spriteType === "azra"
+                    ? "azra"
+                    : npc.spriteType === "sweetheart"
+                    ? "allia"
+                    : "none"
+                );
+              }
 
-          const nameTagW = Math.max(56, npc.nameTag.length * 6.5 + 14);
-          ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
-          ctx.fillRect(nx + 16 - nameTagW / 2, ny - 10, nameTagW, 13);
-          if (npc.spriteType === "azra") {
-            ctx.fillStyle = "#38bdf8";
-          } else if (npc.spriteType === "sweetheart") {
-            ctx.fillStyle = "#fb7185";
-          } else if (npc.spriteType === "dog") {
-            ctx.fillStyle = "#fde047";
-          } else {
-            ctx.fillStyle = "#ffffff";
-          }
-          ctx.font = "bold 8px monospace";
-          ctx.textAlign = "center";
-          ctx.fillText(npc.nameTag, nx + 16, ny - 1);
+              const nameTagW = Math.max(56, npc.nameTag.length * 6.5 + 14);
+              ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
+              ctx.fillRect(nx + 16 - nameTagW / 2, ny - 10, nameTagW, 13);
+              if (npc.spriteType === "azra") {
+                ctx.fillStyle = "#38bdf8";
+              } else if (npc.spriteType === "sweetheart") {
+                ctx.fillStyle = "#fb7185";
+              } else if (npc.spriteType === "dog") {
+                ctx.fillStyle = "#fde047";
+              } else {
+                ctx.fillStyle = "#ffffff";
+              }
+              ctx.font = "bold 8px monospace";
+              ctx.textAlign = "center";
+              ctx.fillText(npc.nameTag, nx + 16, ny - 1);
+            },
+          };
         });
+
+        const sceneDrawables: Drawable[] = [
+          ...collectFences(ctx, time),
+          ...collectFlowerPots(ctx, time),
+          ...collectBushes(ctx, time),
+          ...collectFurniture(ctx, time),
+          ...collectStatues(ctx, time),
+          ...collectBanners(ctx, time),
+          ...collectBuildings(ctx, time),
+          { baseline: FOUNTAIN_BASELINE, draw: () => drawCentralFountain(ctx, time) },
+          ...collectBasketballHoop(ctx, time),
+          ...collectTrees(ctx, time),
+          ...npcDrawables,
+          ...collectTallGrassTips(ctx, time),
+          { baseline: playerFeetY, draw: drawPlayer },
+        ];
+
+        sortByBaseline(sceneDrawables).forEach((d) => d.draw());
       }
 
-      // 12. Player Character (Selected Custom Skin)
-      const currentSkin =
-        CHARACTER_SKINS.find((s) => s.id === selectedSkinRef.current) ||
-        CHARACTER_SKINS[0];
-
-      if (currentSkin.spriteType === "dog") {
-        drawKissesTheDog(
-          ctx,
-          p.x,
-          p.y,
-          p.direction,
-          p.isMoving,
-          p.frame,
-          time
-        );
-      } else {
-        drawSpritesheetCharacter(
-          ctx,
-          charactersImageRef.current,
-          currentSkin.spriteRow,
-          p.x,
-          p.y,
-          p.direction,
-          p.isMoving,
-          p.frame,
-          currentSkin.customEffect || "none"
-        );
+      // Leaf burst on grass entry — drawn above the sorted scene layer, own
+      // short-lived array, culled above. Overworld only: leaves are stored
+      // in overworld world-space, so they must not be drawn over an
+      // interior scene (the ref itself is cleared on the
+      // overworld->interior transition; this guard also covers the ~0.4s
+      // window where a burst could still be aging).
+      if (!isInterior) {
+        for (const leaf of leavesRef.current) {
+          ctx.fillStyle = leaf.color;
+          ctx.globalAlpha = Math.max(0, leaf.life / leaf.maxLife);
+          ctx.fillRect(leaf.x, leaf.y, 3, 3);
+        }
+        ctx.globalAlpha = 1.0;
       }
 
-      // 13. Ambient Floating Particles
+      // Ambient Floating Particles — overlay, always on top.
       drawParticles(ctx, particlesRef.current);
 
       ctx.restore();
@@ -5642,10 +2060,22 @@ export default function GameCanvas() {
         {/* Top Game Bar */}
         <div className="flex items-center justify-between border-b-2 border-foreground bg-foreground px-3 py-1.5 font-mono text-xs font-bold text-background">
           <div className="flex items-center gap-2">
-            <span className={`h-2 w-2 rounded-full ${currentScene === "projects-guild" ? "bg-amber-400" : "bg-red-500"} animate-pulse`} />
+            <span className={`h-2 w-2 rounded-full ${currentScene === "overworld" ? "bg-red-500" : "bg-amber-400"} animate-pulse`} />
             <span className="tracking-wider uppercase">
               {currentScene === "projects-guild"
                 ? "PROJECTS GUILD // EXHIBITION HALL"
+                : currentScene === "village-post"
+                ? "VILLAGE POST // COURIER DESK"
+                : currentScene === "azra-sanctuary"
+                ? "AZRA SANCTUARY // ORACLE CORE"
+                : currentScene === "devops-station"
+                ? "DEVOPS STATION // OPS BAY"
+                : currentScene === "career-archive"
+                ? "CAREER ARCHIVES // TIMELINE ROOM"
+                : currentScene === "academy"
+                ? "ACADEMY OF ENVERGA // HONORS DOJO"
+                : currentScene === "gamer-cottage"
+                ? "GAMER COTTAGE // NIGHT GAME DEN"
                 : "FRANZE TOWN // DEV OVERWORLD"}
             </span>
           </div>

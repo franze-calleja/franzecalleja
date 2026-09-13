@@ -1,0 +1,217 @@
+import { PAL } from "./game-palette";
+import { px, dith, hash, withSprite, type PixelCtx, type Drawable } from "./game-pixel";
+import { MAP_TOTAL_WIDTH, MAP_TOTAL_HEIGHT, PATH_AREAS, TALL_GRASS_AREAS } from "./game-data";
+import { buildExclusionMask, isExcluded } from "./game-mask";
+
+const TILE_WORLD = 32;
+const TILE = 16; // logical
+const COLS = Math.ceil(MAP_TOTAL_WIDTH / TILE_WORLD);
+const ROWS = Math.ceil(MAP_TOTAL_HEIGHT / TILE_WORLD);
+
+const GRASS_TONES = ["grassL", "grass", "grassD"] as const;
+export type GrassTone = (typeof GRASS_TONES)[number];
+
+/** Six blade-cluster layouts, in logical px offsets within a 16x16 tile. */
+const BLADES: ReadonlyArray<ReadonlyArray<readonly [number, number]>> = [
+  [[2, 4], [5, 2], [9, 6]],
+  [[7, 3], [11, 5], [3, 9]],
+  [[4, 7], [10, 2], [13, 8]],
+  [[1, 6], [6, 10], [12, 4]],
+  [[8, 8], [2, 11], [13, 2]],
+  [[5, 5], [9, 11], [3, 3]],
+];
+
+export function bladeVariant(col: number, row: number): number {
+  return hash(col, row) % 6;
+}
+
+/**
+ * Low-frequency value noise: sampling on a coarse grid makes neighbouring
+ * tiles usually agree, so tones form soft blobs instead of per-tile static.
+ */
+export function patchTone(col: number, row: number): GrassTone {
+  const n = hash(col >> 2, row >> 2);
+  return GRASS_TONES[n % 3];
+}
+
+function drawTile(ctx: PixelCtx, col: number, row: number, mask: Uint8Array): void {
+  const x = col * TILE;
+  const y = row * TILE;
+  const base = PAL[patchTone(col, row)];
+
+  px(ctx, x, y, TILE, TILE, base);
+  // Suggestion of a mowing stripe: one tone step, not the old hard band.
+  if (col % 2 === 0) dith(ctx, x, y + 7, TILE, 1, base, PAL.grassD);
+
+  for (const [bx, by] of BLADES[bladeVariant(col, row)]) {
+    px(ctx, x + bx, y + by + 2, 2, 1, PAL.grassS);
+    px(ctx, x + bx, y + by, 1, 3, PAL.grassX);
+    px(ctx, x + bx + 1, y + by - 1, 1, 2, PAL.grassL);
+  }
+
+  if (!isExcluded(mask, COLS, col, row)) {
+    const h = hash(col * 3, row * 5) % 31;
+    if (h === 1) { px(ctx, x + 5, y + 7, 1, 2, PAL.leafD); px(ctx, x + 4, y + 4, 3, 3, PAL.gold); }
+    else if (h === 2) { px(ctx, x + 10, y + 9, 1, 2, PAL.leafD); px(ctx, x + 9, y + 6, 3, 3, PAL.bloom); }
+    else if (h === 3) { px(ctx, x + 7, y + 12, 1, 2, PAL.leafD); px(ctx, x + 6, y + 9, 3, 3, PAL.glass); }
+    else if (h === 4) { px(ctx, x + 8, y + 4, 3, 3, PAL.leaf); px(ctx, x + 9, y + 5, 1, 1, PAL.leafD); }
+    else if (h === 5) { px(ctx, x + 3, y + 11, 3, 3, PAL.wallL); px(ctx, x + 4, y + 12, 1, 1, PAL.gold); }
+  }
+}
+
+function drawPaths(ctx: PixelCtx): void {
+  for (const p of PATH_AREAS) {
+    // PATH_AREAS holds world coordinates, and several are odd numbers
+    // (e.g. x: 375). Halving them raw would produce fractional logical
+    // coordinates and reintroduce anti-aliasing, so snap to the 2px grid.
+    const x = Math.floor(p.x / 2), y = Math.floor(p.y / 2);
+    const w = Math.ceil(p.w / 2), h = Math.ceil(p.h / 2);
+    px(ctx, x, y, w, h, PAL.path);
+    for (let py = y; py < y + h - 5; py += 8) {
+      for (let pxx = x; pxx < x + w - 5; pxx += 8) {
+        px(ctx, pxx, py, 8, 8, PAL.pathD);
+        px(ctx, pxx, py, 7, 7, PAL.pathL);
+        px(ctx, pxx + 1, py + 1, 6, 6, (pxx + py) % 16 === 0 ? PAL.path : PAL.pathL);
+      }
+    }
+    // Dithered fringe: grass fingers into the stone instead of stopping dead.
+    for (let i = 0; i < w; i++) {
+      const top = hash(x + i, y) % 3;
+      const bot = hash(x + i, y + h) % 3;
+      for (let d = 0; d < top; d++) px(ctx, x + i, y + d, 1, 1, PAL.grass);
+      for (let d = 0; d < bot; d++) px(ctx, x + i, y + h - 1 - d, 1, 1, PAL.grass);
+    }
+    for (let j = 0; j < h; j++) {
+      const l = hash(x, y + j) % 3;
+      const r = hash(x + w, y + j) % 3;
+      for (let d = 0; d < l; d++) px(ctx, x + d, y + j, 1, 1, PAL.grass);
+      for (let d = 0; d < r; d++) px(ctx, x + w - 1 - d, y + j, 1, 1, PAL.grass);
+    }
+  }
+}
+
+/** Builds the static ground once. Called at mount, never per frame. */
+export function renderTerrainToCache(): HTMLCanvasElement {
+  const cache = document.createElement("canvas");
+  cache.width = MAP_TOTAL_WIDTH;
+  cache.height = MAP_TOTAL_HEIGHT;
+  const ctx = cache.getContext("2d") as unknown as PixelCtx;
+  const mask = buildExclusionMask(TILE_WORLD);
+
+  withSprite(ctx, 0, 0, () => {
+    for (let c = 0; c < COLS; c++) {
+      for (let r = 0; r < ROWS; r++) {
+        const perimeter = c === 0 || r === 0 || c === COLS - 1 || r === ROWS - 1;
+        if (perimeter) {
+          px(ctx, c * TILE, r * TILE, TILE, TILE, PAL.grassS);
+          dith(ctx, c * TILE, r * TILE, TILE, TILE, PAL.grassS, PAL.grassX);
+        } else {
+          drawTile(ctx, c, r, mask);
+        }
+      }
+    }
+    drawPaths(ctx);
+  });
+
+  return cache;
+}
+
+/** One blit per frame, replacing ~18k fillRect calls. */
+export function drawTerrain(
+  ctx: CanvasRenderingContext2D, cache: HTMLCanvasElement
+): void {
+  ctx.drawImage(cache, 0, 0);
+}
+
+// --- Tall grass ------------------------------------------------------------
+
+export interface Leaf {
+  x: number; y: number; vx: number; vy: number;
+  life: number; maxLife: number; color: string;
+}
+
+export function isInTallGrass(x: number, y: number): boolean {
+  return TALL_GRASS_AREAS.some(
+    (g) => x >= g.x && x <= g.x + g.w && y >= g.y && y <= g.y + g.h
+  );
+}
+
+export function spawnLeaves(x: number, y: number): Leaf[] {
+  const out: Leaf[] = [];
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2;
+    out.push({
+      x, y,
+      vx: Math.cos(a) * 0.6,
+      vy: Math.sin(a) * 0.4 - 0.5,
+      life: 26, maxLife: 26,
+      color: i % 2 ? PAL.tallL : PAL.leaf,
+    });
+  }
+  return out;
+}
+
+/** Clump bases — drawn BEFORE the player so they sit behind it.
+ *  Takes no time argument: bases do not sway, only the tips do. */
+export function drawTallGrassBases(ctx: PixelCtx): void {
+  withSprite(ctx, 0, 0, () => {
+    for (const g of TALL_GRASS_AREAS) {
+      for (let wy = g.y; wy < g.y + g.h; wy += 16) {
+        for (let wx = g.x; wx < g.x + g.w; wx += 16) {
+          if (hash(wx, wy) % 4 === 0) continue; // gaps keep it organic
+          const x = wx / 2, y = wy / 2;
+          px(ctx, x, y + 4, 8, 4, PAL.tallD);
+          px(ctx, x + 1, y + 4, 6, 2, PAL.tall);
+        }
+      }
+    }
+  });
+}
+
+/**
+ * Blade tips, one Drawable per grid cell, y-sorted against the player and
+ * everything else in the scene layer by the caller.
+ *
+ * `baseline` is `wy + 32`, **not** the cell's literal bottom edge (`wy +
+ * 16`) — this replicates the old two-call renderer's effective threshold
+ * exactly, and getting this wrong is a real regression (Fix round 1), not
+ * a cosmetic nit: the old code split bands at `playerFeetY - 16`, so a
+ * cell drew in front whenever `wy + 16 > playerFeetY - 16`, i.e.
+ * `wy + 32 > playerFeetY` — the extra 16px fudge compensated for blade
+ * height extending upward past the cell's nominal bottom edge. Using the
+ * literal `wy + 16` here instead (what "the same convention as every
+ * other entity" would naively suggest) shifts that threshold by 16 world
+ * px: a whole row of tufts in every patch would sort behind the player
+ * one row earlier than they used to. See `lib/game-rustle.test.ts`'s
+ * interleaving test, which fails against `wy + 16` and passes against
+ * `wy + 32`.
+ *
+ * No outline: grass blades are ground texture, not a discrete object, so
+ * the 1px-outline constraint doesn't apply here (unlike props, buildings,
+ * and characters). An outline around each tuft's bounding box was tried
+ * and reverted — on this grid it tiles edge-to-edge into a continuous
+ * dark lattice across the patch.
+ */
+export function collectTallGrassTips(ctx: PixelCtx, t: number): Drawable[] {
+  const out: Drawable[] = [];
+  for (const g of TALL_GRASS_AREAS) {
+    for (let wy = g.y; wy < g.y + g.h; wy += 16) {
+      for (let wx = g.x; wx < g.x + g.w; wx += 16) {
+        if (hash(wx, wy) % 4 === 0) continue; // gaps keep it organic
+        out.push({
+          baseline: wy + 32,
+          draw: () => {
+            withSprite(ctx, 0, 0, () => {
+              const x = wx / 2, y = wy / 2;
+              const sway = Math.round(Math.sin(t * 0.002 + hash(wx, wy) * 0.1) * 1);
+              px(ctx, x + 1 + sway, y, 1, 5, PAL.tall);
+              px(ctx, x + 4 + sway, y - 1, 1, 6, PAL.tallL);
+              px(ctx, x + 6 + sway, y + 1, 1, 4, PAL.tall);
+            });
+          },
+        });
+      }
+    }
+  }
+  return out;
+}

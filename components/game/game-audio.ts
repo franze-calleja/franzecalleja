@@ -294,6 +294,41 @@ class RetroAudioEngine {
       });
     } catch {}
   }
+
+  /**
+   * Short filtered-noise burst for walking into tall grass.
+   */
+  public playRustle() {
+    if (this.isMuted) return;
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    try {
+      const dur = 0.14;
+      const buffer = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < data.length; i++) {
+        data[i] = (Math.random() * 2 - 1) * (1 - i / data.length) ** 2;
+      }
+
+      const src = ctx.createBufferSource();
+      src.buffer = buffer;
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = "bandpass";
+      filter.frequency.value = 2600;
+      filter.Q.value = 0.8;
+
+      const gain = ctx.createGain();
+      gain.gain.value = 0.16;
+
+      src.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+
+      src.start();
+    } catch {}
+  }
 }
 
 export const retroAudio = new RetroAudioEngine();

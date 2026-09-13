@@ -593,3 +593,101 @@ body {
     transition: none;
   }
 }
+
+/* ── Game information dossiers ────────────────────────────────────────────
+   The modal content predates the dossier shell and carries location-specific
+   Tailwind colour utilities. Scope their cool/warm accents into one coherent
+   emerald–teal–violet system without affecting the rest of the site. */
+.game-info-modal {
+  color: #f5f5f0;
+  background-color: #090d0c;
+  box-shadow:
+    0 0 0 1px #12332b,
+    10px 12px 0 rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(167, 243, 208, 0.08);
+}
+
+.game-info-modal [class*="text-amber-"] {
+  color: #a7f3d0;
+}
+
+.game-info-modal [class*="text-blue-"],
+.game-info-modal [class*="text-indigo-"],
+.game-info-modal [class*="text-sky-"],
+.game-info-modal [class*="text-cyan-"] {
+  color: #5eead4;
+}
+
+.game-info-modal [class*="border-amber-"],
+.game-info-modal [class*="border-indigo-"] {
+  border-color: rgba(52, 211, 153, 0.68);
+}
+
+.game-info-modal [class*="border-blue-"],
+.game-info-modal [class*="border-sky-"],
+.game-info-modal [class*="border-cyan-"] {
+  border-color: rgba(45, 212, 191, 0.52);
+}
+
+.game-info-modal [class*="bg-amber-"],
+.game-info-modal [class*="bg-blue-"],
+.game-info-modal [class*="bg-indigo-"],
+.game-info-modal [class*="bg-sky-"],
+.game-info-modal [class*="bg-cyan-"] {
+  background-color: rgba(18, 51, 43, 0.62);
+}
+
+.game-info-modal .bg-amber-500,
+.game-info-modal .bg-amber-600,
+.game-info-modal .bg-indigo-600,
+.game-info-modal .bg-sky-500 {
+  background-color: #059669;
+  color: #ecfdf5;
+}
+
+.game-info-modal .bg-blue-400,
+.game-info-modal .bg-indigo-400,
+.game-info-modal .bg-cyan-400,
+.game-info-modal .bg-sky-400 {
+  background-color: #2dd4bf;
+}
+
+.game-info-modal .bg-amber-950\/15,
+.game-info-modal .bg-amber-950\/20,
+.game-info-modal .bg-amber-950\/60,
+.game-info-modal .bg-amber-950\/80,
+.game-info-modal .bg-blue-950\/20,
+.game-info-modal .bg-blue-950\/50,
+.game-info-modal .bg-indigo-950,
+.game-info-modal .bg-indigo-950\/50,
+.game-info-modal .bg-indigo-950\/60,
+.game-info-modal .bg-indigo-950\/80,
+.game-info-modal .bg-sky-950,
+.game-info-modal .bg-sky-950\/15,
+.game-info-modal .bg-sky-950\/60,
+.game-info-modal .bg-cyan-950\/20 {
+  background-color: rgba(18, 51, 43, 0.62);
+}
+
+.game-info-modal [class*="from-amber-"],
+.game-info-modal [class*="from-blue-"],
+.game-info-modal [class*="from-indigo-"] {
+  background-image: none;
+  background-color: #047857;
+  color: #ecfdf5;
+}
+
+.game-info-modal button:focus-visible,
+.game-info-modal a:focus-visible {
+  outline: 2px solid #a78bfa;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-info-modal *,
+  .game-info-modal *::before,
+  .game-info-modal *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

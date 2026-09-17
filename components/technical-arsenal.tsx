@@ -50,8 +50,8 @@ const arsenalCategories: ArsenalCategory[] = [
   },
   {
     index: "03",
-    title: "DevOps & Observability",
-    subtitle: "Containerization, telemetry metrics, log aggregation, and uptime alerts",
+    title: "DevOps & Infrastructure",
+    subtitle: "Cloud infrastructure, containerization, telemetry metrics, and uptime alerts",
     icon: Activity,
     items: [
       "Docker",
@@ -63,6 +63,8 @@ const arsenalCategories: ArsenalCategory[] = [
       "Node Exporter",
       "Dozzle",
       "CI/CD Pipelines",
+      "AWS / GCP",
+      "Hostinger Cloud",
     ],
   },
   {
@@ -79,8 +81,6 @@ const arsenalCategories: ArsenalCategory[] = [
       "Gemini API",
       "Agentic Workflows",
       "Model Orchestration",
-      "AWS / GCP",
-      "Hostinger Cloud",
     ],
   },
 ];

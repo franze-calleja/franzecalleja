@@ -16,12 +16,15 @@ const GAME_DIR = join(process.cwd(), "components", "game");
  *  - game-palette.ts — the palette itself: the one file allowed to define
  *                      hex colour literals, since every renderer's colours
  *                      must trace back to it
+ *  - game-dpad.ts    — pure hit geometry for the on-screen d-pad (maps a
+ *                      touch position to a direction), no canvas calls
  */
 const NON_RENDERER_FILES = new Set([
   "game-data.ts",
   "game-audio.ts",
   "game-mask.ts",
   "game-palette.ts",
+  "game-dpad.ts",
 ]);
 
 /**

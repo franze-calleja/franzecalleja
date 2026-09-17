@@ -214,18 +214,20 @@ export default function GameCharacterSelect({
   }, [selectedSkin]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-3 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-2 sm:p-3 backdrop-blur-sm animate-in fade-in duration-200">
       <div
-        className="relative w-full max-w-2xl overflow-hidden rounded-xl border-4 border-foreground bg-(--surface) font-mono shadow-[0_20px_60px_rgba(0,0,0,0.8)]"
+        className="relative flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border-4 border-foreground bg-(--surface) font-mono shadow-[0_20px_60px_rgba(0,0,0,0.8)]"
         style={{
           boxShadow: "8px 8px 0px 0px rgba(0,0,0,0.85), inset 0 0 0 2px var(--surface)",
         }}
       >
         {/* Top Header Bar */}
-        <div className="flex items-center justify-between border-b-2 border-foreground bg-foreground px-4 py-2 text-xs font-bold uppercase tracking-wider text-background">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-amber-400 animate-pulse" />
-            <span className="text-sm">CHOOSE YOUR HERO // HERO SELECT</span>
+        <div className="flex shrink-0 items-center justify-between border-b-2 border-foreground bg-foreground px-3 py-2 sm:px-4 text-xs font-bold uppercase tracking-wider text-background">
+          <div className="flex min-w-0 items-center gap-2">
+            <Sparkles className="h-4 w-4 shrink-0 text-amber-400 animate-pulse" />
+            <span className="truncate text-sm">
+              <span className="hidden sm:inline">CHOOSE YOUR HERO // </span>HERO SELECT
+            </span>
           </div>
 
           <button
@@ -233,7 +235,7 @@ export default function GameCharacterSelect({
               retroAudio.playCancel();
               onClose();
             }}
-            className="flex h-6 w-6 items-center justify-center rounded border border-background/20 bg-background/10 hover:bg-red-500 hover:text-white transition-all active:scale-95 cursor-pointer"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded border border-background/20 bg-background/10 hover:bg-red-500 hover:text-white transition-all active:scale-95 cursor-pointer"
             title="Close (Esc)"
           >
             <X className="h-3.5 w-3.5" />
@@ -241,12 +243,12 @@ export default function GameCharacterSelect({
         </div>
 
         {/* Modal Body */}
-        <div className="p-4 sm:p-5 space-y-4">
+        <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-5 space-y-4">
           {/* Main Hero Showcase Box */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center rounded-lg border-2 border-foreground/30 bg-background/50 p-4 shadow-inner">
             {/* Animated Sprite Stage */}
             <div className="md:col-span-5 flex flex-col items-center justify-center">
-              <div className="relative flex h-36 w-36 items-center justify-center rounded-xl border-2 border-foreground/40 bg-gradient-to-b from-slate-900 to-slate-950 shadow-md">
+              <div className="relative flex h-28 w-28 sm:h-36 sm:w-36 items-center justify-center rounded-xl border-2 border-foreground/40 bg-gradient-to-b from-slate-900 to-slate-950 shadow-md">
                 <canvas
                   ref={previewCanvasRef}
                   width={140}
@@ -292,7 +294,7 @@ export default function GameCharacterSelect({
                 {selectedSkin.id === currentSkinId ? (
                   <button
                     disabled
-                    className="flex-1 flex items-center justify-center gap-2 rounded-lg border-2 border-emerald-500 bg-emerald-600/30 py-2 font-bold text-xs text-emerald-300 opacity-90 cursor-default"
+                    className="flex-1 flex min-h-11 items-center justify-center gap-2 rounded-lg border-2 border-emerald-500 bg-emerald-600/30 py-2 font-bold text-xs text-emerald-300 opacity-90 cursor-default"
                   >
                     <Check className="h-4 w-4" />
                     <span>CURRENTLY EQUIPPED</span>
@@ -303,10 +305,14 @@ export default function GameCharacterSelect({
                       retroAudio.playSuccess();
                       onSelectSkin(selectedSkin.id);
                     }}
-                    className="flex-1 flex items-center justify-center gap-2 rounded-lg border-2 border-foreground bg-amber-500 hover:bg-amber-400 active:scale-95 py-2 font-bold text-xs text-slate-950 shadow-md transition-all cursor-pointer"
+                    className="flex-1 flex min-h-11 items-center justify-center gap-2 rounded-lg border-2 border-foreground bg-amber-500 hover:bg-amber-400 active:scale-95 px-2 py-2 text-center font-bold text-xs leading-tight text-slate-950 shadow-md transition-all cursor-pointer"
                   >
-                    <Sparkles className="h-4 w-4" />
-                    <span>SELECT & PLAY AS {selectedSkin.name.toUpperCase()}</span>
+                    <Sparkles className="h-4 w-4 shrink-0" />
+                    <span>
+                      <span className="hidden sm:inline">SELECT & PLAY AS </span>
+                      <span className="sm:hidden">PLAY AS </span>
+                      {selectedSkin.name.toUpperCase()}
+                    </span>
                   </button>
                 )}
               </div>
@@ -319,7 +325,7 @@ export default function GameCharacterSelect({
               <span className="text-[11px] font-bold uppercase text-(--muted) tracking-wider">
                 AVAILABLE CHARACTERS & SKINS ({CHARACTER_SKINS.length})
               </span>
-              <div className="flex items-center gap-1 text-[10px] text-(--muted)">
+              <div className="hidden sm:flex items-center gap-1 text-[10px] text-(--muted)">
                 <span>Use [A]/[D] or Arrow keys</span>
               </div>
             </div>
@@ -361,8 +367,8 @@ export default function GameCharacterSelect({
         </div>
 
         {/* Footer Navigation & Instructions */}
-        <div className="flex items-center justify-between border-t-2 border-foreground/20 bg-foreground/5 px-4 py-2.5 text-xs text-(--muted)">
-          <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center justify-between gap-2 border-t-2 border-foreground/20 bg-foreground/5 px-3 py-2.5 sm:px-4 text-xs text-(--muted)">
+          <div className="hidden sm:flex items-center gap-3">
             <span>[← / →] Cycle</span>
             <span>[Space/Enter] Equip</span>
             <span>[Esc / C] Close</span>
@@ -373,7 +379,7 @@ export default function GameCharacterSelect({
               retroAudio.playCancel();
               onClose();
             }}
-            className="rounded border border-foreground/30 bg-background px-3 py-1 font-bold text-foreground hover:bg-foreground hover:text-background transition-all active:scale-95 cursor-pointer"
+            className="min-h-11 w-full sm:w-auto rounded border border-foreground/30 bg-background px-3 py-1 font-bold text-foreground hover:bg-foreground hover:text-background transition-all active:scale-95 cursor-pointer"
           >
             RETURN TO GAME
           </button>

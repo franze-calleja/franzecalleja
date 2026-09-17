@@ -180,8 +180,8 @@
         ]
       },
       {
-        "name": "DevOps & Production Observability",
-        "description": "Telemetry monitoring, distributed logging, containerization, and cloud pipelines",
+        "name": "DevOps & Infrastructure",
+        "description": "Cloud infrastructure, containerization, telemetry monitoring, and distributed logging",
         "items": [
           "Full-stack observability (Grafana, Prometheus, Loki, Alloy, Dozzle)",
           "Service health monitoring & uptime alerts (Uptime Kuma, node_exporter)",

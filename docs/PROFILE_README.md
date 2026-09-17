@@ -105,7 +105,7 @@ const franze = {
 
 <br /><br />
 
-<sub><b>DEVOPS &amp; OBSERVABILITY</b></sub><br />
+<sub><b>DEVOPS &amp; INFRASTRUCTURE</b></sub><br />
 <img src="https://skillicons.dev/icons?i=docker,grafana,prometheus,githubactions,vercel,git,linux&theme=dark" alt="Docker, Grafana, Prometheus, GitHub Actions, Vercel, Git, Linux" />
 <br />
 <img src="https://img.shields.io/badge/Loki-F5A800?style=flat-square&logo=grafana&logoColor=black" alt="Loki" />

@@ -243,7 +243,7 @@ Cloud & Infrastructure:
     Scope: Large-scale enterprise systems, Docker containerization, Prometheus/Grafana observability.
 
 02. R-A-Ones Corporation (January 2026 - Present) [ACTIVE]
-    Role:  Lead Software Engineer
+    Role:  Fullstack Software Engineer
     Scope: Startup cloud architecture, high-throughput backend services, React Native mobile apps.
 
 03. Ellipsense (2023 - Present) [ACTIVE]

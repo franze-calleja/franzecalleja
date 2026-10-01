@@ -9,7 +9,7 @@
 
 <br /><br />
 
-<img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=700&size=21&pause=1100&color=0EA5E9&center=true&vCenter=true&width=680&height=40&lines=Lead+Fullstack+Software+Engineer;Scalable+systems+%26+cloud+architecture;Docker+%C2%B7+Grafana+%C2%B7+Prometheus+%C2%B7+Loki;Agentic+AI+workflows+%26+dev+harnesses;Magna+Cum+Laude+%E2%80%A2+Class+Salutatorian" alt="What I do" />
+<img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=700&size=21&pause=1100&color=0EA5E9&center=true&vCenter=true&width=680&height=40&lines=Fullstack+Software+Engineer;Scalable+systems+%26+cloud+architecture;Docker+%C2%B7+Grafana+%C2%B7+Prometheus+%C2%B7+Loki;Agentic+AI+workflows+%26+dev+harnesses;Magna+Cum+Laude+%E2%80%A2+Class+Salutatorian" alt="What I do" />
 
 <br />
 
@@ -25,7 +25,7 @@
 
 ```ts
 const franze = {
-  role: "Lead Fullstack Software Engineer",
+  role: "Fullstack Software Engineer",
   at: ["MSEUF-Candelaria Inc.", "R-A-Ones Corporation", "Ellipsense (freelance)"],
   focus: ["scalable systems", "cloud infrastructure", "end-to-end product architecture"],
   exploring: ["agentic AI workflows", "developer harnesses", "autonomous coding tools"],
@@ -46,7 +46,7 @@ const franze = {
 <td width="50%" valign="top">
 
 <h3>🚀 &nbsp;Startup pace</h3>
-<b>Lead Software Engineer</b> · R-A-Ones Corporation<br />
+<b>Fullstack Software Engineer</b> · R-A-Ones Corporation<br />
 <sub>Jan 2026 — Present</sub>
 <p>Core system design, distributed cloud infrastructure, high-throughput backend APIs, and cross-platform mobile from zero to production.</p>
 

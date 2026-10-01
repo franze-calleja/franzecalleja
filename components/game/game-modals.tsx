@@ -308,7 +308,7 @@ export default function GameModal({ type, onClose }: GameModalProps) {
                         <div>
                           <div className="flex items-center gap-1.5">
                             <span className="text-[9px] font-bold text-amber-400">
-                              [LVL 99 LEAD ENGINEER]
+                              [LVL 99 FULLSTACK ENGINEER]
                             </span>
                             {job.current && (
                               <span className="rounded border border-emerald-400/40 bg-emerald-950/60 px-1 py-0.2 text-[8px] font-bold uppercase text-emerald-300">
@@ -682,7 +682,7 @@ export default function GameModal({ type, onClose }: GameModalProps) {
                       <span>Enterprise Guild Banner</span>
                     </div>
                     <h2 className="text-base sm:text-lg font-black uppercase text-white">
-                      MSEUF-CI LEAD ENGINEER
+                      MSEUF-CI FULLSTACK ENGINEER
                     </h2>
                     <p className="text-[10px] text-slate-400">August 2025 - Present • Institutional Scale</p>
                   </div>
@@ -709,7 +709,7 @@ export default function GameModal({ type, onClose }: GameModalProps) {
                       <span>Startup Guild Banner</span>
                     </div>
                     <h2 className="text-base sm:text-lg font-black uppercase text-white">
-                      R-A-ONES LEAD ENGINEER
+                      R-A-ONES FULLSTACK ENGINEER
                     </h2>
                     <p className="text-[10px] text-slate-400">January 2026 - Present • Startup Velocity</p>
                   </div>

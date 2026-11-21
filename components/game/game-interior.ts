@@ -74,9 +74,11 @@ const BOOK_TONES = [PAL.roof, PAL.arcane, PAL.leaf, PAL.gold, PAL.steel, PAL.gla
 // on sight. Uniform PAL.arcane lost that entirely. This is the same fix as
 // BOOK_TONES: a fixed rotation through PAL rather than the literal hex
 // (which the "paints only palette colours" contract forbids). Indexed by
-// `station.projectIndex` (0-5 for the six real projects); the master codex
-// (projectIndex -1) always gets the last, gold-toned slot — a deliberate
-// callback to its own original gold accent.
+// station id, not `station.projectIndex`: projectIndex follows the order of
+// profile-data.json's project list, which changes whenever projects are
+// re-ranked, and a pedestal's colour should stay with its project. Any
+// unlisted station (the master codex included) gets the last, gold-toned
+// slot — a deliberate callback to the codex's own original gold accent.
 //
 // aem's original #a855f7 is purple, which the palette had no ramp for
 // (round 1 substituted PAL.leafL/leafD as a stand-in). That collided
@@ -87,22 +89,18 @@ const BOOK_TONES = [PAL.roof, PAL.arcane, PAL.leaf, PAL.gold, PAL.steel, PAL.gla
 // (game-palette.ts) gives aem its own hue instead of borrowing another
 // station's. Minimum pairwise RGB distance across all 7 glow tones below
 // is now ~73 (arcane vs. glassL), comfortably clear of that threshold.
-const STATION_TONES: readonly { glow: string; back: string }[] = [
-  { glow: PAL.arcane, back: PAL.arcaneD },   // 0 website — cyan
-  { glow: PAL.violetL, back: PAL.violetD },  // 1 aem — violet (matches original #a855f7)
-  { glow: PAL.grassL, back: PAL.grassS },    // 2 upfps — grass green
-  { glow: PAL.roofL, back: PAL.roofD },      // 3 phd — amber/red
-  { glow: PAL.bloom2, back: PAL.bloom },     // 4 nfc — pink
-  { glow: PAL.glassL, back: PAL.glassD },    // 5 college-portal — blue
-  { glow: PAL.goldL, back: PAL.goldD },      // 6 master codex — gold
-] as const;
+const STATION_TONES: Readonly<Record<string, { glow: string; back: string }>> = {
+  "station-website": { glow: PAL.arcane, back: PAL.arcaneD },          // cyan
+  "station-aem": { glow: PAL.violetL, back: PAL.violetD },             // violet (matches original #a855f7)
+  "station-upfps": { glow: PAL.grassL, back: PAL.grassS },             // grass green
+  "station-phd": { glow: PAL.roofL, back: PAL.roofD },                 // amber/red
+  "station-nfc": { glow: PAL.bloom2, back: PAL.bloom },                // pink
+  "station-college-portal": { glow: PAL.glassL, back: PAL.glassD },    // blue
+};
+const CODEX_TONE = { glow: PAL.goldL, back: PAL.goldD };               // master codex — gold
 
 function stationTone(station: ProjectStation): { glow: string; back: string } {
-  const REAL_PROJECT_COUNT = STATION_TONES.length - 1;
-  const idx = station.projectIndex >= 0
-    ? station.projectIndex % REAL_PROJECT_COUNT
-    : STATION_TONES.length - 1;
-  return STATION_TONES[idx];
+  return STATION_TONES[station.id] ?? CODEX_TONE;
 }
 
 /**

@@ -431,7 +431,7 @@ export const WORLD_OBJECTS: WorldObject[] = [
     y: 380,
     width: 48,
     height: 68,
-    title: "Techbears Solutions Web Developer",
+    title: "Techbears Solutions Fullstack Web Developer",
     subtitle: "August 2025 - January 2026",
     iconName: "Award",
     description: "Engineered administrative dashboard and operations control center for a commercial ride-hailing transportation platform.",

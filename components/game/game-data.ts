@@ -794,7 +794,7 @@ export interface ProjectStation {
 export const GUILD_PROJECT_STATIONS: ProjectStation[] = [
   {
     id: "station-website",
-    projectIndex: 0,
+    projectIndex: 1,
     name: "MSEUF-Candelaria Institutional Portal & Custom CMS",
     shortTitle: "MSEUF-CI Portal",
     tagline: "Custom CMS & Multi-Tenant Portal",
@@ -809,7 +809,7 @@ export const GUILD_PROJECT_STATIONS: ProjectStation[] = [
   },
   {
     id: "station-aem",
-    projectIndex: 1,
+    projectIndex: 4,
     name: "AEM System — Algorithmic Educational Support",
     shortTitle: "AEM Core AI",
     tagline: "Algorithmic Risk Scoring & Intervention",
@@ -824,7 +824,7 @@ export const GUILD_PROJECT_STATIONS: ProjectStation[] = [
   },
   {
     id: "station-upfps",
-    projectIndex: 2,
+    projectIndex: 5,
     name: "Unified Plant, Facilities, and Property System (UPFPS)",
     shortTitle: "UPFPS Enterprise",
     tagline: "Institutional Property & Asset Tracking",
@@ -839,7 +839,7 @@ export const GUILD_PROJECT_STATIONS: ProjectStation[] = [
   },
   {
     id: "station-phd",
-    projectIndex: 3,
+    projectIndex: 2,
     name: "PHD Map — Urban Parking Discovery & Reservation",
     shortTitle: "PHD Map Toronto",
     tagline: "Geospatial Parking Discovery & Booking",
@@ -854,7 +854,7 @@ export const GUILD_PROJECT_STATIONS: ProjectStation[] = [
   },
   {
     id: "station-nfc",
-    projectIndex: 4,
+    projectIndex: 6,
     name: "CITHM Smart NFC Attendance & Event Tracking",
     shortTitle: "Smart NFC IoT",
     tagline: "Hardware-Integrated Event Attendance",
@@ -869,7 +869,7 @@ export const GUILD_PROJECT_STATIONS: ProjectStation[] = [
   },
   {
     id: "station-college-portal",
-    projectIndex: 5,
+    projectIndex: 0,
     name: "EUC Academic & Admissions Portal",
     shortTitle: "EUC Academic Portal",
     tagline: "Digital Admissions & Enrollment Architecture",

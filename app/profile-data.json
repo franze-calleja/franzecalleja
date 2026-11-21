@@ -207,11 +207,32 @@
     "viewAllHref": "https://github.com/franze-calleja",
     "items": [
       {
+        "name": "EUC Academic Portal",
+        "description": "Comprehensive institutional academic portal covering digital admissions, student enrollment, grade evaluation, course management, and unified academic services for students and faculty.",
+        "href": "https://collegeportal.mseufcandelaria.com/",
+        "image": "/projects/college-portal.png",
+        "technologies": ["Next.js 16", "React 19", "Express.js", "Prisma 7", "MariaDB", "AWS S3", "TanStack Query", "Zod", "Framer Motion"]
+      },
+      {
         "name": "MSEUF-Candelaria Institutional Portal & Custom CMS",
         "description": "Official university portal and custom CMS for admissions, academic programs, and announcements, backed by MinIO object storage and granular capability-based access control.",
         "href": "https://mseufcandelaria.com",
         "image": "/projects/website.png",
         "technologies": ["Next.js 16", "React 19", "Express.js", "Prisma", "MySQL", "MinIO (S3)", "TipTap", "Zod"]
+      },
+      {
+        "name": "PHD Map — Urban Parking Discovery & Reservation Platform",
+        "description": "Peer-to-peer parking marketplace resolving urban parking scarcity and latent supply with real-time geospatial discovery, booking workflows, and host management in Toronto.",
+        "href": "https://phdmap.raones.cloud",
+        "image": "/projects/phd.png",
+        "technologies": ["React Native", "Expo", "Express.js", "Prisma", "PostgreSQL", "Zustand", "Next.js"]
+      },
+      {
+        "name": "Kairos — AI-Assisted Stock & ETF Research",
+        "description": "Self-hosted, open-source research tool that turns news, SEC filings, and market data into sourced readings for US stocks and ETFs. Every AI claim cites its source and every figure is computed in code, with a track record scored against VOO.",
+        "href": "https://github.com/franze-calleja/kairos",
+        "image": "/projects/kairos.png",
+        "technologies": ["Python", "FastAPI", "pandas", "SQLite", "React 19", "Vite", "TanStack Query", "Gemini API", "Docker"]
       },
       {
         "name": "AEM System — Algorithmic Educational Management",
@@ -228,25 +249,11 @@
         "technologies": ["Next.js 16", "React 19", "Express.js", "Prisma", "MySQL", "TanStack Query", "Zustand"]
       },
       {
-        "name": "PHD Map — Urban Parking Discovery & Reservation Platform",
-        "description": "Peer-to-peer parking marketplace resolving urban parking scarcity and latent supply with real-time geospatial discovery, booking workflows, and host management in Toronto.",
-        "href": "https://phdmap.raones.cloud",
-        "image": "/projects/phd.png",
-        "technologies": ["React Native", "Expo", "Express.js", "Prisma", "PostgreSQL", "Zustand", "Next.js"]
-      },
-      {
         "name": "CITHM Smart NFC Attendance & Event Tracking System",
         "description": "High-throughput hardware-integrated attendance system using NFC card tapping for real-time student check-ins, automated event logging, and containerized Docker services.",
         "href": "https://euccithm.com",
         "image": "/projects/nfc.png",
         "technologies": ["Next.js 16", "TypeScript", "Prisma 7", "MySQL 8", "Docker", "TanStack Query", "Zustand"]
-      },
-      {
-        "name": "EUC Academic Portal",
-        "description": "Comprehensive institutional academic portal covering digital admissions, student enrollment, grade evaluation, course management, and unified academic services for students and faculty.",
-        "href": "https://collegeportal.mseufcandelaria.com/",
-        "image": "/projects/college-portal.png",
-        "technologies": ["Next.js 16", "React 19", "Express.js", "Prisma 7", "MariaDB", "AWS S3", "TanStack Query", "Zod", "Framer Motion"]
       },
       {
         "name": "Human Resource Information Management System (HRIMS)",

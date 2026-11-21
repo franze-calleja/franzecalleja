@@ -251,11 +251,11 @@ Cloud & Infrastructure:
     Scope: Global client product roadmaps, full-stack systems, technical scoping.
 
 04. Techbears Solutions (August 2025 - January 2026)
-    Role:  Web Developer
+    Role:  Fullstack Web Developer
     Scope: Ride-hailing admin dashboard, CASL RBAC, real-time fleet dispatch APIs.
 
 05. Linoflap Technology (February - May 2025)
-    Role:  Frontend Developer Intern
+    Role:  Web Developer Intern
     Scope: Modern responsive UI engineering & RESTful API integration.`,
             timestamp: getTimestamp(),
           },

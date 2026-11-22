@@ -34,8 +34,11 @@ export default function FeaturedProjects() {
         </Link>
       </div>
 
-      {/* Sticky stack: each card pins and recedes as the next slides over it. */}
-      <ol className="project-stack mt-8 flex flex-col gap-6 sm:gap-10">
+      {/* Sticky stack: each card pins and the next slides over it. */}
+      <ol
+        className="project-stack mt-8 gap-6 sm:gap-10"
+        style={{ "--count": featuredProjects.length } as CSSProperties}
+      >
         {featuredProjects.map((project, index) => (
           <li
             key={project.name}
@@ -43,8 +46,6 @@ export default function FeaturedProjects() {
             style={
               {
                 "--i": index,
-                "--self-timeline": `--project-${index + 1}`,
-                "--next-timeline": `--project-${index + 2}`,
               } as CSSProperties
             }
           >
@@ -54,7 +55,7 @@ export default function FeaturedProjects() {
               rel="noopener noreferrer"
               onMouseEnter={() => setActivePreview(project)}
               onMouseLeave={() => setActivePreview(null)}
-              className="group flex min-h-64 flex-col border border-foreground/55 bg-background p-6 shadow-[0_-12px_30px_-18px_rgba(0,0,0,0.35)] transition-colors hover:bg-foreground hover:text-background sm:min-h-72 sm:p-8 lg:p-10"
+              className="group flex h-full min-h-64 flex-col border border-foreground/55 bg-background p-6 shadow-[0_-12px_30px_-18px_rgba(0,0,0,0.35)] transition-colors hover:bg-foreground hover:text-background sm:min-h-72 sm:p-8 lg:p-10"
             >
               <p className="mb-4 font-mono text-xs font-semibold uppercase tracking-[0.16em] text-(--muted) transition-colors group-hover:text-background/70">
                 {String(index + 1).padStart(2, "0")} / {String(featuredProjects.length).padStart(2, "0")}

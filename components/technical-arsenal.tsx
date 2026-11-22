@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react";
 import Link from "next/link";
 import { ArrowUpRight, Code2, Server, Activity, Sparkles, type LucideIcon } from "lucide-react";
 
@@ -86,11 +85,6 @@ const arsenalCategories: ArsenalCategory[] = [
   },
 ];
 
-const marqueeRows = [
-  [...arsenalCategories[0].items, ...arsenalCategories[3].items],
-  [...arsenalCategories[1].items, ...arsenalCategories[2].items],
-];
-
 export default function TechnicalArsenal() {
   return (
     <section id="technical-arsenal" className="border-t border-foreground/35 py-12 sm:py-16">
@@ -113,26 +107,6 @@ export default function TechnicalArsenal() {
           <span className="sm:hidden">Full Stack</span>
           <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
         </Link>
-      </div>
-
-      {/* Drifting rows; decorative, the grid below is the accessible list. */}
-      <div aria-hidden="true" className="tech-marquee mt-8 space-y-3 overflow-hidden">
-        {marqueeRows.map((row, rowIndex) => (
-          <div
-            key={rowIndex}
-            className={`tech-marquee__track flex w-max ${rowIndex % 2 ? "tech-marquee__track--reverse" : ""}`}
-            style={{ "--duration": `${row.length * 4}s` } as CSSProperties}
-          >
-            {[...row, ...row].map((item, itemIndex) => (
-              <span
-                key={`${item}-${itemIndex}`}
-                className="mr-3 shrink-0 border border-foreground/35 px-3 py-1.5 font-mono text-xs font-semibold uppercase tracking-[0.08em] text-foreground/80 sm:text-sm"
-              >
-                {item}
-              </span>
-            ))}
-          </div>
-        ))}
       </div>
 
       {/* Bento Grid */}

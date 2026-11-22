@@ -631,58 +631,26 @@ body {
   -webkit-text-stroke: 1px color-mix(in srgb, var(--foreground) 14%, transparent);
 }
 
-/* Featured projects: sticky stacking cards (sticky works without motion). */
+/* Featured projects: sticky stacking cards (no scroll timeline needed).
+   Every card row matches the tallest card; the last row is scroll room so
+   the final card pins like the others before the stack scrolls away. */
 .project-stack {
-  timeline-scope: --project-1, --project-2, --project-3, --project-4, --project-5, --project-6;
+  display: grid;
+  grid-template-rows: repeat(var(--count), 1fr) 25vh;
 }
 
-/* Scroll room after the last card so it pins like the others before the
-   whole stack scrolls away together. */
 .project-stack::after {
   content: "";
-  height: 25vh;
-  margin-top: -1.5rem;
-}
-
-@media (min-width: 640px) {
-  .project-stack::after {
-    margin-top: -2.5rem;
-  }
 }
 
 .project-stack__card {
   position: sticky;
   top: calc(1rem + var(--i) * 0.75rem);
-  view-timeline-name: var(--self-timeline);
-  transform-origin: 50% 0;
 }
 
 @media (min-width: 640px) {
   .project-stack__card {
     top: calc(2rem + var(--i) * 1.25rem);
-  }
-}
-
-/* Technical arsenal marquee (time-based, pauses on hover). */
-.tech-marquee {
-  mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
-}
-
-.tech-marquee__track {
-  animation: marquee var(--duration, 45s) linear infinite;
-}
-
-.tech-marquee__track--reverse {
-  animation-direction: reverse;
-}
-
-.tech-marquee:hover .tech-marquee__track {
-  animation-play-state: paused;
-}
-
-@keyframes marquee {
-  to {
-    transform: translateX(-50%);
   }
 }
 
@@ -705,10 +673,6 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tech-marquee__track {
-    animation: none;
-  }
-
   .main-bottom-nav,
   [data-magnetic] {
     transition: none;
@@ -779,17 +743,6 @@ body {
       animation-timeline: view();
       animation-range: cover 10% cover 60%;
     }
-
-    /* Each project card recedes as the next one slides over it. */
-    .project-stack__card {
-      animation: stack-recede linear both;
-      animation-timeline: var(--next-timeline);
-      animation-range: entry 0% cover 55%;
-    }
-
-    .project-stack__card:last-child {
-      animation: none;
-    }
   }
 }
 
@@ -850,12 +803,6 @@ body {
   to {
     opacity: 1;
     transform: none;
-  }
-}
-
-@keyframes stack-recede {
-  to {
-    scale: 0.94;
   }
 }
 

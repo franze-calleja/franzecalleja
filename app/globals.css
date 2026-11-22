@@ -876,3 +876,66 @@ body {
     animation: none;
   }
 }
+
+/* ── /stats count-up (docs/superpowers/specs/2026-11-22-motion-sections-design.md).
+   One-shot, time-based: InViewOnce sets data-armed on hydration and data-in
+   the first time the grid is in view. Server HTML and reduced motion show the
+   real value text; the animated counter is a decorative aria-hidden twin. ── */
+@property --num {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 0;
+}
+
+.stat-value__count {
+  display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-armed] .stat-value__text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  [data-armed] .stat-value__count {
+    display: inline;
+    counter-reset: num var(--num);
+  }
+
+  [data-armed] .stat-value__count::after {
+    content: var(--prefix) counter(num, var(--style)) var(--suffix);
+  }
+
+  [data-armed] .stat-tile {
+    opacity: 0;
+    translate: 0 1rem;
+  }
+
+  [data-in] .stat-tile {
+    animation: stat-rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--i, 0) * 90ms) both;
+  }
+
+  [data-in] .stat-value__count {
+    animation: stat-count 1.2s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--i, 0) * 90ms) both;
+  }
+}
+
+@keyframes stat-rise {
+  to {
+    opacity: 1;
+    translate: none;
+  }
+}
+
+@keyframes stat-count {
+  from {
+    --num: 0;
+  }
+  to {
+    --num: var(--to);
+  }
+}

@@ -16,11 +16,14 @@ import {
   Compass,
 } from "lucide-react";
 
+import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 
 import content from "@/app/profile-data.json";
 import { countTestCases } from "@/lib/test-count";
 import GithubStatsCalendar from "@/components/github-stats-calendar";
+import InViewOnce from "@/components/in-view-once";
+import { parseStatValue } from "@/lib/stat-value";
 import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -146,14 +149,16 @@ export default function StatsPage() {
           <h2 id="primary-metrics-heading" className="sr-only">
             Primary Engineering Metrics
           </h2>
-          <div className="grid border-l border-t border-foreground/35 sm:grid-cols-2 lg:grid-cols-3">
-            {primaryStats.map((stat) => {
+          <InViewOnce className="grid border-l border-t border-foreground/35 sm:grid-cols-2 lg:grid-cols-3">
+            {primaryStats.map((stat, index) => {
               const Icon = stat.icon;
+              const parsed = parseStatValue(stat.value);
 
               return (
                 <article
                   key={stat.label}
-                  className="group relative flex min-h-48 flex-col justify-between border-b border-r border-foreground/35 p-5 transition-colors hover:bg-foreground hover:text-background sm:min-h-52 sm:p-6"
+                  style={{ "--i": index } as CSSProperties}
+                  className="stat-tile group relative flex min-h-48 flex-col justify-between border-b border-r border-foreground/35 p-5 transition-colors hover:bg-foreground hover:text-background sm:min-h-52 sm:p-6"
                 >
                   <div className="flex items-center justify-between">
                     <Icon className="h-5 w-5" aria-hidden="true" />
@@ -163,7 +168,21 @@ export default function StatsPage() {
                   </div>
                   <div>
                     <p className="text-4xl font-black tracking-tight sm:text-5xl">
-                      {stat.value}
+                      <span className="stat-value__text">{stat.value}</span>
+                      {parsed && (
+                        <span
+                          aria-hidden="true"
+                          className="stat-value__count"
+                          style={
+                            {
+                              "--to": parsed.number,
+                              "--prefix": JSON.stringify(parsed.prefix),
+                              "--suffix": JSON.stringify(parsed.suffix),
+                              "--style": parsed.pad ? "decimal-leading-zero" : "decimal",
+                            } as CSSProperties
+                          }
+                        />
+                      )}
                     </p>
                     <p className="mt-2 text-xs font-bold uppercase tracking-[0.1em]">
                       {stat.label}
@@ -175,7 +194,7 @@ export default function StatsPage() {
                 </article>
               );
             })}
-          </div>
+          </InViewOnce>
         </section>
 
         {/* GitHub Live Contributions Calendar */}

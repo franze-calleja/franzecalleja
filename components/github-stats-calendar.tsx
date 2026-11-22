@@ -4,12 +4,36 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import { Github, Users, GitCommit, Flame } from "lucide-react";
 import { GitHubCalendar } from "react-github-calendar";
 
+import { useInViewOnce } from "@/lib/use-in-view-once";
+
 const CALENDAR_THEME = {
   light: ["#e8e3cf", "#9be9a8", "#40c463", "#30a14e", "#216e39"],
   dark: ["#1e2020", "#2c3a2a", "#3e5a38", "#5a8050", "#86b878"],
 };
 
 const USERNAME = "franze-calleja";
+
+/**
+ * Tags each week column of the calendar SVG with its index (`--w`) so the CSS
+ * ripple can stagger by week, and marks the wrapper `data-ready` once real data
+ * has rendered. While the library shows its pulsing loading skeleton (rects
+ * with an inline loading animation) the wrapper stays un-ready, so the ripple
+ * never hides the skeleton. Re-runs on mutation, since data loads async.
+ */
+function indexCalendarWeeks(wrapper: HTMLElement) {
+  if (wrapper.querySelector('svg rect[style*="loading-animation"]')) {
+    delete wrapper.dataset.ready;
+    return;
+  }
+  let week = 0;
+  wrapper.querySelectorAll<SVGGElement>("svg g").forEach((group) => {
+    if (!group.querySelector(":scope > rect")) return;
+    const value = String(week++);
+    // Only write on change: these writes are observed, so avoid a feedback loop.
+    if (group.style.getPropertyValue("--w") !== value) group.style.setProperty("--w", value);
+  });
+  if (week > 0 && !("ready" in wrapper.dataset)) wrapper.dataset.ready = "";
+}
 
 function lastNWeeks(weeks: number) {
   return (data: { date: string; count: number; level: 0 | 1 | 2 | 3 | 4 }[]) => {
@@ -56,6 +80,17 @@ export default function GithubStatsCalendar() {
     getThemeServerSnapshot,
   );
   const [followers, setFollowers] = useState<number | null>(null);
+  const { ref: calendarRef, armed, inView } = useInViewOnce<HTMLDivElement>({ threshold: 0.2 });
+
+  useEffect(() => {
+    const wrapper = calendarRef.current;
+    if (!wrapper) return;
+    indexCalendarWeeks(wrapper);
+    const observer = new MutationObserver(() => indexCalendarWeeks(wrapper));
+    // `style` too: the skeleton turns into data by dropping its inline animation.
+    observer.observe(wrapper, { childList: true, subtree: true, attributes: true, attributeFilter: ["style"] });
+    return () => observer.disconnect();
+  }, [calendarRef]);
   const isMobile = useSyncExternalStore(
     subscribeToMobile,
     getMobileSnapshot,
@@ -117,7 +152,11 @@ export default function GithubStatsCalendar() {
       </div>
 
       {/* Calendar Area */}
-      <div className="github-calendar-wrapper mt-6 flex w-full justify-center overflow-x-auto pb-2">
+      <div
+        ref={calendarRef}
+        data-armed={armed || undefined}
+        data-in={inView || undefined}
+        className="github-calendar-wrapper mt-6 flex w-full justify-center overflow-x-auto pb-2">
         <GitHubCalendar
           username={USERNAME}
           colorScheme={colorScheme}

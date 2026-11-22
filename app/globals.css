@@ -968,3 +968,47 @@ body {
     transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--r, 0) * 120ms);
   }
 }
+
+/* ── Technical Arsenal folded stack (components/technical-arsenal.tsx) ── */
+.arsenal-strip[data-open] {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.arsenal-strip[data-open] .arsenal-muted {
+  color: color-mix(in srgb, var(--background) 72%, transparent);
+}
+
+.arsenal-chip {
+  border-color: color-mix(in srgb, var(--foreground) 35%, transparent);
+}
+
+.arsenal-strip[data-open] .arsenal-chip {
+  border-color: color-mix(in srgb, var(--background) 40%, transparent);
+}
+
+.arsenal-title {
+  transition: font-size 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* While one strip is open, the others step back a size. */
+@media (min-width: 640px) {
+  .arsenal[data-has-open] .arsenal-strip:not([data-open]) .arsenal-title {
+    font-size: 1.375rem;
+  }
+}
+
+.arsenal-plus {
+  transition: rotate 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.arsenal-strip[data-open] .arsenal-plus {
+  rotate: 45deg;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arsenal-title,
+  .arsenal-plus {
+    transition: none;
+  }
+}

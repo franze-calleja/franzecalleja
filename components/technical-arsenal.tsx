@@ -1,5 +1,8 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, Code2, Server, Activity, Sparkles, type LucideIcon } from "lucide-react";
+import { ArrowUpRight, Code2, Server, Activity, Plus, Sparkles, type LucideIcon } from "lucide-react";
 
 import content from "@/app/profile-data.json";
 
@@ -85,7 +88,14 @@ const arsenalCategories: ArsenalCategory[] = [
   },
 ];
 
+/**
+ * Technical Arsenal as a folded stack: one bold strip per category; the open
+ * strip unfolds (inverted) to show its subtitle and tools. One open at a time,
+ * the first open on load.
+ */
 export default function TechnicalArsenal() {
+  const [openIndex, setOpenIndex] = useState<string | null>(arsenalCategories[0]?.index ?? null);
+
   return (
     <section id="technical-arsenal" className="border-t border-foreground/35 py-12 sm:py-16">
       {/* Section Header */}
@@ -109,58 +119,61 @@ export default function TechnicalArsenal() {
         </Link>
       </div>
 
-      {/* Bento Grid */}
-      <div className="mt-8 grid gap-4 md:grid-cols-2 lg:gap-6">
+      <ol className="arsenal mt-8 border-b border-foreground/35" data-has-open={openIndex !== null || undefined}>
         {arsenalCategories.map((group) => {
           const Icon = group.icon;
+          const isOpen = openIndex === group.index;
+          const panelId = `arsenal-${group.index}`;
 
           return (
-            <article
+            <li
               key={group.index}
-              className="reveal group flex flex-col border border-foreground/55 p-6 transition-all duration-300 hover:border-foreground hover:shadow-lg sm:p-7"
+              className="arsenal-strip border-t border-foreground/35 transition-colors duration-300"
+              data-open={isOpen || undefined}
             >
-              {/* Header with index and icon */}
-              <div className="flex items-center justify-between gap-4">
-                <span className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-(--muted)">
-                  {group.index} / ARSENAL
+              <button
+                type="button"
+                aria-expanded={isOpen}
+                aria-controls={panelId}
+                onClick={() => setOpenIndex(isOpen ? null : group.index)}
+                className="grid w-full grid-cols-[2.5rem_minmax(0,1fr)_auto] items-center gap-x-4 px-1 py-5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent sm:grid-cols-[3.5rem_2rem_minmax(0,1fr)_auto_auto] sm:px-3"
+              >
+                <span className="arsenal-muted font-mono text-xs font-semibold tracking-[0.12em] text-(--muted)">
+                  {group.index}
                 </span>
-                <span className="flex h-8 w-8 items-center justify-center border border-foreground/30 text-foreground transition-colors group-hover:border-foreground group-hover:bg-foreground group-hover:text-background">
-                  <Icon className="h-4 w-4" aria-hidden="true" />
+                <Icon className="hidden h-5 w-5 sm:block" aria-hidden="true" />
+                <span className="arsenal-title text-xl font-black uppercase leading-tight tracking-tight sm:text-3xl">
+                  {group.title}
                 </span>
+                <span className="arsenal-muted hidden font-mono text-xs font-semibold uppercase tracking-[0.12em] text-(--muted) sm:block">
+                  {group.items.length} tools
+                </span>
+                <Plus className="arsenal-plus h-5 w-5" aria-hidden="true" />
+              </button>
+
+              <div id={panelId} className="fold" data-open={isOpen || undefined} inert={!isOpen}>
+                <div>
+                  <div className="grid gap-5 px-1 pb-7 sm:grid-cols-[3.5rem_minmax(0,1fr)] sm:px-3">
+                    <span className="hidden sm:block" />
+                    <div>
+                      <p className="arsenal-muted max-w-2xl text-sm leading-relaxed text-(--muted)">{group.subtitle}</p>
+                      <ul className="mt-5 flex flex-wrap gap-2" aria-label={`${group.title} technologies`}>
+                        {group.items.map((item) => (
+                          <li key={item}>
+                            <span className="arsenal-chip inline-block border px-2.5 py-1 font-mono text-xs font-semibold">
+                              {item}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
               </div>
-
-              {/* Title & Subtitle */}
-              <h3 className="mt-3 text-xl font-bold tracking-tight sm:text-2xl">
-                {group.title}
-              </h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-(--muted)">
-                {group.subtitle}
-              </p>
-
-              {/* Divider */}
-              <div className="my-5 border-t border-foreground/20" />
-
-              {/* Technology Badges */}
-              <ul className="flex flex-wrap gap-2" aria-label={`${group.title} technologies`}>
-                {group.items.map((item) => (
-                  <li key={item}>
-                    <span className="inline-block border border-foreground/35 px-2.5 py-1 font-mono text-xs font-semibold text-foreground/90 transition-all duration-200 hover:border-foreground hover:bg-foreground hover:text-background">
-                      {item}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-
-              {/* Bottom pill count */}
-              <div className="mt-auto pt-6">
-                <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-(--muted)">
-                  {group.items.length} core technologies
-                </p>
-              </div>
-            </article>
+            </li>
           );
         })}
-      </div>
+      </ol>
     </section>
   );
 }

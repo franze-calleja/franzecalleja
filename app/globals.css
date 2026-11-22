@@ -594,3 +594,254 @@ body {
   }
 }
 
+
+/* ── Motion system ───────────────────────────────────────────────────────
+   Scroll effects use CSS scroll-driven animations so they run off the main
+   thread. Everything is opt-in twice: only with no reduced-motion preference
+   and only where `animation-timeline` is supported. Elsewhere the page
+   renders exactly as the static layout. Only transform/translate/scale/
+   opacity are animated. `--depth` halves parallax distances below lg. */
+:root {
+  --depth: 1;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (max-width: 1023px) {
+  :root {
+    --depth: 0.5;
+  }
+}
+
+.scroll-progress {
+  display: none;
+}
+
+/* Hero decoration: static by default, layered when motion is allowed. */
+.hero-backdrop {
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--foreground) 22%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 22px 22px;
+  mask-image: radial-gradient(ellipse at 70% 45%, #000 15%, transparent 70%);
+}
+
+.hero-ghost-text {
+  color: transparent;
+  -webkit-text-stroke: 1px color-mix(in srgb, var(--foreground) 14%, transparent);
+}
+
+/* Featured projects: sticky stacking cards (sticky works without motion). */
+.project-stack {
+  timeline-scope: --project-1, --project-2, --project-3, --project-4, --project-5, --project-6;
+}
+
+.project-stack__card {
+  position: sticky;
+  top: calc(1rem + var(--i) * 0.75rem);
+  view-timeline-name: var(--self-timeline);
+  transform-origin: 50% 0;
+}
+
+@media (min-width: 640px) {
+  .project-stack__card {
+    top: calc(2rem + var(--i) * 1.25rem);
+  }
+}
+
+/* Technical arsenal marquee (time-based, pauses on hover). */
+.tech-marquee {
+  mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+}
+
+.tech-marquee__track {
+  animation: marquee var(--duration, 45s) linear infinite;
+}
+
+.tech-marquee__track--reverse {
+  animation-direction: reverse;
+}
+
+.tech-marquee:hover .tech-marquee__track {
+  animation-play-state: paused;
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Bottom nav hides while scrolling down, returns on scroll up or focus. */
+.main-bottom-nav {
+  transition: translate 0.35s var(--ease-out-expo), opacity 0.25s ease;
+}
+
+.main-bottom-nav[data-hidden="true"]:not(:focus-within) {
+  translate: 0 calc(100% + 2rem);
+  opacity: 0;
+}
+
+/* Magnetic hover (desktop pointer only; vars are set by MagneticEffect). */
+[data-magnetic] {
+  translate: var(--mx, 0px) var(--my, 0px);
+  transition-property: color, background-color, border-color, translate;
+  transition-duration: 0.2s, 0.2s, 0.2s, 0.35s;
+  transition-timing-function: ease, ease, ease, var(--ease-out-expo);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tech-marquee__track {
+    animation: none;
+  }
+
+  .main-bottom-nav,
+  [data-magnetic] {
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .scroll-progress {
+      display: block;
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 90;
+      height: 2px;
+      background: var(--foreground);
+      transform-origin: 0 50%;
+      pointer-events: none;
+      animation: grow-x linear both;
+      animation-timeline: scroll(root);
+    }
+
+    /* Hero depth layers: further layers move less, nearer ones move more. */
+    .hero-layer {
+      animation: linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 100vh;
+    }
+
+    .hero-layer--back {
+      animation-name: hero-back;
+    }
+
+    .hero-layer--copy {
+      animation-name: hero-copy;
+    }
+
+    .hero-layer--portrait {
+      animation-name: hero-portrait;
+    }
+
+    .hero-layer--photo {
+      scale: 1.14;
+      animation-name: hero-photo;
+    }
+
+    .hero-layer--badge {
+      animation-name: hero-badge;
+    }
+
+    /* Section reveal as an element enters the viewport. */
+    .reveal {
+      animation: reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 75%;
+    }
+
+    /* Timeline line fills while the list scrolls through. */
+    .timeline-track::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: -1.5px;
+      width: 2px;
+      background: var(--foreground);
+      transform-origin: 50% 0;
+      animation: grow-y linear both;
+      animation-timeline: view();
+      animation-range: cover 10% cover 60%;
+    }
+
+    /* Each project card recedes as the next one slides over it. */
+    .project-stack__card {
+      animation: stack-recede linear both;
+      animation-timeline: var(--next-timeline);
+      animation-range: entry 0% cover 55%;
+    }
+
+    .project-stack__card:last-child {
+      animation: none;
+    }
+  }
+}
+
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes grow-y {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes hero-back {
+  to {
+    translate: 0 calc(var(--depth) * 22vh);
+  }
+}
+
+@keyframes hero-copy {
+  to {
+    translate: 0 calc(var(--depth) * -6vh);
+    opacity: 0.2;
+  }
+}
+
+@keyframes hero-portrait {
+  to {
+    translate: 0 calc(var(--depth) * -14vh);
+  }
+}
+
+@keyframes hero-photo {
+  to {
+    translate: 0 calc(var(--depth) * 5vh);
+  }
+}
+
+@keyframes hero-badge {
+  to {
+    translate: 0 calc(var(--depth) * -7vh);
+  }
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(calc(var(--depth) * 2.5rem));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes stack-recede {
+  to {
+    scale: 0.94;
+    opacity: 0.55;
+  }
+}

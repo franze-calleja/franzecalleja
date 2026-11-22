@@ -6,7 +6,7 @@ import TechnicalArsenal from "@/components/technical-arsenal";
 
 export default function Home() {
   return (
-    <main className="min-h-screen overflow-hidden bg-background px-5 pb-28 pt-5 sm:px-10 sm:pb-32 sm:pt-8 lg:px-16">
+    <main className="min-h-screen overflow-x-clip bg-background px-5 pb-28 pt-5 sm:px-10 sm:pb-32 sm:pt-8 lg:px-16">
       <div className="mx-auto flex w-full max-w-7xl flex-col">
         <HomeHero />
         <ExperienceTimeline />

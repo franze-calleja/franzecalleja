@@ -97,7 +97,7 @@ export default function ExperienceTimeline() {
               key={item.step}
               type="button"
               onClick={() => openModal(item)}
-              className="group relative flex min-h-64 flex-col border border-foreground/55 p-6 text-left transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:border-foreground hover:bg-foreground hover:text-background hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground sm:p-7"
+              className="reveal group relative flex min-h-64 flex-col border border-foreground/55 p-6 text-left transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:border-foreground hover:bg-foreground hover:text-background hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground sm:p-7"
             >
               {/* Top metadata */}
               <div className="flex items-center justify-between gap-2">
@@ -168,14 +168,14 @@ export default function ExperienceTimeline() {
           Previous Roles
         </h3>
 
-        <ol className="relative ml-1 mt-6 border-l border-foreground/55 sm:ml-2">
+        <ol className="timeline-track relative ml-1 mt-6 border-l border-foreground/55 sm:ml-2">
           {previousRoles.map((item) => {
             const isExpanded = !!expandedPrevious[item.step];
 
             return (
               <li
                 key={item.step}
-                className="relative pb-8 pl-6 last:pb-2 sm:pl-8"
+                className="reveal relative pb-8 pl-6 last:pb-2 sm:pl-8"
               >
                 {/* Node indicator */}
                 <span

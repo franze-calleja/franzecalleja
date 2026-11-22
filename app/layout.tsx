@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import CursorFollower from "@/components/cursor-follower";
+import MagneticEffect from "@/components/magnetic-effect";
 import MainBottomNav from "@/components/main-bottom-nav";
 import { SITE_URL } from "@/lib/site";
 import "./globals.css";
@@ -193,7 +194,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <div className="scroll-progress" aria-hidden="true" />
         <CursorFollower />
+        <MagneticEffect />
         {children}
         <MainBottomNav />
       </body>

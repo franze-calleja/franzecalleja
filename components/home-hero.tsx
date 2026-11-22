@@ -2,6 +2,7 @@ import Image from "next/image";
 import { CalendarDays, Github, Link as LinkIcon, Linkedin, Mail } from "lucide-react";
 
 import content from "@/app/profile-data.json";
+import PointerTilt from "@/components/pointer-tilt";
 import ThemeToggle from "@/components/theme-toggle";
 
 const iconMap = {
@@ -33,8 +34,16 @@ export default function HomeHero() {
         <ThemeToggle />
       </header>
 
-      <section className="grid flex-1 items-center gap-10 py-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(22rem,0.8fr)] lg:gap-16 lg:py-14">
-        <div className="max-w-3xl">
+      <section className="relative isolate grid flex-1 items-center gap-10 py-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(22rem,0.8fr)] lg:gap-16 lg:py-14">
+        {/* Back layer: drifts slower than the page for depth. */}
+        <div aria-hidden="true" className="hero-layer hero-layer--back pointer-events-none absolute inset-0 -z-10 select-none">
+          <div className="hero-backdrop absolute inset-0" />
+          <span className="hero-ghost-text absolute -top-4 right-0 font-black leading-none tracking-tighter text-[38vw] lg:-top-10 lg:text-[22rem]">
+            FWC
+          </span>
+        </div>
+
+        <div className="hero-layer hero-layer--copy max-w-3xl">
           <p className="mb-4 font-mono text-xs font-semibold uppercase tracking-[0.16em] text-(--muted)">
             {content.profile.location} / Available for select work
           </p>
@@ -57,6 +66,7 @@ export default function HomeHero() {
               return (
                 <a
                   key={link.label}
+                  data-magnetic
                   href={link.href}
                   target={isExternal ? "_blank" : undefined}
                   rel={isExternal ? "noopener noreferrer" : undefined}
@@ -74,8 +84,9 @@ export default function HomeHero() {
           </div>
         </div>
 
-        <div className="relative mx-auto w-full max-w-md lg:max-w-none">
-          <div className="relative aspect-[4/5] border border-foreground/70 bg-foreground/8 p-3 sm:p-4">
+        <div className="hero-layer hero-layer--portrait relative mx-auto w-full max-w-md lg:max-w-none">
+          <PointerTilt className="relative aspect-[4/5] border border-foreground/70 bg-background p-3 sm:p-4">
+            <div aria-hidden="true" className="absolute inset-0 bg-foreground/8" />
             <div className="absolute left-[-0.2rem] top-[-0.2rem] h-5 w-5 border-l-2 border-t-2 border-foreground" />
             <div className="absolute right-[-0.2rem] top-[-0.2rem] h-5 w-5 border-r-2 border-t-2 border-foreground" />
             <div className="absolute bottom-[-0.2rem] left-[-0.2rem] h-5 w-5 border-b-2 border-l-2 border-foreground" />
@@ -88,20 +99,22 @@ export default function HomeHero() {
                 status: online<br />
                 deploy: ready
               </div>
-              <Image
-                src={content.profile.image}
-                alt={content.profile.name}
-                fill
-                priority
-                sizes="(max-width: 1024px) 100vw, 38vw"
-                className="object-cover object-[56%_center] grayscale contrast-125"
-              />
+              <div className="hero-layer hero-layer--photo absolute inset-0">
+                <Image
+                  src={content.profile.image}
+                  alt={content.profile.name}
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 38vw"
+                  className="object-cover object-[56%_center] grayscale contrast-125"
+                />
+              </div>
               <div className="absolute inset-0 bg-linear-to-r from-foreground/40 via-transparent to-transparent" />
-              <span className="absolute bottom-3 right-3 border border-background/70 bg-background px-2 py-1 font-mono text-[0.6rem] font-semibold text-foreground">
+              <span className="hero-layer hero-layer--badge absolute bottom-3 right-3 z-10 border border-background/70 bg-background px-2 py-1 font-mono text-[0.6rem] font-semibold text-foreground">
                 macOS · M5
               </span>
             </div>
-          </div>
+          </PointerTilt>
         </div>
       </section>
     </>

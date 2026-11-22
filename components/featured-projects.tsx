@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 
@@ -25,6 +25,7 @@ export default function FeaturedProjects() {
         </div>
         <Link
           href="/projects"
+          data-magnetic
           className="inline-flex h-10 shrink-0 items-center gap-2 border border-foreground px-3 text-xs font-bold uppercase tracking-[0.12em] transition-colors hover:bg-foreground hover:text-background sm:h-11 sm:px-4"
         >
           <span className="hidden sm:inline">Show more</span>
@@ -33,39 +34,54 @@ export default function FeaturedProjects() {
         </Link>
       </div>
 
-      <div className="mt-8 grid gap-4 lg:grid-cols-2 lg:gap-8">
-        {featuredProjects.map((project) => (
-          <a
+      {/* Sticky stack: each card pins and recedes as the next slides over it. */}
+      <ol className="project-stack mt-8 flex flex-col gap-6 sm:gap-10">
+        {featuredProjects.map((project, index) => (
+          <li
             key={project.name}
-            href={project.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            onMouseEnter={() => setActivePreview(project)}
-            onMouseLeave={() => setActivePreview(null)}
-            className="group flex min-h-56 flex-col border border-foreground/55 p-6 transition-colors hover:bg-foreground hover:text-background sm:p-7"
+            className="project-stack__card"
+            style={
+              {
+                "--i": index,
+                "--self-timeline": `--project-${index + 1}`,
+                "--next-timeline": `--project-${index + 2}`,
+              } as CSSProperties
+            }
           >
-            <div className="flex items-start justify-between gap-6">
-              <h3 className="max-w-xl text-2xl font-bold leading-tight sm:text-3xl">
-                {project.name}
-              </h3>
-              <ExternalLink className="mt-1 h-4 w-4 shrink-0 text-(--muted) transition-colors group-hover:text-background" aria-hidden="true" />
-            </div>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-(--muted) transition-colors group-hover:text-background/70">
-              {project.description}
-            </p>
-            <ul className="mt-auto flex flex-wrap gap-2 pt-7" aria-label={`${project.name} technologies`}>
-              {project.technologies.map((technology) => (
-                <li
-                  key={technology}
-                  className="border border-foreground/55 px-2.5 py-1 font-mono text-xs font-semibold transition-colors group-hover:border-background/70"
-                >
-                  {technology}
-                </li>
-              ))}
-            </ul>
-          </a>
+            <a
+              href={project.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              onMouseEnter={() => setActivePreview(project)}
+              onMouseLeave={() => setActivePreview(null)}
+              className="group flex min-h-64 flex-col border border-foreground/55 bg-background p-6 shadow-[0_-12px_30px_-18px_rgba(0,0,0,0.35)] transition-colors hover:bg-foreground hover:text-background sm:min-h-72 sm:p-8 lg:p-10"
+            >
+              <p className="mb-4 font-mono text-xs font-semibold uppercase tracking-[0.16em] text-(--muted) transition-colors group-hover:text-background/70">
+                {String(index + 1).padStart(2, "0")} / {String(featuredProjects.length).padStart(2, "0")}
+              </p>
+              <div className="flex items-start justify-between gap-6">
+                <h3 className="max-w-xl text-2xl font-bold leading-tight sm:text-3xl">
+                  {project.name}
+                </h3>
+                <ExternalLink className="mt-1 h-4 w-4 shrink-0 text-(--muted) transition-colors group-hover:text-background" aria-hidden="true" />
+              </div>
+              <p className="mt-4 max-w-2xl text-base leading-7 text-(--muted) transition-colors group-hover:text-background/70">
+                {project.description}
+              </p>
+              <ul className="mt-auto flex flex-wrap gap-2 pt-7" aria-label={`${project.name} technologies`}>
+                {project.technologies.map((technology) => (
+                  <li
+                    key={technology}
+                    className="border border-foreground/55 px-2.5 py-1 font-mono text-xs font-semibold transition-colors group-hover:border-background/70"
+                  >
+                    {technology}
+                  </li>
+                ))}
+              </ul>
+            </a>
+          </li>
         ))}
-      </div>
+      </ol>
 
       <ProjectHoverPreview activeProject={activePreview} />
     </section>

@@ -51,4 +51,4 @@ Open to part-time roles and freelance projects.
 </picture>
 </p>
 
-<sub>My portfolio also has a <a href="https://franzecalleja.vercel.app/game">playable pixel game</a> and an <a href="https://franzecalleja.vercel.app/chat">AI assistant</a> that answers questions about my work.</sub>
+<sub>My portfolio also has an <a href="https://franzecalleja.vercel.app/chat">AI assistant</a> that answers questions about my work.</sub>

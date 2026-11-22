@@ -939,3 +939,24 @@ body {
     --num: var(--to);
   }
 }
+
+/* ── /stats GitHub calendar ripple: squares pop in week by week, once, when the
+   calendar is in view and its data has rendered (--w set per week column by
+   github-stats-calendar.tsx). Same one-shot armed/in pattern as the count-up. ── */
+@media (prefers-reduced-motion: no-preference) {
+  .github-calendar-wrapper[data-armed][data-ready] svg g > rect {
+    transform-box: fill-box;
+    transform-origin: center;
+    scale: 0;
+  }
+
+  .github-calendar-wrapper[data-armed][data-ready][data-in] svg g > rect {
+    animation: cell-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--w, 0) * 18ms) both;
+  }
+}
+
+@keyframes cell-pop {
+  to {
+    scale: 1;
+  }
+}

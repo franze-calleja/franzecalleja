@@ -4,12 +4,27 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import { Github, Users, GitCommit, Flame } from "lucide-react";
 import { GitHubCalendar } from "react-github-calendar";
 
+import { useInViewOnce } from "@/lib/use-in-view-once";
+
 const CALENDAR_THEME = {
   light: ["#e8e3cf", "#9be9a8", "#40c463", "#30a14e", "#216e39"],
   dark: ["#1e2020", "#2c3a2a", "#3e5a38", "#5a8050", "#86b878"],
 };
 
 const USERNAME = "franze-calleja";
+
+/**
+ * Tags each week column of the calendar SVG with its index (`--w`) so the CSS
+ * ripple can stagger by week, and marks the wrapper `data-ready` once indexed.
+ * The calendar renders its data asynchronously, so this re-runs on mutation.
+ */
+function indexCalendarWeeks(wrapper: HTMLElement) {
+  let week = 0;
+  wrapper.querySelectorAll<SVGGElement>("svg g").forEach((group) => {
+    if (group.querySelector(":scope > rect")) group.style.setProperty("--w", String(week++));
+  });
+  if (week > 0) wrapper.dataset.ready = "";
+}
 
 function lastNWeeks(weeks: number) {
   return (data: { date: string; count: number; level: 0 | 1 | 2 | 3 | 4 }[]) => {
@@ -56,6 +71,16 @@ export default function GithubStatsCalendar() {
     getThemeServerSnapshot,
   );
   const [followers, setFollowers] = useState<number | null>(null);
+  const { ref: calendarRef, armed, inView } = useInViewOnce<HTMLDivElement>({ threshold: 0.2 });
+
+  useEffect(() => {
+    const wrapper = calendarRef.current;
+    if (!wrapper) return;
+    indexCalendarWeeks(wrapper);
+    const observer = new MutationObserver(() => indexCalendarWeeks(wrapper));
+    observer.observe(wrapper, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [calendarRef]);
   const isMobile = useSyncExternalStore(
     subscribeToMobile,
     getMobileSnapshot,
@@ -117,7 +142,11 @@ export default function GithubStatsCalendar() {
       </div>
 
       {/* Calendar Area */}
-      <div className="github-calendar-wrapper mt-6 flex w-full justify-center overflow-x-auto pb-2">
+      <div
+        ref={calendarRef}
+        data-armed={armed || undefined}
+        data-in={inView || undefined}
+        className="github-calendar-wrapper mt-6 flex w-full justify-center overflow-x-auto pb-2">
         <GitHubCalendar
           username={USERNAME}
           colorScheme={colorScheme}

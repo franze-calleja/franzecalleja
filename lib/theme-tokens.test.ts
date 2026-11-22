@@ -44,6 +44,10 @@ describe.each(Object.entries(themes))("%s theme tokens", (_, { vars, accent, nav
     expect(vars["--nav-active-foreground"]?.toLowerCase()).toBe(navActiveForeground.toLowerCase());
   });
 
+  it("has an inverse accent readable as text on inverted (foreground-coloured) panels (>= 4.5:1)", () => {
+    expect(contrastRatio(vars["--accent-inverse"], vars["--foreground"])).toBeGreaterThanOrEqual(4.5);
+  });
+
   it("keeps the accent readable as text on the page background (>= 4.5:1)", () => {
     expect(contrastRatio(vars["--accent"], vars["--background"])).toBeGreaterThanOrEqual(4.5);
   });

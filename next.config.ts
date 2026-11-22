@@ -29,6 +29,10 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  experimental: {
+    // Enables React <ViewTransition> for page-to-page animations (app/template.tsx).
+    viewTransition: true,
+  },
   images: {
     formats: ["image/avif", "image/webp"],
   },

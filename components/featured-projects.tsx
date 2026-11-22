@@ -84,7 +84,7 @@ export default function FeaturedProjects() {
         ))}
       </ol>
 
-      <ProjectHoverPreview activeProject={activePreview} />
+      <ProjectHoverPreview activeProject={activePreview} projects={featuredProjects} />
     </section>
   );
 }

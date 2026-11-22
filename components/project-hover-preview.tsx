@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import Image from "next/image";
 import { ExternalLink, Lock, ShieldCheck, Globe, Smartphone, Activity } from "lucide-react";
+
+import { previewPosition } from "@/lib/preview-position";
 
 export type ProjectPreviewData = {
   name: string;
@@ -14,6 +16,19 @@ export type ProjectPreviewData = {
 
 interface ProjectHoverPreviewProps {
   activeProject: ProjectPreviewData | null;
+  /** Every project the page can preview; their screenshots load up front so a hover shows one instantly. */
+  projects: ProjectPreviewData[];
+}
+
+const FINE_POINTER = "(hover: hover) and (pointer: fine)";
+const CARD = { width: 360, height: 260 };
+/** Fraction of the remaining distance the card closes each frame. */
+const FOLLOW_SPEED = 0.22;
+
+function subscribeFinePointer(onChange: () => void) {
+  const mediaQuery = window.matchMedia(FINE_POINTER);
+  mediaQuery.addEventListener("change", onChange);
+  return () => mediaQuery.removeEventListener("change", onChange);
 }
 
 function getProjectDomain(href: string): string {
@@ -44,80 +59,53 @@ function getProjectCategory(project: ProjectPreviewData) {
   return { label: "Web Platform", icon: Globe };
 }
 
-export default function ProjectHoverPreview({ activeProject }: ProjectHoverPreviewProps) {
+export default function ProjectHoverPreview({ activeProject, projects }: ProjectHoverPreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mouseRef = useRef({ x: -500, y: -500 });
   const posRef = useRef({ x: -500, y: -500 });
-  const [mounted, setMounted] = useState(false);
-  const [isFinePointer, setIsFinePointer] = useState(false);
+  const isFinePointer = useSyncExternalStore(
+    subscribeFinePointer,
+    () => window.matchMedia(FINE_POINTER).matches,
+    () => false,
+  );
+  const isActive = activeProject !== null;
 
-  useEffect(() => {
-    setMounted(true);
-    const mediaQuery = window.matchMedia("(hover: hover) and (pointer: fine)");
-    setIsFinePointer(mediaQuery.matches);
-
-    const handlePointerChange = (e: MediaQueryListEvent) => {
-      setIsFinePointer(e.matches);
-    };
-
-    mediaQuery.addEventListener("change", handlePointerChange);
-    return () => mediaQuery.removeEventListener("change", handlePointerChange);
-  }, []);
-
+  // Track the cursor cheaply all the time, so a hover starts at the cursor.
   useEffect(() => {
     if (!isFinePointer) return;
-
     const onMouseMove = (e: MouseEvent) => {
       mouseRef.current.x = e.clientX;
       mouseRef.current.y = e.clientY;
     };
-
     window.addEventListener("mousemove", onMouseMove, { passive: true });
-
-    let animationFrameId: number;
-
-    const render = () => {
-      const targetX = mouseRef.current.x;
-      const targetY = mouseRef.current.y;
-
-      // Damped interpolation for floating lag
-      const speed = 0.22;
-      posRef.current.x += (targetX - posRef.current.x) * speed;
-      posRef.current.y += (targetY - posRef.current.y) * speed;
-
-      if (containerRef.current) {
-        const cardWidth = 360;
-        const cardHeight = 260;
-        const padding = 20;
-
-        let renderX = posRef.current.x + 24;
-        let renderY = posRef.current.y - cardHeight / 2;
-
-        // Viewport boundaries
-        if (renderX + cardWidth > window.innerWidth - padding) {
-          renderX = posRef.current.x - cardWidth - 24;
-        }
-        if (renderY < padding) {
-          renderY = padding;
-        } else if (renderY + cardHeight > window.innerHeight - padding) {
-          renderY = window.innerHeight - cardHeight - padding;
-        }
-
-        containerRef.current.style.transform = `translate3d(${renderX}px, ${renderY}px, 0)`;
-      }
-
-      animationFrameId = requestAnimationFrame(render);
-    };
-
-    animationFrameId = requestAnimationFrame(render);
-
-    return () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      cancelAnimationFrame(animationFrameId);
-    };
+    return () => window.removeEventListener("mousemove", onMouseMove);
   }, [isFinePointer]);
 
-  if (!mounted || !isFinePointer) return null;
+  // Follow the cursor only while a project is hovered.
+  useEffect(() => {
+    if (!isFinePointer || !isActive) return;
+
+    const place = () => {
+      const { x, y } = previewPosition(posRef.current, CARD, { width: window.innerWidth, height: window.innerHeight });
+      if (containerRef.current) containerRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    };
+
+    // Start at the cursor instead of gliding in from wherever the last hover ended.
+    posRef.current = { ...mouseRef.current };
+    place();
+
+    let animationFrameId = 0;
+    const render = () => {
+      posRef.current.x += (mouseRef.current.x - posRef.current.x) * FOLLOW_SPEED;
+      posRef.current.y += (mouseRef.current.y - posRef.current.y) * FOLLOW_SPEED;
+      place();
+      animationFrameId = requestAnimationFrame(render);
+    };
+    animationFrameId = requestAnimationFrame(render);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [isFinePointer, isActive]);
+
+  if (!isFinePointer) return null;
 
   const category = activeProject ? getProjectCategory(activeProject) : null;
   const CategoryIcon = category ? category.icon : Globe;
@@ -128,7 +116,7 @@ export default function ProjectHoverPreview({ activeProject }: ProjectHoverPrevi
     <div
       ref={containerRef}
       aria-hidden="true"
-      className={`pointer-events-none fixed left-0 top-0 z-9990 hidden w-[340px] sm:w-[360px] md:block transition-[opacity,transform] duration-250 ease-out will-change-transform ${
+      className={`pointer-events-none fixed left-0 top-0 z-9990 hidden w-[340px] sm:w-[360px] md:block transition-[opacity,scale] duration-250 ease-out will-change-transform ${
         activeProject
           ? "opacity-100 scale-100"
           : "opacity-0 scale-95"
@@ -160,16 +148,21 @@ export default function ProjectHoverPreview({ activeProject }: ProjectHoverPrevi
 
         {/* Preview Screen Body */}
         <div className="relative aspect-[16/10] w-full overflow-hidden bg-foreground/5">
-          {activeProject?.image && activeProject.image.trim() !== "" ? (
-            <Image
-              src={activeProject.image}
-              alt={activeProject.name}
-              fill
-              sizes="360px"
-              quality={85}
-              className="object-cover object-top"
-            />
-          ) : (
+          {projects
+            .filter((project) => project.image?.trim())
+            .map((project) => (
+              <Image
+                key={project.name}
+                src={project.image!}
+                alt=""
+                fill
+                sizes="360px"
+                quality={85}
+                loading="eager"
+                className={`object-cover object-top ${project.name === activeProject?.name ? "opacity-100" : "opacity-0"}`}
+              />
+            ))}
+          {activeProject?.image?.trim() ? null : (
             <div className="flex h-full w-full flex-col justify-between p-4 font-mono text-xs">
               {/* Top Row: System Tag & Category */}
               <div className="flex items-center justify-between gap-2">

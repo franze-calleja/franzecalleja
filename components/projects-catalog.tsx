@@ -54,7 +54,7 @@ export default function ProjectsCatalog({ projects }: ProjectsCatalogProps) {
         ))}
       </ul>
 
-      <ProjectHoverPreview activeProject={activePreview} />
+      <ProjectHoverPreview activeProject={activePreview} projects={projects} />
     </>
   );
 }

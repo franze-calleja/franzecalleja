@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { ArrowUpRight, Plus, X } from "lucide-react";
 
 import content from "@/app/profile-data.json";
+import { latestStartYear } from "@/lib/experience-years";
 
 type ExperienceStep = {
   step: string;
@@ -20,6 +21,7 @@ export default function ExperienceTimeline() {
   const steps = content.experience.steps as ExperienceStep[];
   const currentRoles = steps.filter((item) => item.current);
   const previousRoles = steps.filter((item) => !item.current);
+  const previousYear = latestStartYear(previousRoles.map((item) => item.period));
 
   const [selectedRole, setSelectedRole] = useState<ExperienceStep | null>(null);
   const [isClosing, setIsClosing] = useState(false);
@@ -83,7 +85,13 @@ export default function ExperienceTimeline() {
       </div>
 
       {/* Current Roles Grid */}
-      <section className="mt-8" aria-labelledby="current-roles-heading">
+      <section className="relative isolate mt-8" aria-labelledby="current-roles-heading">
+        <span
+          aria-hidden="true"
+          className="experience-ghost pointer-events-none absolute -top-6 right-0 -z-10 select-none font-black leading-none tracking-tighter text-[8rem] sm:text-[11rem] lg:-top-14 lg:text-[16rem]"
+        >
+          NOW
+        </span>
         <div className="flex items-center gap-3">
           <span className="h-2 w-2 bg-foreground" aria-hidden="true" />
           <h3 id="current-roles-heading" className="font-mono text-xs font-semibold uppercase tracking-[0.14em]">
@@ -160,7 +168,15 @@ export default function ExperienceTimeline() {
       </section>
 
       {/* Previous Roles Timeline */}
-      <section className="mt-12" aria-labelledby="previous-roles-heading">
+      <section className="relative isolate mt-12" aria-labelledby="previous-roles-heading">
+        {previousYear !== null && (
+          <span
+            aria-hidden="true"
+            className="experience-ghost pointer-events-none absolute -top-6 right-0 -z-10 select-none font-black leading-none tracking-tighter text-[8rem] sm:text-[11rem] lg:-top-14 lg:text-[16rem]"
+          >
+            {previousYear}
+          </span>
+        )}
         <h3
           id="previous-roles-heading"
           className="border-b border-foreground/35 pb-3 font-mono text-xs font-semibold uppercase tracking-[0.14em] text-(--muted)"

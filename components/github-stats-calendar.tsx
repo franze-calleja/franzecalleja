@@ -15,15 +15,24 @@ const USERNAME = "franze-calleja";
 
 /**
  * Tags each week column of the calendar SVG with its index (`--w`) so the CSS
- * ripple can stagger by week, and marks the wrapper `data-ready` once indexed.
- * The calendar renders its data asynchronously, so this re-runs on mutation.
+ * ripple can stagger by week, and marks the wrapper `data-ready` once real data
+ * has rendered. While the library shows its pulsing loading skeleton (rects
+ * with an inline loading animation) the wrapper stays un-ready, so the ripple
+ * never hides the skeleton. Re-runs on mutation, since data loads async.
  */
 function indexCalendarWeeks(wrapper: HTMLElement) {
+  if (wrapper.querySelector('svg rect[style*="loading-animation"]')) {
+    delete wrapper.dataset.ready;
+    return;
+  }
   let week = 0;
   wrapper.querySelectorAll<SVGGElement>("svg g").forEach((group) => {
-    if (group.querySelector(":scope > rect")) group.style.setProperty("--w", String(week++));
+    if (!group.querySelector(":scope > rect")) return;
+    const value = String(week++);
+    // Only write on change: these writes are observed, so avoid a feedback loop.
+    if (group.style.getPropertyValue("--w") !== value) group.style.setProperty("--w", value);
   });
-  if (week > 0) wrapper.dataset.ready = "";
+  if (week > 0 && !("ready" in wrapper.dataset)) wrapper.dataset.ready = "";
 }
 
 function lastNWeeks(weeks: number) {
@@ -78,7 +87,8 @@ export default function GithubStatsCalendar() {
     if (!wrapper) return;
     indexCalendarWeeks(wrapper);
     const observer = new MutationObserver(() => indexCalendarWeeks(wrapper));
-    observer.observe(wrapper, { childList: true, subtree: true });
+    // `style` too: the skeleton turns into data by dropping its inline animation.
+    observer.observe(wrapper, { childList: true, subtree: true, attributes: true, attributeFilter: ["style"] });
     return () => observer.disconnect();
   }, [calendarRef]);
   const isMobile = useSyncExternalStore(

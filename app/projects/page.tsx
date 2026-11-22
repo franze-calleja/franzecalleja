@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 
 export default function ProjectsPage() {
   return (
-    <main className="min-h-screen bg-background px-5 pb-28 pt-5 sm:px-10 sm:pb-32 sm:pt-8 lg:px-16">
+    <main className="min-h-screen overflow-x-clip bg-background px-5 pb-28 pt-5 sm:px-10 sm:pb-32 sm:pt-8 lg:px-16">
       <div className="mx-auto max-w-7xl">
         <header className="flex flex-col gap-6 border-b border-foreground/35 pb-4 sm:flex-row sm:items-end sm:justify-between">
           <div>

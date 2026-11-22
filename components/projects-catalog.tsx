@@ -3,6 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 
+import GalleryFocusScroll from "@/components/gallery-focus-scroll";
+
 
 interface ProjectsCatalogProps {
   projects: Array<{
@@ -45,7 +47,7 @@ export default function ProjectsCatalog({ projects }: ProjectsCatalogProps) {
                   href={project.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group relative isolate grid h-full gap-5 border border-foreground/55 bg-background p-4 transition-colors hover:border-foreground sm:p-6 lg:grid-cols-[1.25fr_1fr] lg:items-center lg:gap-10 lg:p-8"
+                  className="group relative isolate grid h-full gap-5 border border-foreground/55 bg-background p-4 transition-colors hover:border-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent sm:p-6 lg:grid-cols-[1.25fr_1fr] lg:items-center lg:gap-10 lg:p-8"
                 >
                   <span
                     aria-hidden="true"
@@ -114,6 +116,7 @@ export default function ProjectsCatalog({ projects }: ProjectsCatalogProps) {
           </li>
         </ol>
       </div>
+      <GalleryFocusScroll />
     </section>
   );
 }

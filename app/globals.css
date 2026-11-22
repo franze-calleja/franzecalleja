@@ -842,7 +842,6 @@ body {
 @keyframes stack-recede {
   to {
     scale: 0.94;
-    opacity: 0.55;
   }
 }
 

@@ -636,6 +636,20 @@ body {
   timeline-scope: --project-1, --project-2, --project-3, --project-4, --project-5, --project-6;
 }
 
+/* Scroll room after the last card so it pins like the others before the
+   whole stack scrolls away together. */
+.project-stack::after {
+  content: "";
+  height: 25vh;
+  margin-top: -1.5rem;
+}
+
+@media (min-width: 640px) {
+  .project-stack::after {
+    margin-top: -2.5rem;
+  }
+}
+
 .project-stack__card {
   position: sticky;
   top: calc(1rem + var(--i) * 0.75rem);

@@ -16,6 +16,8 @@
   --nav-active-foreground: #B34700;
   --nav-hover: rgba(243, 239, 221, 0.15);
   --accent: #B34700;
+  /* Accent for text on inverted (foreground-coloured) panels. */
+  --accent-inverse: #E0662A;
 }
 
 :root[data-theme="dark"] {
@@ -32,6 +34,7 @@
   --nav-active-foreground: #E0662A;
   --nav-hover: rgba(14, 16, 15, 0.12);
   --accent: #E0662A;
+  --accent-inverse: #B34700;
 }
 
 @theme inline {
@@ -108,38 +111,6 @@ body {
   color: var(--nav-active-foreground);
 }
 
-/* Timeline Accordion Transitions */
-.timeline-accordion {
-  display: grid;
-  grid-template-rows: 0fr;
-  opacity: 0;
-  margin-top: 0;
-  transition:
-    grid-template-rows 350ms cubic-bezier(0.16, 1, 0.3, 1),
-    opacity 280ms ease,
-    margin-top 350ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.timeline-accordion--open {
-  grid-template-rows: 1fr;
-  opacity: 1;
-  margin-top: 1rem;
-}
-
-.timeline-accordion__inner {
-  overflow: hidden;
-  min-height: 0;
-}
-
-.timeline-accordion__content {
-  transform: translateY(-8px);
-  transition: transform 350ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.timeline-accordion--open .timeline-accordion__content {
-  transform: translateY(0);
-}
-
 @media (prefers-reduced-motion: reduce) {
   body *,
   body *::before,
@@ -169,34 +140,6 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-@keyframes modal-backdrop-in {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
-@keyframes modal-card-in {
-  0% {
-    opacity: 0;
-    transform: translateY(18px) scale(0.96);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.animate-modal-backdrop {
-  animation: modal-backdrop-in 220ms ease-out both;
-}
-
-.animate-modal-card {
-  animation: modal-card-in 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @keyframes chat-panel-enter {
@@ -630,7 +573,6 @@ body {
 }
 
 .hero-ghost-text,
-.experience-ghost,
 .gallery__ghost {
   color: transparent;
   -webkit-text-stroke: 1px color-mix(in srgb, var(--foreground) 14%, transparent);
@@ -734,13 +676,6 @@ body {
       animation-range: entry 0% entry 75%;
     }
 
-    /* Experience ghost labels drift slower than the roles in front of them. */
-    .experience-ghost {
-      animation: experience-ghost linear both;
-      animation-timeline: view();
-      animation-range: cover 0% cover 100%;
-    }
-
     /* ── /projects gallery, desktop: the page's vertical scroll slides the
        panels sideways through a pinned, full-bleed stage. Each panel's ghost
        number and screenshot get their own parallax window, centred on the
@@ -832,30 +767,6 @@ body {
         animation-name: gallery-shot-swipe;
       }
     }
-
-    /* Timeline line fills while the list scrolls through. */
-    .timeline-track::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: -1.5px;
-      width: 2px;
-      background: var(--accent);
-      transform-origin: 50% 0;
-      animation: grow-y linear both;
-      animation-timeline: view();
-      animation-range: cover 10% cover 60%;
-    }
-  }
-}
-
-@keyframes experience-ghost {
-  from {
-    translate: 0 calc(var(--depth) * 6rem);
-  }
-  to {
-    translate: 0 calc(var(--depth) * -6rem);
   }
 }
 
@@ -907,15 +818,6 @@ body {
   }
   to {
     transform: scaleX(1);
-  }
-}
-
-@keyframes grow-y {
-  from {
-    transform: scaleY(0);
-  }
-  to {
-    transform: scaleY(1);
   }
 }
 
@@ -1110,5 +1012,244 @@ body {
 @keyframes cell-pop {
   to {
     scale: 1;
+  }
+}
+
+/* ── Fold: smooth unfold used by the experience ledger and the technical
+   arsenal. Animates grid rows 0fr → 1fr; the child must be a single wrapper. ── */
+.fold {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.fold > * {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.fold[data-open] {
+  grid-template-rows: 1fr;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fold {
+    transition: none;
+  }
+}
+
+/* ── Experience ledger (components/experience-timeline.tsx) ──
+   A row inverts and unfolds its details while pinned open (click/Enter/tap),
+   while it holds keyboard focus, or on hover (pointer devices only, after a
+   short intent delay so sweeping the cursor down the list stays calm). */
+.ledger-grid {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+@media (min-width: 1024px) {
+  .ledger-grid {
+    grid-template-columns: 18rem minmax(0, 1fr) 5.5rem;
+  }
+}
+
+.ledger-row {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+.ledger-row .fold {
+  transition-delay: 0s;
+}
+
+.ledger-now {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.ledger-chip {
+  border-color: color-mix(in srgb, var(--foreground) 35%, transparent);
+}
+
+.ledger-bar {
+  position: absolute;
+  top: 4px;
+  height: 4px;
+  background: var(--foreground);
+  transform-origin: left center;
+}
+
+.ledger-bar--now {
+  background: var(--accent);
+}
+
+.ledger-bar--now::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  right: -5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 18%, transparent);
+}
+
+.ledger-plus {
+  transition: rotate 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ledger-row[data-open],
+.ledger-row:has(:focus-visible) {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.ledger-row[data-open] .fold,
+.ledger-row:has(:focus-visible) .fold {
+  grid-template-rows: 1fr;
+}
+
+.ledger-row[data-open] .ledger-muted,
+.ledger-row:has(:focus-visible) .ledger-muted {
+  color: color-mix(in srgb, var(--background) 72%, transparent);
+}
+
+.ledger-row[data-open] .ledger-tick,
+.ledger-row:has(:focus-visible) .ledger-tick {
+  border-color: color-mix(in srgb, var(--background) 18%, transparent);
+}
+
+.ledger-row[data-open] .ledger-bar,
+.ledger-row:has(:focus-visible) .ledger-bar {
+  background: var(--background);
+}
+
+.ledger-row[data-open] .ledger-bar--now,
+.ledger-row:has(:focus-visible) .ledger-bar--now,
+.ledger-row[data-open] .ledger-bar--now::after,
+.ledger-row:has(:focus-visible) .ledger-bar--now::after {
+  background: var(--accent-inverse);
+}
+
+.ledger-row[data-open] .ledger-now,
+.ledger-row:has(:focus-visible) .ledger-now {
+  border-color: var(--accent-inverse);
+  color: var(--accent-inverse);
+}
+
+.ledger-row[data-open] .ledger-chip,
+.ledger-row:has(:focus-visible) .ledger-chip {
+  border-color: color-mix(in srgb, var(--background) 40%, transparent);
+}
+
+.ledger-row[data-open] .ledger-plus,
+.ledger-row:has(:focus-visible) .ledger-plus {
+  rotate: 45deg;
+}
+
+@media (hover: hover) {
+  .ledger-row:hover {
+    background: var(--foreground);
+    color: var(--background);
+    transition-delay: 120ms;
+  }
+
+  .ledger-row:hover .fold {
+    grid-template-rows: 1fr;
+    transition-delay: 120ms;
+  }
+
+  .ledger-row:hover .ledger-muted {
+    color: color-mix(in srgb, var(--background) 72%, transparent);
+  }
+
+  .ledger-row:hover .ledger-tick {
+    border-color: color-mix(in srgb, var(--background) 18%, transparent);
+  }
+
+  .ledger-row:hover .ledger-bar {
+    background: var(--background);
+  }
+
+  .ledger-row:hover .ledger-bar--now,
+  .ledger-row:hover .ledger-bar--now::after {
+    background: var(--accent-inverse);
+  }
+
+  .ledger-row:hover .ledger-now {
+    border-color: var(--accent-inverse);
+    color: var(--accent-inverse);
+  }
+
+  .ledger-row:hover .ledger-chip {
+    border-color: color-mix(in srgb, var(--background) 40%, transparent);
+  }
+
+  .ledger-row:hover .ledger-plus {
+    rotate: 45deg;
+  }
+}
+
+/* Bars draw in once when the ledger enters view (armed after hydration, so
+   server HTML and reduced motion show them fully drawn). */
+@media (prefers-reduced-motion: no-preference) {
+  .ledger[data-armed]:not([data-in]) .ledger-bar {
+    transform: scaleX(0);
+  }
+
+  .ledger[data-armed] .ledger-bar {
+    transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--r, 0) * 120ms);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ledger-row,
+  .ledger-plus {
+    transition: none;
+  }
+}
+
+/* ── Technical Arsenal folded stack (components/technical-arsenal.tsx) ── */
+.arsenal-strip[data-open] {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.arsenal-strip[data-open] .arsenal-muted {
+  color: color-mix(in srgb, var(--background) 72%, transparent);
+}
+
+.arsenal-chip {
+  border-color: color-mix(in srgb, var(--foreground) 35%, transparent);
+}
+
+.arsenal-strip[data-open] .arsenal-chip {
+  border-color: color-mix(in srgb, var(--background) 40%, transparent);
+}
+
+.arsenal-title {
+  transition: font-size 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* While one strip is open, the others step back a size. */
+@media (min-width: 640px) {
+  .arsenal[data-has-open] .arsenal-strip:not([data-open]) .arsenal-title {
+    font-size: 1.375rem;
+  }
+}
+
+.arsenal-plus {
+  transition: rotate 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.arsenal-strip[data-open] .arsenal-plus {
+  rotate: 45deg;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arsenal-title,
+  .arsenal-plus {
+    transition: none;
   }
 }

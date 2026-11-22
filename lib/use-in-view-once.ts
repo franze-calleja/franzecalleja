@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type RefObject } from "react";
 
+import { shouldReveal } from "./reveal";
+
 const subscribeNever = () => () => {};
 
 /**
@@ -22,12 +24,14 @@ export function useInViewOnce<T extends Element>({ threshold = 0.3 }: { threshol
     if (!el || inView) return;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
+        if (entries.some((entry) => shouldReveal(entry, threshold))) {
           setInView(true);
           observer.disconnect();
         }
       },
-      { threshold },
+      // Fine-grained thresholds so elements taller than the viewport keep
+      // reporting as they scroll in (their ratio may never reach `threshold`).
+      { threshold: [...Array.from({ length: 21 }, (_, i) => i / 20), threshold] },
     );
     observer.observe(el);
     return () => observer.disconnect();

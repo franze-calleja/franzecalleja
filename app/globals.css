@@ -629,7 +629,8 @@ body {
   mask-image: radial-gradient(ellipse at 70% 45%, #000 15%, transparent 70%);
 }
 
-.hero-ghost-text {
+.hero-ghost-text,
+.experience-ghost {
   color: transparent;
   -webkit-text-stroke: 1px color-mix(in srgb, var(--foreground) 14%, transparent);
 }
@@ -732,6 +733,13 @@ body {
       animation-range: entry 0% entry 75%;
     }
 
+    /* Experience ghost labels drift slower than the roles in front of them. */
+    .experience-ghost {
+      animation: experience-ghost linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+    }
+
     /* Timeline line fills while the list scrolls through. */
     .timeline-track::before {
       content: "";
@@ -740,12 +748,21 @@ body {
       bottom: 0;
       left: -1.5px;
       width: 2px;
-      background: var(--foreground);
+      background: var(--accent);
       transform-origin: 50% 0;
       animation: grow-y linear both;
       animation-timeline: view();
       animation-range: cover 10% cover 60%;
     }
+  }
+}
+
+@keyframes experience-ghost {
+  from {
+    translate: 0 calc(var(--depth) * 6rem);
+  }
+  to {
+    translate: 0 calc(var(--depth) * -6rem);
   }
 }
 

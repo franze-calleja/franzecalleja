@@ -12,8 +12,8 @@
   --hover: rgba(23, 23, 23, 0.04);
   --nav-background: #0e100f;
   --nav-foreground: #f3efdd;
-  --nav-active: #E0662A;
-  --nav-active-foreground: #0e100f;
+  --nav-active: #f3efdd;
+  --nav-active-foreground: #B34700;
   --nav-hover: rgba(243, 239, 221, 0.15);
   --accent: #B34700;
 }
@@ -28,8 +28,8 @@
   --hover: rgba(255, 255, 255, 0.06);
   --nav-background: #f3efdd;
   --nav-foreground: #0e100f;
-  --nav-active: #B34700;
-  --nav-active-foreground: #f3efdd;
+  --nav-active: #0e100f;
+  --nav-active-foreground: #E0662A;
   --nav-hover: rgba(14, 16, 15, 0.12);
   --accent: #E0662A;
 }

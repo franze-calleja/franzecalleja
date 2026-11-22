@@ -23,14 +23,14 @@ const themes = {
   light: {
     vars: tokens(/:root\s*\{([^}]*)\}/),
     accent: "#B34700",
-    navActive: "#E0662A",
-    navActiveForeground: "#0E100F",
+    navActive: "#f3efdd",
+    navActiveForeground: "#B34700",
   },
   dark: {
     vars: tokens(/:root\[data-theme="dark"\]\s*\{([^}]*)\}/),
     accent: "#E0662A",
-    navActive: "#B34700",
-    navActiveForeground: "#f3efdd",
+    navActive: "#0e100f",
+    navActiveForeground: "#E0662A",
   },
 };
 
@@ -39,7 +39,7 @@ describe.each(Object.entries(themes))("%s theme tokens", (_, { vars, accent, nav
     expect(vars["--accent"]?.toLowerCase()).toBe(accent.toLowerCase());
   });
 
-  it("uses the accent shade that suits the inverted nav pill", () => {
+  it("keeps the nav indicator neutral and draws the active icon in the accent", () => {
     expect(vars["--nav-active"]?.toLowerCase()).toBe(navActive.toLowerCase());
     expect(vars["--nav-active-foreground"]?.toLowerCase()).toBe(navActiveForeground.toLowerCase());
   });

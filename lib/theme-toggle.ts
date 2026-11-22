@@ -46,6 +46,8 @@ export function toggleThemeWithRipple(
     Math.max(y, window.innerHeight - y),
   );
 
+  // Lets CSS drop the nav's own view-transition layers during the ripple.
+  root.dataset.themeTransition = "true";
   const transition = document.startViewTransition(() => {
     root.dataset.theme = nextTheme;
     try {
@@ -68,5 +70,9 @@ export function toggleThemeWithRipple(
         pseudoElement: "::view-transition-new(root)",
       },
     );
+  });
+
+  transition.finished.finally(() => {
+    delete root.dataset.themeTransition;
   });
 }

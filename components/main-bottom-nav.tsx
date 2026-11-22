@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ChartNoAxesColumn, House, MessageCircle } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 
 const navigationItems = [
   { href: "/", label: "Home", icon: House },
@@ -65,7 +65,7 @@ export default function MainBottomNav() {
           }`}
           style={{ transform: `translateX(${Math.max(activeIndex, 0) * 3}rem)` }}
         />
-        {navigationItems.map((item) => {
+        {navigationItems.map((item, index) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
 
@@ -75,6 +75,7 @@ export default function MainBottomNav() {
               href={item.href}
               aria-current={isActive ? "page" : undefined}
               title={item.label}
+              style={{ "--vt-name": `nav-item-${index}` } as CSSProperties}
               className={`main-bottom-nav__item relative z-10 inline-flex h-11 w-11 items-center justify-center rounded-full transition-colors duration-200 ${
                 isActive
                   ? "main-bottom-nav__item--active"

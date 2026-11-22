@@ -834,10 +834,42 @@ body {
   }
 }
 
+/* The nav gets its own layers so the incoming page never covers it, and the
+   active circle slides between items while the icons recolour above it.
+   Paint order (nav, indicator, items) keeps the icons on top. */
+.main-bottom-nav {
+  view-transition-name: bottom-nav;
+}
+
+.main-bottom-nav__indicator {
+  view-transition-name: nav-indicator;
+}
+
+.main-bottom-nav__item {
+  view-transition-name: var(--vt-name);
+}
+
+/* The theme ripple reveals the whole page as one layer, nav included. */
+:root[data-theme-transition] :is(.main-bottom-nav, .main-bottom-nav__indicator, .main-bottom-nav__item) {
+  view-transition-name: none;
+}
+
+/* During a transition the slide is drawn by the view transition, so the
+   indicator's own transform transition must not lag behind it. */
+:root:active-view-transition .main-bottom-nav__indicator {
+  transition: opacity 200ms ease, background-color 360ms ease;
+}
+
+::view-transition-group(nav-indicator) {
+  animation-duration: 0.45s;
+  animation-timing-function: cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(page),
   ::view-transition-old(page),
-  ::view-transition-new(page) {
+  ::view-transition-new(page),
+  ::view-transition-group(nav-indicator) {
     animation: none;
   }
 }

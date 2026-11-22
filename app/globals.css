@@ -630,7 +630,8 @@ body {
 }
 
 .hero-ghost-text,
-.experience-ghost {
+.experience-ghost,
+.gallery__ghost {
   color: transparent;
   -webkit-text-stroke: 1px color-mix(in srgb, var(--foreground) 14%, transparent);
 }
@@ -740,6 +741,98 @@ body {
       animation-range: cover 0% cover 100%;
     }
 
+    /* ── /projects gallery, desktop: the page's vertical scroll slides the
+       panels sideways through a pinned, full-bleed stage. Each panel's ghost
+       number and screenshot get their own parallax window, centred on the
+       point where that panel crosses the stage (--i / (--n - 1)). ── */
+    @media (min-width: 1024px) {
+      .gallery {
+        view-timeline-name: --gallery;
+        height: calc(var(--n) * 55svh + 100svh);
+      }
+
+      .gallery__stage {
+        position: sticky;
+        top: 0;
+        display: flex;
+        align-items: center;
+        width: 100vw;
+        height: 100svh;
+        margin-inline: calc(50% - 50vw);
+        overflow: clip;
+        container-type: inline-size;
+      }
+
+      .gallery__track {
+        flex-direction: row;
+        width: max-content;
+        gap: 4vw;
+        margin: 0;
+        padding: 0 8vw;
+        overflow: visible;
+        animation: gallery-slide linear both;
+        animation-timeline: --gallery;
+        animation-range: contain 0% contain 100%;
+      }
+
+      .gallery__panel {
+        width: min(68vw, 1040px);
+      }
+
+      .gallery__panel:not(.gallery__end) > a {
+        height: min(72svh, 640px);
+      }
+
+      .gallery__ghost,
+      .gallery__shot {
+        /* Longhands: a nameless \`animation: linear both\` shorthand loses its
+           fill mode in the CSS build. */
+        animation-duration: auto;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
+        animation-timeline: --gallery;
+        animation-range:
+          contain calc((var(--i) - 1) / (var(--n) - 1) * 100%)
+          contain calc((var(--i) + 1) / (var(--n) - 1) * 100%);
+      }
+
+      .gallery__ghost {
+        animation-name: gallery-ghost;
+      }
+
+      .gallery__shot {
+        scale: 1.15;
+        animation-name: gallery-shot;
+      }
+    }
+
+    /* ── /projects gallery, phones and tablets: a native swipe row; each
+       panel's screenshot and ghost number drift as it crosses the row. ── */
+    @media (max-width: 1023.98px) {
+      .gallery__panel {
+        view-timeline-name: --panel;
+        view-timeline-axis: inline;
+      }
+
+      .gallery__ghost,
+      .gallery__shot {
+        animation-duration: auto;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
+        animation-timeline: --panel;
+        animation-range: cover 0% cover 100%;
+      }
+
+      .gallery__ghost {
+        animation-name: gallery-ghost-swipe;
+      }
+
+      .gallery__shot {
+        scale: 1.15;
+        animation-name: gallery-shot-swipe;
+      }
+    }
+
     /* Timeline line fills while the list scrolls through. */
     .timeline-track::before {
       content: "";
@@ -763,6 +856,48 @@ body {
   }
   to {
     translate: 0 calc(var(--depth) * -6rem);
+  }
+}
+
+@keyframes gallery-slide {
+  to {
+    translate: calc(-100% + 100cqw) 0;
+  }
+}
+
+@keyframes gallery-ghost {
+  from {
+    translate: calc(var(--depth) * 14vw) 0;
+  }
+  to {
+    translate: calc(var(--depth) * -14vw) 0;
+  }
+}
+
+@keyframes gallery-shot {
+  from {
+    translate: -4% 0;
+  }
+  to {
+    translate: 4% 0;
+  }
+}
+
+@keyframes gallery-ghost-swipe {
+  from {
+    translate: 30vw 0;
+  }
+  to {
+    translate: -30vw 0;
+  }
+}
+
+@keyframes gallery-shot-swipe {
+  from {
+    translate: -6% 0;
+  }
+  to {
+    translate: 6% 0;
   }
 }
 

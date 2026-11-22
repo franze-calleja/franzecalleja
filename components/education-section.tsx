@@ -29,7 +29,7 @@ export default function EducationSection() {
       </div>
 
       {/* Unified Academic Credential Card */}
-      <article className="group mt-8 border border-foreground/55 p-6 transition-all duration-300 hover:border-foreground hover:shadow-xl sm:p-8 lg:p-10">
+      <article className="reveal group mt-8 border border-foreground/55 p-6 transition-all duration-300 hover:border-foreground hover:shadow-xl sm:p-8 lg:p-10">
         {/* Top bar with Distinction badges and graduation period */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-foreground/20 pb-5">
           <div className="flex flex-wrap items-center gap-2">

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ChartNoAxesColumn, House, MessageCircle } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
 
 const navigationItems = [
   { href: "/", label: "Home", icon: House },
@@ -12,14 +13,49 @@ const navigationItems = [
 
 export default function MainBottomNav() {
   const pathname = usePathname();
+  const navRef = useRef<HTMLElement>(null);
+
+  // Hide while scrolling down, show on scroll up or near the page end.
+  // Writes a data attribute directly so scrolling never re-renders React.
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+
+    let lastY = window.scrollY;
+    let frameId: number | null = null;
+
+    const update = () => {
+      frameId = null;
+      const y = window.scrollY;
+      const delta = y - lastY;
+      if (Math.abs(delta) < 6) return;
+
+      const nearBottom = window.innerHeight + y >= document.documentElement.scrollHeight - 80;
+      const hide = delta > 0 && y > 120 && !nearBottom;
+      nav.dataset.hidden = hide ? "true" : "false";
+      lastY = y;
+    };
+
+    const onScroll = () => {
+      if (frameId === null) frameId = requestAnimationFrame(update);
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (frameId !== null) cancelAnimationFrame(frameId);
+      nav.dataset.hidden = "false";
+    };
+  }, [pathname]);
 
   const activeIndex = navigationItems.findIndex((item) => item.href === pathname);
   const hasActive = activeIndex !== -1;
 
   return (
     <nav
+      ref={navRef}
       aria-label="Main navigation"
-      className="fixed inset-x-0 bottom-5 z-60 flex justify-center px-5 sm:bottom-7"
+      className="main-bottom-nav fixed inset-x-0 bottom-5 z-60 flex justify-center px-5 sm:bottom-7"
     >
       <div className="main-bottom-nav__shell relative flex items-center gap-1 rounded-full p-1.5">
         <span

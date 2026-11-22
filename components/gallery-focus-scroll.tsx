@@ -15,8 +15,12 @@ export default function GalleryFocusScroll() {
     if (!gallery || !track) return;
 
     const onFocusIn = (event: FocusEvent) => {
+      const target = event.target as Element;
+      // Keyboard focus only: a mouse press also focuses the link, and moving
+      // the page under the pointer then would lose the click.
+      if (!target.matches(":focus-visible")) return;
       if (getComputedStyle(track).animationName === "none") return;
-      const panel = (event.target as Element).closest<HTMLElement>(".gallery__panel");
+      const panel = target.closest<HTMLElement>(".gallery__panel");
       if (!panel) return;
       const index = Number(panel.style.getPropertyValue("--i"));
       const count = Number(gallery.style.getPropertyValue("--n"));

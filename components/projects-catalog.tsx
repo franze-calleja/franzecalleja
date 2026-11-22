@@ -33,7 +33,7 @@ export default function ProjectsCatalog({ projects }: ProjectsCatalogProps) {
       style={{ "--n": total + 1 } as CSSProperties}
     >
       <div className="gallery__stage">
-        <ol className="gallery__track -mx-5 flex snap-x snap-mandatory gap-5 overflow-x-auto px-5 pb-4 sm:-mx-10 sm:px-10 lg:mx-0 lg:flex-col lg:gap-10 lg:overflow-visible lg:px-0">
+        <ol className="gallery__track -mx-5 flex snap-x snap-mandatory gap-5 overflow-x-auto px-5 pb-4 pt-10 sm:-mx-10 sm:px-10 lg:mx-0 lg:flex-col lg:gap-10 lg:overflow-visible lg:px-0 lg:pt-0">
           {projects.map((project, index) => {
             const hasShot = Boolean(project.image?.trim());
 

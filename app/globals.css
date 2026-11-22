@@ -806,6 +806,33 @@ body {
       }
     }
 
+    /* ── /projects gallery, phones and tablets: a native swipe row; each
+       panel's screenshot and ghost number drift as it crosses the row. ── */
+    @media (max-width: 1023.98px) {
+      .gallery__panel {
+        view-timeline-name: --panel;
+        view-timeline-axis: inline;
+      }
+
+      .gallery__ghost,
+      .gallery__shot {
+        animation-duration: auto;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
+        animation-timeline: --panel;
+        animation-range: cover 0% cover 100%;
+      }
+
+      .gallery__ghost {
+        animation-name: gallery-ghost-swipe;
+      }
+
+      .gallery__shot {
+        scale: 1.15;
+        animation-name: gallery-shot-swipe;
+      }
+    }
+
     /* Timeline line fills while the list scrolls through. */
     .timeline-track::before {
       content: "";
@@ -853,6 +880,24 @@ body {
   }
   to {
     translate: 4% 0;
+  }
+}
+
+@keyframes gallery-ghost-swipe {
+  from {
+    translate: 30vw 0;
+  }
+  to {
+    translate: -30vw 0;
+  }
+}
+
+@keyframes gallery-shot-swipe {
+  from {
+    translate: -6% 0;
+  }
+  to {
+    translate: 6% 0;
   }
 }
 

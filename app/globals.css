@@ -630,7 +630,8 @@ body {
 }
 
 .hero-ghost-text,
-.experience-ghost {
+.experience-ghost,
+.gallery__ghost {
   color: transparent;
   -webkit-text-stroke: 1px color-mix(in srgb, var(--foreground) 14%, transparent);
 }

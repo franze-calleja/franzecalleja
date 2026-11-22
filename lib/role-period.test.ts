@@ -24,6 +24,12 @@ describe("parseRolePeriod", () => {
     expect(parseRolePeriod("Aug 2025 – Jan 2026", now)).toEqual({ start: 2025 + 7 / 12, end: 2026 + 1 / 12, ongoing: false });
   });
 
+  it("reads 'Present' in UTC so server and browser agree across time zones", () => {
+    // 30 Nov 20:00 UTC is already 1 Dec in UTC+8; both must still say November.
+    const boundary = new Date(Date.UTC(2026, 10, 30, 20));
+    expect(parseRolePeriod("2023 - Present", boundary)?.end).toBe(2026 + 11 / 12);
+  });
+
   it("returns null when there is no year to place the role", () => {
     expect(parseRolePeriod("Present", now)).toBeNull();
   });
@@ -32,6 +38,11 @@ describe("parseRolePeriod", () => {
 describe("rulerYears", () => {
   it("spans whole years from the earliest start to the year after the latest end", () => {
     expect(rulerYears([{ start: 2023, end: 2026.9 }, { start: 2025.1, end: 2025.4 }])).toEqual([2023, 2024, 2025, 2026, 2027]);
+  });
+
+  it("does not add an empty year when a span ends exactly on a year boundary", () => {
+    // An ongoing role in December ends at the start of next year.
+    expect(rulerYears([{ start: 2023, end: 2027 }])).toEqual([2023, 2024, 2025, 2026, 2027]);
   });
 
   it("returns no years for no spans", () => {

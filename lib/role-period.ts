@@ -14,14 +14,15 @@ function parsePoint(text: string): Point {
 /**
  * Places a role period such as "August 2025 - Present", "February - May 2025"
  * or "2023 - Present" on a fractional-year axis: the start is the start of its
- * month, the end the end of its month ("Present" = the current month). A side
+ * month, the end the end of its month ("Present" = the current UTC month). A side
  * without a year borrows the other side's; a bare year starts in January.
  */
 export function parseRolePeriod(period: string, now: Date): RoleSpan | null {
   const [from = "", to = ""] = period.split(/\s+[-–—]\s+/);
   const ongoing = /present|now|current/i.test(to);
   const start = parsePoint(from);
-  const end = ongoing ? { month: now.getMonth(), year: now.getFullYear() } : parsePoint(to);
+  // UTC, so the server render and the browser agree whatever their time zones.
+  const end = ongoing ? { month: now.getUTCMonth(), year: now.getUTCFullYear() } : parsePoint(to);
 
   const startYear = start.year ?? end.year;
   const endYear = end.year ?? start.year;
@@ -34,10 +35,10 @@ export function parseRolePeriod(period: string, now: Date): RoleSpan | null {
   };
 }
 
-/** Whole years for the ruler: from the earliest start to the year after the latest end. */
+/** Whole years for the ruler: from the earliest start's year to the first year boundary at or after the latest end. */
 export function rulerYears(spans: Array<{ start: number; end: number }>): number[] {
   if (spans.length === 0) return [];
   const first = Math.floor(Math.min(...spans.map((s) => s.start)));
-  const last = Math.floor(Math.max(...spans.map((s) => s.end))) + 1;
+  const last = Math.ceil(Math.max(...spans.map((s) => s.end)));
   return Array.from({ length: last - first + 1 }, (_, i) => first + i);
 }

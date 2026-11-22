@@ -77,7 +77,7 @@ export default function ExperienceTimeline({ now }: { now: number }) {
         >
           <span className="hidden lg:block">Company</span>
           <span className="hidden lg:block">Role</span>
-          <span className="relative h-4">
+          <span className="relative col-span-2 h-4 lg:col-span-1">
             {years.map((year, i) => (
               <span
                 key={year}
@@ -96,6 +96,7 @@ export default function ExperienceTimeline({ now }: { now: number }) {
           {rows.map(({ step, span }, index) => {
             const isOpen = openStep === step.step;
             const panelId = `role-${step.step}-details`;
+            const descId = `role-${step.step}-summary`;
 
             return (
               <li key={step.step} className="ledger-row border-b border-foreground/35" data-open={isOpen || undefined}>
@@ -103,6 +104,9 @@ export default function ExperienceTimeline({ now }: { now: number }) {
                   type="button"
                   aria-expanded={isOpen}
                   aria-controls={panelId}
+                  // A short name for each row; the description is announced as its description.
+                  aria-label={`${step.title} at ${step.caption}, ${step.period}${step.current ? ", current role" : ""}`}
+                  aria-describedby={step.description ? descId : undefined}
                   onClick={() => setOpenStep(isOpen ? null : step.step)}
                   className="ledger-grid grid w-full items-center gap-x-6 gap-y-3 py-5 text-left transition-colors hover:bg-foreground/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 >
@@ -118,7 +122,9 @@ export default function ExperienceTimeline({ now }: { now: number }) {
                     {step.description && (
                       <span className="ledger-desc fold">
                         <span>
-                          <span className="block pt-2 text-sm leading-relaxed text-(--muted)">{step.description}</span>
+                          <span id={descId} className="block pt-2 text-sm leading-relaxed text-(--muted)">
+                            {step.description}
+                          </span>
                         </span>
                       </span>
                     )}

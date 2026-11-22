@@ -83,7 +83,7 @@ export default function GithubStatsCalendar() {
                 href={`https://github.com/${USERNAME}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-mono text-sm font-bold tracking-tight text-foreground hover:underline sm:text-base"
+                className="font-mono text-sm font-bold tracking-tight text-foreground hover:text-accent hover:underline sm:text-base"
               >
                 @{USERNAME}
               </a>

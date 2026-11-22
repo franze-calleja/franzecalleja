@@ -287,7 +287,7 @@ export default function StatsPage() {
                             href={cert.credentialUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-(--muted) hover:text-foreground"
+                            className="text-(--muted) hover:text-accent"
                             aria-label={`Verify ${cert.name}`}
                           >
                             <ExternalLink className="h-3.5 w-3.5" />

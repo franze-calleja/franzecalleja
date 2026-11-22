@@ -13,8 +13,9 @@
   --nav-background: #0e100f;
   --nav-foreground: #f3efdd;
   --nav-active: #f3efdd;
-  --nav-active-foreground: #0e100f;
+  --nav-active-foreground: #B34700;
   --nav-hover: rgba(243, 239, 221, 0.15);
+  --accent: #B34700;
 }
 
 :root[data-theme="dark"] {
@@ -28,13 +29,15 @@
   --nav-background: #f3efdd;
   --nav-foreground: #0e100f;
   --nav-active: #0e100f;
-  --nav-active-foreground: #f3efdd;
+  --nav-active-foreground: #E0662A;
   --nav-hover: rgba(14, 16, 15, 0.12);
+  --accent: #E0662A;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -687,7 +690,7 @@ body {
       inset: 0 0 auto;
       z-index: 90;
       height: 2px;
-      background: var(--foreground);
+      background: var(--accent);
       transform-origin: 0 50%;
       pointer-events: none;
       animation: grow-x linear both;

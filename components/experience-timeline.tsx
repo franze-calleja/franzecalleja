@@ -97,7 +97,7 @@ export default function ExperienceTimeline() {
               key={item.step}
               type="button"
               onClick={() => openModal(item)}
-              className="reveal group relative flex min-h-64 flex-col border border-foreground/55 p-6 text-left transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:border-foreground hover:bg-foreground hover:text-background hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground sm:p-7"
+              className="reveal group relative flex min-h-64 flex-col border border-foreground/55 p-6 text-left transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:border-foreground hover:bg-foreground hover:text-background hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent sm:p-7"
             >
               {/* Top metadata */}
               <div className="flex items-center justify-between gap-2">
@@ -192,7 +192,7 @@ export default function ExperienceTimeline() {
                   type="button"
                   onClick={() => togglePreviousRole(item.step)}
                   aria-expanded={isExpanded}
-                  className="group flex w-full flex-col items-start justify-between gap-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground sm:flex-row sm:items-baseline sm:gap-6"
+                  className="group flex w-full flex-col items-start justify-between gap-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent sm:flex-row sm:items-baseline sm:gap-6"
                 >
                   <div>
                     <div className="flex items-center gap-2.5">
@@ -319,7 +319,7 @@ export default function ExperienceTimeline() {
               <button
                 type="button"
                 onClick={closeModal}
-                className="flex h-9 w-9 items-center justify-center border border-foreground/40 transition-colors hover:border-foreground hover:bg-foreground hover:text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground"
+                className="flex h-9 w-9 items-center justify-center border border-foreground/40 transition-colors hover:border-foreground hover:bg-foreground hover:text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 aria-label="Close role details"
               >
                 <X className="h-4 w-4" aria-hidden="true" />
